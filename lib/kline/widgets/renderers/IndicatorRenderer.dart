@@ -7,7 +7,12 @@ import 'package:k_line_flutter/kline/config/KLineConfig.dart';
 /// 指标绘制器接口
 abstract class IndicatorRenderer {
   /// 绘制指标内容
-  void paint(Canvas canvas, Size size, List<KLineModel> klineModels, List<KLinePositionModel> positionModels);
+  void paint(
+    Canvas canvas,
+    Size size,
+    List<KLineModel> klineModels,
+    List<KLinePositionModel> positionModels,
+  );
 
   /// 绘制坐标轴标签
   void paintCoordinateLabels(
@@ -46,7 +51,8 @@ abstract class BaseIndicatorRenderer implements IndicatorRenderer {
         final value = valueExtractor(indicators);
         if (value != null) {
           final normalizedValue = (value - valueRange.$1) / range;
-          final yPosition = layerSize.height - (normalizedValue * layerSize.height);
+          final yPosition =
+              layerSize.height - (normalizedValue * layerSize.height);
           points.add(Offset(positionModels[i].candleCenterX, yPosition));
         }
       }
@@ -56,7 +62,11 @@ abstract class BaseIndicatorRenderer implements IndicatorRenderer {
   }
 
   /// 绘制通用折线图
-  void drawLineChart(Canvas canvas, Size layerSize, List<(List<Offset> points, Color color, String name)> lines) {
+  void drawLineChart(
+    Canvas canvas,
+    Size layerSize,
+    List<(List<Offset> points, Color color, String name)> lines,
+  ) {
     for (final lineData in lines) {
       if (lineData.$1.length < 2) continue;
 
@@ -103,7 +113,11 @@ abstract class BaseIndicatorRenderer implements IndicatorRenderer {
   }
 
   /// 绘制指标名称标签
-  void _paintIndicatorName(Canvas canvas, Size size, KLineTechnicalIndicatorType indicatorType) {
+  void _paintIndicatorName(
+    Canvas canvas,
+    Size size,
+    KLineTechnicalIndicatorType indicatorType,
+  ) {
     String name = '';
     switch (indicatorType) {
       case KLineTechnicalIndicatorType.volume:
@@ -127,7 +141,10 @@ abstract class BaseIndicatorRenderer implements IndicatorRenderer {
 
     if (name.isNotEmpty) {
       final textPainter = TextPainter(
-        text: TextSpan(text: name, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+        text: TextSpan(
+          text: name,
+          style: const TextStyle(color: Colors.grey, fontSize: 10),
+        ),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
@@ -150,10 +167,18 @@ abstract class BaseIndicatorRenderer implements IndicatorRenderer {
 
     for (int i = 0; i < labelCount; i++) {
       final yPosition = (size.height - labelHeight) * i / (labelCount - 1);
-      final labelValue = _calculateLabelValue(indicatorType, i, labelCount, valueRange);
+      final labelValue = _calculateLabelValue(
+        indicatorType,
+        i,
+        labelCount,
+        valueRange,
+      );
 
       final textPainter = TextPainter(
-        text: TextSpan(text: labelValue, style: TextStyle(color: Colors.grey[400], fontSize: 9)),
+        text: TextSpan(
+          text: labelValue,
+          style: TextStyle(color: Colors.grey[400], fontSize: 9),
+        ),
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.right,
       );
@@ -227,8 +252,10 @@ abstract class BaseIndicatorRenderer implements IndicatorRenderer {
           if (indicators.wr14 != null) allValues.add(indicators.wr14!);
           break;
         case KLineTechnicalIndicatorType.volume:
-          if (indicators.volumeMA5 != null) allValues.add(indicators.volumeMA5!);
-          if (indicators.volumeMA10 != null) allValues.add(indicators.volumeMA10!);
+          if (indicators.volumeMA5 != null)
+            allValues.add(indicators.volumeMA5!);
+          if (indicators.volumeMA10 != null)
+            allValues.add(indicators.volumeMA10!);
           break;
         case KLineTechnicalIndicatorType.macd:
           if (indicators.dif != null) allValues.add(indicators.dif!);
@@ -269,7 +296,10 @@ abstract class BaseIndicatorRenderer implements IndicatorRenderer {
 
     // 绘制标题
     final titlePainter = TextPainter(
-      text: TextSpan(text: title, style: TextStyle(color: titleColor, fontSize: 8)),
+      text: TextSpan(
+        text: title,
+        style: TextStyle(color: titleColor, fontSize: 8),
+      ),
       textDirection: TextDirection.ltr,
     );
     titlePainter.layout();
@@ -281,7 +311,10 @@ abstract class BaseIndicatorRenderer implements IndicatorRenderer {
       if (value != null) {
         final valueText = '$name:${value.toStringAsFixed(2)}';
         final valuePainter = TextPainter(
-          text: TextSpan(text: valueText, style: TextStyle(color: color, fontSize: 8)),
+          text: TextSpan(
+            text: valueText,
+            style: TextStyle(color: color, fontSize: 8),
+          ),
           textDirection: TextDirection.ltr,
         );
         valuePainter.layout();

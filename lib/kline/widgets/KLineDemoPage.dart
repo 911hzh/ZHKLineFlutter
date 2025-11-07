@@ -20,8 +20,12 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
   List<dynamic> _klineModels = [];
 
   // 选中的指标
-  final List<KLineTechnicalIndicatorType> _mainChartIndicators = [KLineTechnicalIndicatorType.ma];
-  final List<KLineTechnicalIndicatorType> _secondChartIndicators = [KLineTechnicalIndicatorType.volume];
+  final List<KLineTechnicalIndicatorType> _mainChartIndicators = [
+    KLineTechnicalIndicatorType.ma,
+  ];
+  final List<KLineTechnicalIndicatorType> _secondChartIndicators = [
+    KLineTechnicalIndicatorType.volume,
+  ];
 
   @override
   void initState() {
@@ -38,10 +42,17 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
     try {
       // 获取K线数据
       final klineApi = KlineApi.shared;
-      final datas = await klineApi.getKLineModels(symbol: 'btcusdt', period: KLinePeriod.day1, size: 200);
+      final datas = await klineApi.getKLineModels(
+        symbol: 'btcusdt',
+        period: KLinePeriod.day1,
+        size: 200,
+      );
 
       // 计算技术指标
-      final models = DataUtil.toKLineModelsWithIndicators(datas, KLinePeriod.day1);
+      final models = DataUtil.toKLineModelsWithIndicators(
+        datas,
+        KLinePeriod.day1,
+      );
 
       setState(() {
         _klineModels = models;
@@ -60,7 +71,9 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('K线图演示'),
-        actions: [IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData)],
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
+        ],
       ),
       body: _buildBody(),
     );
@@ -123,7 +136,11 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
             children: [
               _buildIndicatorChip('MA', KLineTechnicalIndicatorType.ma, true),
               _buildIndicatorChip('EMA', KLineTechnicalIndicatorType.ema, true),
-              _buildIndicatorChip('BOLL', KLineTechnicalIndicatorType.boll, true),
+              _buildIndicatorChip(
+                'BOLL',
+                KLineTechnicalIndicatorType.boll,
+                true,
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -131,10 +148,26 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
           Wrap(
             spacing: 8,
             children: [
-              _buildIndicatorChip('VOL', KLineTechnicalIndicatorType.volume, false),
-              _buildIndicatorChip('MACD', KLineTechnicalIndicatorType.macd, false),
-              _buildIndicatorChip('KDJ', KLineTechnicalIndicatorType.kdj, false),
-              _buildIndicatorChip('RSI', KLineTechnicalIndicatorType.rsi, false),
+              _buildIndicatorChip(
+                'VOL',
+                KLineTechnicalIndicatorType.volume,
+                false,
+              ),
+              _buildIndicatorChip(
+                'MACD',
+                KLineTechnicalIndicatorType.macd,
+                false,
+              ),
+              _buildIndicatorChip(
+                'KDJ',
+                KLineTechnicalIndicatorType.kdj,
+                false,
+              ),
+              _buildIndicatorChip(
+                'RSI',
+                KLineTechnicalIndicatorType.rsi,
+                false,
+              ),
               _buildIndicatorChip('WR', KLineTechnicalIndicatorType.wr, false),
             ],
           ),
@@ -143,8 +176,13 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
     );
   }
 
-  Widget _buildIndicatorChip(String label, KLineTechnicalIndicatorType type, bool isMainChart) {
-    final indicators = isMainChart ? _mainChartIndicators : _secondChartIndicators;
+  Widget _buildIndicatorChip(
+    String label,
+    KLineTechnicalIndicatorType type,
+    bool isMainChart,
+  ) {
+    final indicators =
+        isMainChart ? _mainChartIndicators : _secondChartIndicators;
     final isSelected = indicators.contains(type);
 
     return FilterChip(

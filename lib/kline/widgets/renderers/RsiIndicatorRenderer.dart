@@ -8,7 +8,12 @@ import 'package:k_line_flutter/kline/widgets/renderers/IndicatorRenderer.dart';
 /// RSI指标绘制器
 class RSIIndicatorRenderer extends BaseIndicatorRenderer {
   @override
-  void paint(Canvas canvas, Size size, List<KLineModel> klineModels, List<KLinePositionModel> positionModels) {
+  void paint(
+    Canvas canvas,
+    Size size,
+    List<KLineModel> klineModels,
+    List<KLinePositionModel> positionModels,
+  ) {
     final config = KLineConfig.shared;
 
     // 计算数据范围

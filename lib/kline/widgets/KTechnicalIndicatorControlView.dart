@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:k_line_flutter/kline/models/KLineTechnicalIndicatorType.dart';
 
 /// 技术指标选择控制视图委托
-typedef KTechnicalIndicatorControlViewDelegate = void Function(List<KLineTechnicalIndicatorType> types);
+typedef KTechnicalIndicatorControlViewDelegate =
+    void Function(List<KLineTechnicalIndicatorType> types);
 
 /// 技术指标选择控制视图
 /// 对应 Swift 版本的 KTechnicalIndicatorControlView
@@ -10,13 +11,19 @@ class KTechnicalIndicatorControlView extends StatefulWidget {
   final KTechnicalIndicatorControlViewDelegate? onIndicatorSelectionChanged;
   final List<KLineTechnicalIndicatorType> initialSelection;
 
-  const KTechnicalIndicatorControlView({super.key, this.onIndicatorSelectionChanged, this.initialSelection = const []});
+  const KTechnicalIndicatorControlView({
+    super.key,
+    this.onIndicatorSelectionChanged,
+    this.initialSelection = const [],
+  });
 
   @override
-  State<KTechnicalIndicatorControlView> createState() => _KTechnicalIndicatorControlViewState();
+  State<KTechnicalIndicatorControlView> createState() =>
+      _KTechnicalIndicatorControlViewState();
 }
 
-class _KTechnicalIndicatorControlViewState extends State<KTechnicalIndicatorControlView> {
+class _KTechnicalIndicatorControlViewState
+    extends State<KTechnicalIndicatorControlView> {
   /// 当前选中的指标类型集合（支持多选）
   late List<KLineTechnicalIndicatorType> _selectedIndicatorTypes;
 
@@ -44,7 +51,8 @@ class _KTechnicalIndicatorControlViewState extends State<KTechnicalIndicatorCont
 
   @override
   Widget build(BuildContext context) {
-    final totalCount = _mainIndicatorTitles.length + _secondIndicatorTitles.length;
+    final totalCount =
+        _mainIndicatorTitles.length + _secondIndicatorTitles.length;
     final separatorWidth = 1.0;
 
     return Container(
@@ -58,7 +66,11 @@ class _KTechnicalIndicatorControlViewState extends State<KTechnicalIndicatorCont
           }),
 
           // 分割线
-          Container(width: separatorWidth, margin: const EdgeInsets.symmetric(vertical: 10), color: Colors.grey[400]),
+          Container(
+            width: separatorWidth,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            color: Colors.grey[400],
+          ),
 
           // 副图指标按钮
           ..._secondIndicatorTitles.map((item) {

@@ -9,7 +9,9 @@ import 'package:k_line_flutter/kline/widgets/renderers/WrIndicatorRenderer.dart'
 /// 指标绘制器工厂类
 class IndicatorRendererFactory {
   /// 根据指标类型创建对应的绘制器
-  static IndicatorRenderer? createRenderer(KLineTechnicalIndicatorType indicatorType) {
+  static IndicatorRenderer? createRenderer(
+    KLineTechnicalIndicatorType indicatorType,
+  ) {
     switch (indicatorType) {
       case KLineTechnicalIndicatorType.volume:
         return VolumeIndicatorRenderer();

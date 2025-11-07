@@ -83,9 +83,16 @@ class _KLinePeriodViewState extends State<KLinePeriodView> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('更多', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                      Text(
+                        '更多',
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      ),
                       const SizedBox(width: 4),
-                      Icon(Icons.keyboard_arrow_down, size: 12, color: Colors.grey[600]),
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 12,
+                        color: Colors.grey[600],
+                      ),
                     ],
                   ),
                   onTap: widget.onMoreButtonTapped,
@@ -93,7 +100,11 @@ class _KLinePeriodViewState extends State<KLinePeriodView> {
 
                 // 设置按钮
                 _buildControlButton(
-                  child: Icon(Icons.settings, size: 20, color: Colors.grey[600]),
+                  child: Icon(
+                    Icons.settings,
+                    size: 20,
+                    color: Colors.grey[600],
+                  ),
                   onTap: widget.onSettingsButtonTapped,
                 ),
 
@@ -111,7 +122,11 @@ class _KLinePeriodViewState extends State<KLinePeriodView> {
   }
 
   /// 构建周期按钮
-  Widget _buildPeriodButton({required String text, required bool isSelected, required VoidCallback onTap}) {
+  Widget _buildPeriodButton({
+    required String text,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -133,7 +148,11 @@ class _KLinePeriodViewState extends State<KLinePeriodView> {
   Widget _buildControlButton({required Widget child, VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(padding: const EdgeInsets.all(8), color: Colors.transparent, child: child),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        color: Colors.transparent,
+        child: child,
+      ),
     );
   }
 

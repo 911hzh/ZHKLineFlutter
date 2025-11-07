@@ -9,10 +9,27 @@ import 'package:k_line_flutter/kline/widgets/renderers/IndicatorRenderer.dart';
 /// MACD指标绘制器
 class MACDIndicatorRenderer extends BaseIndicatorRenderer {
   @override
-  void paint(Canvas canvas, Size size, List<KLineModel> klineModels, List<KLinePositionModel> positionModels) {
-    final macdValues = klineModels.map((e) => e.kLineTechnicalIndicatorsModel?.macd).whereType<double>().toList();
-    final difValues = klineModels.map((e) => e.kLineTechnicalIndicatorsModel?.dif).whereType<double>().toList();
-    final deaValues = klineModels.map((e) => e.kLineTechnicalIndicatorsModel?.dea).whereType<double>().toList();
+  void paint(
+    Canvas canvas,
+    Size size,
+    List<KLineModel> klineModels,
+    List<KLinePositionModel> positionModels,
+  ) {
+    final macdValues =
+        klineModels
+            .map((e) => e.kLineTechnicalIndicatorsModel?.macd)
+            .whereType<double>()
+            .toList();
+    final difValues =
+        klineModels
+            .map((e) => e.kLineTechnicalIndicatorsModel?.dif)
+            .whereType<double>()
+            .toList();
+    final deaValues =
+        klineModels
+            .map((e) => e.kLineTechnicalIndicatorsModel?.dea)
+            .whereType<double>()
+            .toList();
 
     if (macdValues.isEmpty) return;
 
@@ -23,10 +40,22 @@ class MACDIndicatorRenderer extends BaseIndicatorRenderer {
     if (maxValue == minValue) return;
 
     // 绘制MACD柱状图
-    _drawMACDBarChart(canvas, size, (minValue, maxValue), klineModels, positionModels);
+    _drawMACDBarChart(
+      canvas,
+      size,
+      (minValue, maxValue),
+      klineModels,
+      positionModels,
+    );
 
     // 绘制MACD线
-    _drawMACDLines(canvas, size, (minValue, maxValue), klineModels, positionModels);
+    _drawMACDLines(
+      canvas,
+      size,
+      (minValue, maxValue),
+      klineModels,
+      positionModels,
+    );
   }
 
   void _drawMACDBarChart(
@@ -111,7 +140,10 @@ class MACDIndicatorRenderer extends BaseIndicatorRenderer {
       positionModels: positionModels,
     );
 
-    drawLineChart(canvas, size, [(difPoints, config.macdDifColor, 'DIF'), (deaPoints, config.macdDeaColor, 'DEA')]);
+    drawLineChart(canvas, size, [
+      (difPoints, config.macdDifColor, 'DIF'),
+      (deaPoints, config.macdDeaColor, 'DEA'),
+    ]);
   }
 
   @override

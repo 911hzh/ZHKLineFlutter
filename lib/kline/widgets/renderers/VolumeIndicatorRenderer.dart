@@ -8,9 +8,15 @@ import 'package:k_line_flutter/kline/widgets/renderers/IndicatorRenderer.dart';
 /// 成交量指标绘制器
 class VolumeIndicatorRenderer extends BaseIndicatorRenderer {
   @override
-  void paint(Canvas canvas, Size size, List<KLineModel> klineModels, List<KLinePositionModel> positionModels) {
+  void paint(
+    Canvas canvas,
+    Size size,
+    List<KLineModel> klineModels,
+    List<KLinePositionModel> positionModels,
+  ) {
     final volumes = klineModels.map((e) => e.volume).toList();
-    final maxVolume = volumes.isEmpty ? 0.0 : volumes.reduce((a, b) => a > b ? a : b);
+    final maxVolume =
+        volumes.isEmpty ? 0.0 : volumes.reduce((a, b) => a > b ? a : b);
 
     if (maxVolume == 0) return;
 
@@ -39,7 +45,12 @@ class VolumeIndicatorRenderer extends BaseIndicatorRenderer {
       final isRising = klineModels[i].isRising;
 
       final barWidth = config.candleWidth * config.volumeBarWidthRatio;
-      final barRect = Rect.fromLTWH(positionModels[i].candleCenterX - barWidth / 2, yPosition, barWidth, height);
+      final barRect = Rect.fromLTWH(
+        positionModels[i].candleCenterX - barWidth / 2,
+        yPosition,
+        barWidth,
+        height,
+      );
 
       if (isRising) {
         upPath.addRect(barRect);

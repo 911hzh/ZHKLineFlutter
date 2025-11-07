@@ -22,7 +22,10 @@ class ApiClient<T> {
   final Dio dio = Dio();
 
   ApiClient() : baseUrl = 'https://api.example.com';
-  Future<RestResponse> get({required String url, Map<String, dynamic>? params}) async {
+  Future<RestResponse> get({
+    required String url,
+    Map<String, dynamic>? params,
+  }) async {
     final response = await dio.get(baseUrl + url, queryParameters: params);
     return _handleResponse(response);
   }
@@ -33,7 +36,12 @@ RestResponse _handleResponse(Response response) {
   response.headers.forEach((name, values) {
     headers.putIfAbsent(name, () => values.first);
   });
-  return RestResponse(response.statusCode ?? 500, response.statusMessage ?? 'Unknown error', headers, response.data);
+  return RestResponse(
+    response.statusCode ?? 500,
+    response.statusMessage ?? 'Unknown error',
+    headers,
+    response.data,
+  );
 }
 
 extension FutureRestResponseExtension on Future<RestResponse> {
@@ -44,7 +52,14 @@ extension FutureRestResponseExtension on Future<RestResponse> {
         data = jsonDecode(data);
       }
       var model = parser(data);
-      return Future.value(RestResponse<T>(value.statusCode, value.statusMessage, value.headers, model));
+      return Future.value(
+        RestResponse<T>(
+          value.statusCode,
+          value.statusMessage,
+          value.headers,
+          model,
+        ),
+      );
     });
   }
 }

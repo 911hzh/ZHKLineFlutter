@@ -52,7 +52,10 @@ class KLineCrandleIndexUtil {
     final showedArray = datas.sublist(indexResult.$1, indexResult.$2 + 1);
 
     // 计算可见数据的最大和最小价格（包含技术指标）
-    final priceResult = _findMaxAndMinPrice(showedArray: showedArray, indicatorSelection: indicatorSelection);
+    final priceResult = _findMaxAndMinPrice(
+      showedArray: showedArray,
+      indicatorSelection: indicatorSelection,
+    );
 
     List<KLinePositionModel> positionModels = [];
     final config = KLineConfig.shared;
@@ -65,7 +68,8 @@ class KLineCrandleIndexUtil {
       // 计算基础K线位置
       // 注意：Flutter的SingleChildScrollView会自动处理滚动偏移，所以这里不需要减去offset
       // Swift版本需要减offset是因为chartView.frame.origin.x被设置为offset
-      final centerX = itemX + config.crandleInsets.left + config.candleWidth / 2;
+      final centerX =
+          itemX + config.crandleInsets.left + config.candleWidth / 2;
 
       // 计算当前K线的技术指标位置
       SingleIndicatorPosition? indicatorPosition;
@@ -267,7 +271,9 @@ class KLineCrandleIndexUtil {
     final startIndex = math.max(0, leftIndex);
     final endIndex = math.min(datasCount - 1, rightIndex);
 
-    print("startIndex: $startIndex, endIndex: $endIndex, offset: $offset, visibleCount: $visibleCount");
+    print(
+      "startIndex: $startIndex, endIndex: $endIndex, offset: $offset, visibleCount: $visibleCount",
+    );
 
     return (math.min(startIndex, endIndex), endIndex);
   }
@@ -315,8 +321,18 @@ class KLineCrandleIndexUtil {
       final currentClose = data.klineData.close;
 
       // 找到当前蜡烛的最高价和最低价
-      double currentMaxPrice = [currentHigh, currentLow, currentOpen, currentClose].reduce(math.max);
-      double currentMinPrice = [currentHigh, currentLow, currentOpen, currentClose].reduce(math.min);
+      double currentMaxPrice = [
+        currentHigh,
+        currentLow,
+        currentOpen,
+        currentClose,
+      ].reduce(math.max);
+      double currentMinPrice = [
+        currentHigh,
+        currentLow,
+        currentOpen,
+        currentClose,
+      ].reduce(math.min);
 
       // 根据选择的技术指标，将指标值也纳入价格范围计算
       final indicators = data.kLineTechnicalIndicatorsModel;

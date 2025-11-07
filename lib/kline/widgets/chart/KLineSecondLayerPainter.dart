@@ -33,7 +33,9 @@ class KLineSecondLayerPainter extends CustomPainter {
       final yOffset = itemHeight * i;
 
       // 使用策略模式处理不同的指标绘制
-      final renderer = IndicatorRendererFactory.createRenderer(needDrawTypes[i]);
+      final renderer = IndicatorRendererFactory.createRenderer(
+        needDrawTypes[i],
+      );
       if (renderer != null) {
         // 保存画布状态
         canvas.save();
@@ -46,7 +48,12 @@ class KLineSecondLayerPainter extends CustomPainter {
         renderer.paint(canvas, indicatorSize, klineModels, positionModels);
 
         // 绘制坐标轴标签
-        renderer.paintCoordinateLabels(canvas, indicatorSize, needDrawTypes[i], klineModels);
+        renderer.paintCoordinateLabels(
+          canvas,
+          indicatorSize,
+          needDrawTypes[i],
+          klineModels,
+        );
 
         // 注意：指标数值标签不在这里绘制，而是在固定层绘制
         // renderer.paintIndicatorValueLabels(canvas, indicatorSize, needDrawTypes[i], klineModels, selectedKLineModel);
@@ -72,7 +79,11 @@ class KLineSecondLayerPainter extends CustomPainter {
       final yOffset = itemHeight * i;
 
       // 绘制顶部分隔线（每个指标区域的顶部）
-      canvas.drawLine(Offset(offset, yOffset + offset), Offset(size.width - offset, yOffset + offset), paint);
+      canvas.drawLine(
+        Offset(offset, yOffset + offset),
+        Offset(size.width - offset, yOffset + offset),
+        paint,
+      );
 
       // 绘制中间的那条线
       canvas.drawLine(
@@ -89,11 +100,16 @@ class KLineSecondLayerPainter extends CustomPainter {
       );
 
       // 绘制竖线
-      final itemWidth = (size.width - offset * 2) / (config.crossVerticalCount - 1);
+      final itemWidth =
+          (size.width - offset * 2) / (config.crossVerticalCount - 1);
       double lastX = offset;
 
       for (int j = 0; j < config.crossVerticalCount; j++) {
-        canvas.drawLine(Offset(lastX, yOffset + offset), Offset(lastX, yOffset + itemHeight - offset), paint);
+        canvas.drawLine(
+          Offset(lastX, yOffset + offset),
+          Offset(lastX, yOffset + itemHeight - offset),
+          paint,
+        );
         lastX += itemWidth;
       }
     }

@@ -8,7 +8,8 @@ class KLineDetailView extends StatelessWidget {
   final KLineModel data;
   final bool preferRight;
 
-  const KLineDetailView({Key? key, required this.data, this.preferRight = true}) : super(key: key);
+  const KLineDetailView({Key? key, required this.data, this.preferRight = true})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -58,36 +59,58 @@ class KLineDetailView extends StatelessWidget {
     // 格式化时间为新加坡时间日期格式
     final date = DateTime.fromMillisecondsSinceEpoch(data.timestamp);
     final formatter = DateFormat('yyyy-MM-dd');
-    final timeString = formatter.format(date.toUtc().add(const Duration(hours: 8))); // 新加坡时区 UTC+8
+    final timeString = formatter.format(
+      date.toUtc().add(const Duration(hours: 8)),
+    ); // 新加坡时区 UTC+8
 
-    return SizedBox(height: 12, child: Text(timeString, style: const TextStyle(fontSize: 8, color: Colors.black)));
+    return SizedBox(
+      height: 12,
+      child: Text(
+        timeString,
+        style: const TextStyle(fontSize: 8, color: Colors.black),
+      ),
+    );
   }
 
   /// 构建普通标签
   Widget _buildLabel(String title, double value) {
-    return Text('$title    ${value.toStringAsFixed(2)}', style: const TextStyle(fontSize: 8, color: Colors.black));
+    return Text(
+      '$title    ${value.toStringAsFixed(2)}',
+      style: const TextStyle(fontSize: 8, color: Colors.black),
+    );
   }
 
   /// 构建涨跌额标签
   Widget _buildChangeAmountLabel() {
     final changeAmount = data.changeAmount;
     final changeAmountText =
-        changeAmount >= 0 ? '+${changeAmount.toStringAsFixed(2)}' : changeAmount.toStringAsFixed(2);
+        changeAmount >= 0
+            ? '+${changeAmount.toStringAsFixed(2)}'
+            : changeAmount.toStringAsFixed(2);
 
     return Text(
       '涨跌额    $changeAmountText',
-      style: TextStyle(fontSize: 8, color: changeAmount >= 0 ? Colors.green : Colors.red),
+      style: TextStyle(
+        fontSize: 8,
+        color: changeAmount >= 0 ? Colors.green : Colors.red,
+      ),
     );
   }
 
   /// 构建涨跌幅标签
   Widget _buildChangeRateLabel() {
     final changeRate = data.changeRate * 100;
-    final changeRateText = changeRate >= 0 ? '+${changeRate.toStringAsFixed(2)}%' : '${changeRate.toStringAsFixed(2)}%';
+    final changeRateText =
+        changeRate >= 0
+            ? '+${changeRate.toStringAsFixed(2)}%'
+            : '${changeRate.toStringAsFixed(2)}%';
 
     return Text(
       '涨跌幅    $changeRateText',
-      style: TextStyle(fontSize: 8, color: changeRate >= 0 ? Colors.green : Colors.red),
+      style: TextStyle(
+        fontSize: 8,
+        color: changeRate >= 0 ? Colors.green : Colors.red,
+      ),
     );
   }
 }

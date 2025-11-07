@@ -27,7 +27,9 @@ class _ChartPageState extends State<ChartPage> {
   List<KLineTechnicalIndicatorType> _mainChartIndicators = [];
 
   // 副图指标选择（默认显示成交量，提供更好的用户体验）
-  List<KLineTechnicalIndicatorType> _secondChartIndicators = [KLineTechnicalIndicatorType.volume];
+  List<KLineTechnicalIndicatorType> _secondChartIndicators = [
+    KLineTechnicalIndicatorType.volume,
+  ];
 
   @override
   void initState() {
@@ -44,11 +46,18 @@ class _ChartPageState extends State<ChartPage> {
 
     try {
       final klineApi = KlineApi.shared;
-      final apiDatas = await klineApi.getBatchKLineData(symbols: ['btcusdt'], period: _selectedPeriod, size: 2000);
+      final apiDatas = await klineApi.getBatchKLineData(
+        symbols: ['btcusdt'],
+        period: _selectedPeriod,
+        size: 2000,
+      );
 
       if (apiDatas.containsKey('btcusdt')) {
         final rawData = apiDatas['btcusdt']!;
-        final models = DataUtil.toKLineModelsWithIndicators(rawData, _selectedPeriod);
+        final models = DataUtil.toKLineModelsWithIndicators(
+          rawData,
+          _selectedPeriod,
+        );
 
         setState(() {
           _datas = models;
@@ -138,15 +147,28 @@ class _ChartPageState extends State<ChartPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('K线图表', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          const Text(
+            'K线图表',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
           GestureDetector(
             onTap: () {
               Navigator.of(context).pop();
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-              child: const Text('关闭', style: TextStyle(fontSize: 16, color: Colors.blue, fontWeight: FontWeight.w500)),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                '关闭',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
         ],
@@ -193,7 +215,10 @@ class _ChartPageState extends State<ChartPage> {
         width: 120,
         height: 40,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Text(
           'scale × ${KLineConfig.scale.toStringAsFixed(1)}',
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),

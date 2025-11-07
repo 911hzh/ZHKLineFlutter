@@ -20,7 +20,12 @@ extension ColorExtension on Color {
   /// 通过十六进制整数值创建Color
   static Color fromHexInt(int hex, {double opacity = 1.0}) {
     final alpha = (opacity * 255).round();
-    return Color.fromARGB(alpha, (hex & 0xFF0000) >> 16, (hex & 0x00FF00) >> 8, hex & 0x0000FF);
+    return Color.fromARGB(
+      alpha,
+      (hex & 0xFF0000) >> 16,
+      (hex & 0x00FF00) >> 8,
+      hex & 0x0000FF,
+    );
   }
 
   /// 将Color转换为十六进制字符串

@@ -4,7 +4,9 @@ import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
 
 /// K线API接口类
 class KlineApi {
-  static final KlineApi shared = KlineApi._internal(apiClient: ApiClient(baseUrl: 'https://api.huobi.pro'));
+  static final KlineApi shared = KlineApi._internal(
+    apiClient: ApiClient(baseUrl: 'https://api.huobi.pro'),
+  );
 
   final ApiClient apiClient;
 
@@ -17,20 +19,40 @@ class KlineApi {
   }
 
   /// 获取K线历史数据
-  Future<KLineResponse> getKLineHistory({required String symbol, required KLinePeriod period, int size = 200}) async {
-    final path = '/market/history/kline?period=${period.value}&size=$size&symbol=$symbol';
+  Future<KLineResponse> getKLineHistory({
+    required String symbol,
+    required KLinePeriod period,
+    int size = 200,
+  }) async {
+    final path =
+        '/market/history/kline?period=${period.value}&size=$size&symbol=$symbol';
     return await apiClient.getJson(path, KLineResponse.fromJson);
   }
 
   /// 获取K线历史数据并转换为KLineData数组
-  Future<List<KLineData>> getKLineModels({required String symbol, required KLinePeriod period, int size = 200}) async {
-    final response = await getKLineHistory(symbol: symbol, period: period, size: size);
+  Future<List<KLineData>> getKLineModels({
+    required String symbol,
+    required KLinePeriod period,
+    int size = 200,
+  }) async {
+    final response = await getKLineHistory(
+      symbol: symbol,
+      period: period,
+      size: size,
+    );
     return response.data;
   }
 
   /// 获取实时K线数据
-  Future<KLineData?> getLatestKLine({required String symbol, required KLinePeriod period}) async {
-    final models = await getKLineModels(symbol: symbol, period: period, size: 1);
+  Future<KLineData?> getLatestKLine({
+    required String symbol,
+    required KLinePeriod period,
+  }) async {
+    final models = await getKLineModels(
+      symbol: symbol,
+      period: period,
+      size: 1,
+    );
     return models.isNotEmpty ? models.first : null;
   }
 
@@ -44,7 +66,11 @@ class KlineApi {
 
     // 使用Future.wait并发获取数据
     final futures = symbols.map((symbol) async {
-      final models = await getKLineModels(symbol: symbol, period: period, size: size);
+      final models = await getKLineModels(
+        symbol: symbol,
+        period: period,
+        size: size,
+      );
       return (symbol, models);
     });
 
@@ -58,7 +84,10 @@ class KlineApi {
   }
 
   /// 泛型接口：获取指定类型的数据
-  Future<T> fetchData<T>({required String path, required T Function(Map<String, dynamic>) fromJson}) async {
+  Future<T> fetchData<T>({
+    required String path,
+    required T Function(Map<String, dynamic>) fromJson,
+  }) async {
     return await apiClient.getJson(path, fromJson);
   }
 
@@ -71,7 +100,9 @@ class KlineApi {
     String path = endpoint;
 
     if (parameters.isNotEmpty) {
-      final queryItems = parameters.entries.map((entry) => '${entry.key}=${entry.value}').join('&');
+      final queryItems = parameters.entries
+          .map((entry) => '${entry.key}=${entry.value}')
+          .join('&');
       path += '?$queryItems';
     }
 

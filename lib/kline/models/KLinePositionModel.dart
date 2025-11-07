@@ -72,7 +72,8 @@ class KLinePositionModel {
   /// 获取蜡烛图实体的矩形框
   Rect get candleBodyRect {
     final x = candleCenterX - candleWidth / 2;
-    final y = candleBodyTopY < candleBodyBottomY ? candleBodyTopY : candleBodyBottomY;
+    final y =
+        candleBodyTopY < candleBodyBottomY ? candleBodyTopY : candleBodyBottomY;
     final height = (candleBodyTopY - candleBodyBottomY).abs();
     return Rect.fromLTWH(x, y, candleWidth, height);
   }
@@ -119,7 +120,8 @@ class KLinePositionModel {
   /// 判断给定的点是否在蜡烛图范围内
   bool containsPoint(Offset point) {
     final xInRange = point.dx >= candleLeftX && point.dx <= candleRightX;
-    final yInRange = point.dy >= candleUpperWickTopY && point.dy <= candleLowerWickBottomY;
+    final yInRange =
+        point.dy >= candleUpperWickTopY && point.dy <= candleLowerWickBottomY;
     return xInRange && yInRange;
   }
 
@@ -131,7 +133,8 @@ class KLinePositionModel {
   /// 判断给定的点是否在上影线范围内
   bool containsPointInUpperWick(Offset point) {
     final xInRange = (point.dx - candleCenterX).abs() <= 1.0; // 允许1像素的误差
-    final topY = candleBodyTopY < candleBodyBottomY ? candleBodyTopY : candleBodyBottomY;
+    final topY =
+        candleBodyTopY < candleBodyBottomY ? candleBodyTopY : candleBodyBottomY;
     final yInRange = point.dy >= candleUpperWickTopY && point.dy <= topY;
     return xInRange && yInRange;
   }
@@ -139,7 +142,8 @@ class KLinePositionModel {
   /// 判断给定的点是否在下影线范围内
   bool containsPointInLowerWick(Offset point) {
     final xInRange = (point.dx - candleCenterX).abs() <= 1.0; // 允许1像素的误差
-    final bottomY = candleBodyTopY > candleBodyBottomY ? candleBodyTopY : candleBodyBottomY;
+    final bottomY =
+        candleBodyTopY > candleBodyBottomY ? candleBodyTopY : candleBodyBottomY;
     final yInRange = point.dy >= bottomY && point.dy <= candleLowerWickBottomY;
     return xInRange && yInRange;
   }

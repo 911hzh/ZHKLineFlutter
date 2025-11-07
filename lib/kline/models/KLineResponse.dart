@@ -12,19 +12,32 @@ class KLineResponse {
   /// K线数据数组
   final List<KLineData> data;
 
-  KLineResponse({required this.ch, required this.status, required this.ts, required this.data});
+  KLineResponse({
+    required this.ch,
+    required this.status,
+    required this.ts,
+    required this.data,
+  });
 
   factory KLineResponse.fromJson(Map<String, dynamic> json) {
     return KLineResponse(
       ch: json['ch'] as String,
       status: json['status'] as String,
       ts: json['ts'] as int,
-      data: (json['data'] as List<dynamic>).map((item) => KLineData.fromJson(item as Map<String, dynamic>)).toList(),
+      data:
+          (json['data'] as List<dynamic>)
+              .map((item) => KLineData.fromJson(item as Map<String, dynamic>))
+              .toList(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'ch': ch, 'status': status, 'ts': ts, 'data': data.map((item) => item.toJson()).toList()};
+    return {
+      'ch': ch,
+      'status': status,
+      'ts': ts,
+      'data': data.map((item) => item.toJson()).toList(),
+    };
   }
 }
 

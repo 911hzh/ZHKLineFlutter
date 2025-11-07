@@ -30,16 +30,26 @@ class ApiClient {
     try {
       final response = await _dio.get(path);
 
-      if (response.statusCode == null || response.statusCode! < 200 || response.statusCode! >= 300) {
-        throw NetworkError('服务器错误: ${response.statusCode}', statusCode: response.statusCode);
+      if (response.statusCode == null ||
+          response.statusCode! < 200 ||
+          response.statusCode! >= 300) {
+        throw NetworkError(
+          '服务器错误: ${response.statusCode}',
+          statusCode: response.statusCode,
+        );
       }
 
       return response;
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
         throw NetworkError('网络超时', originalError: e);
       } else if (e.type == DioExceptionType.badResponse) {
-        throw NetworkError('服务器错误: ${e.response?.statusCode}', statusCode: e.response?.statusCode, originalError: e);
+        throw NetworkError(
+          '服务器错误: ${e.response?.statusCode}',
+          statusCode: e.response?.statusCode,
+          originalError: e,
+        );
       } else {
         throw NetworkError('网络错误: ${e.message}', originalError: e);
       }
@@ -49,7 +59,10 @@ class ApiClient {
   }
 
   /// 泛型GET请求，自动解析JSON
-  Future<T> getJson<T>(String path, T Function(Map<String, dynamic>) fromJson) async {
+  Future<T> getJson<T>(
+    String path,
+    T Function(Map<String, dynamic>) fromJson,
+  ) async {
     try {
       final response = await get(path);
 

@@ -100,7 +100,12 @@ class KLineConfig {
     // 需要副图的指标类型
     final needSeconed = ['macd', 'kdj', 'rsi', 'wr', 'volume'];
 
-    final seconedTypes = indicatorTypes.where((type) => needSeconed.contains(type.toString().split('.').last)).toList();
+    final seconedTypes =
+        indicatorTypes
+            .where(
+              (type) => needSeconed.contains(type.toString().split('.').last),
+            )
+            .toList();
     final seconedHeight = crossItemHeight * seconedTypes.length;
     return seconedHeight;
   }

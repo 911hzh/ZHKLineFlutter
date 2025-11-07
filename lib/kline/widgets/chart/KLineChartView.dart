@@ -54,7 +54,8 @@ class _KLineChartViewState extends State<KLineChartView> {
           if (widget.selectIndicatorTypes.isNotEmpty) _buildSecondChart(),
 
           // 十字线
-          if (widget.showCrossLine && widget.crossLinePoint != null) _buildCrossLine(widget.scrollOffset),
+          if (widget.showCrossLine && widget.crossLinePoint != null)
+            _buildCrossLine(widget.scrollOffset),
         ],
       ),
     );
@@ -111,7 +112,9 @@ class _KLineChartViewState extends State<KLineChartView> {
   /// 构建十字线
   Widget _buildCrossLine(double scrollOffset) {
     final config = KLineConfig.shared;
-    final secondLayerHeight = config.getSecoendHeight(widget.selectIndicatorTypes);
+    final secondLayerHeight = config.getSecoendHeight(
+      widget.selectIndicatorTypes,
+    );
 
     return Positioned(
       left: config.chartViewPadding.left,
@@ -122,11 +125,15 @@ class _KLineChartViewState extends State<KLineChartView> {
         size: Size.infinite,
         painter: CrossLinePainter(
           point: widget.crossLinePoint!,
-          containerSize: Size(MediaQuery.of(context).size.width, config.mainCanvasHeight),
+          containerSize: Size(
+            MediaQuery.of(context).size.width,
+            config.mainCanvasHeight,
+          ),
           verticalLineTopY: config.crandleInsets.top,
           verticalLineBottomY: config.mainCanvasHeight + secondLayerHeight,
           horizontalLineLeftX: config.crandleInsets.left,
-          horizontalLineRightX: MediaQuery.of(context).size.width - config.crandleInsets.right,
+          horizontalLineRightX:
+              MediaQuery.of(context).size.width - config.crandleInsets.right,
           crossLineColor: config.crossLineColor,
           crossLineWidth: config.crossLineWidth,
           selectedKLineModel: widget.selectedKLineModel,

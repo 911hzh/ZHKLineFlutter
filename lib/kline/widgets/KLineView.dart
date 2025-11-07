@@ -99,11 +99,15 @@ class _KLineViewState extends State<KLineView> {
 
     final result = KLineCrandleIndexUtil.computerSize(
       datas: widget.datas,
-      drawMaxWidth: screenWidth - config.crandleInsets.left - config.crandleInsets.right,
+      drawMaxWidth:
+          screenWidth - config.crandleInsets.left - config.crandleInsets.right,
       offset: _scrollOffset,
       crandleWidth: config.candleWidth,
       crandleSpace: config.candleSpace,
-      totalHeight: config.mainCanvasHeight - config.crandleInsets.top - config.crandleInsets.bottom,
+      totalHeight:
+          config.mainCanvasHeight -
+          config.crandleInsets.top -
+          config.crandleInsets.bottom,
       indicatorSelection: _mainChartIndicators,
     );
 
@@ -162,7 +166,9 @@ class _KLineViewState extends State<KLineView> {
                   mainChartIndicatorSelection: _mainChartIndicators,
                   selectIndicatorTypes: _secondChartIndicators,
                   // 如果没有选中数据，使用第一条可见数据（类似 Swift 版本）
-                  selectedKLineModel: _selectedKLineModel ?? (_showDatas.isNotEmpty ? _showDatas.first : null),
+                  selectedKLineModel:
+                      _selectedKLineModel ??
+                      (_showDatas.isNotEmpty ? _showDatas.first : null),
                   crossLinePoint: _crossLinePoint,
                   showCrossLine: _shouldShowCrossLine,
                   scrollOffset: _scrollOffset,
@@ -184,14 +190,18 @@ class _KLineViewState extends State<KLineView> {
               child: Container(
                 color: Colors.white,
                 child: KTechnicalIndicatorControlView(
-                  initialSelection: [..._mainChartIndicators, ..._secondChartIndicators],
+                  initialSelection: [
+                    ..._mainChartIndicators,
+                    ..._secondChartIndicators,
+                  ],
                   onIndicatorSelectionChanged: _onIndicatorSelectionChanged,
                 ),
               ),
             ),
 
             // K线详细信息视图（当长按时显示）
-            if (_shouldShowCrossLine && _selectedKLineModel != null) _buildDetailView(),
+            if (_shouldShowCrossLine && _selectedKLineModel != null)
+              _buildDetailView(),
           ],
         ),
       ),
@@ -277,7 +287,9 @@ class _KLineViewState extends State<KLineView> {
   /// 构建主图指标文本层（固定不滚动）
   Widget _buildMainIndicatorTextLayer() {
     final config = KLineConfig.shared;
-    final selectedModel = _selectedKLineModel ?? (_showDatas.isNotEmpty ? _showDatas.first : null);
+    final selectedModel =
+        _selectedKLineModel ??
+        (_showDatas.isNotEmpty ? _showDatas.first : null);
 
     if (selectedModel == null || _mainChartIndicators.isEmpty) {
       return const SizedBox.shrink();
@@ -287,7 +299,10 @@ class _KLineViewState extends State<KLineView> {
       left: config.chartViewPadding.left + 10,
       top: 5,
       child: IgnorePointer(
-        child: KMainIndicatorTextView(selectedKLineModel: selectedModel, indicatorSelection: _mainChartIndicators),
+        child: KMainIndicatorTextView(
+          selectedKLineModel: selectedModel,
+          indicatorSelection: _mainChartIndicators,
+        ),
       ),
     );
   }
@@ -296,7 +311,9 @@ class _KLineViewState extends State<KLineView> {
   /// 参考 Swift 版本：每个副图指标的标签显示在各自的区域
   Widget _buildSecondIndicatorTextLayer() {
     final config = KLineConfig.shared;
-    final selectedModel = _selectedKLineModel ?? (_showDatas.isNotEmpty ? _showDatas.first : null);
+    final selectedModel =
+        _selectedKLineModel ??
+        (_showDatas.isNotEmpty ? _showDatas.first : null);
 
     if (selectedModel == null || _secondChartIndicators.isEmpty) {
       return const SizedBox.shrink();
@@ -424,7 +441,10 @@ class _KLineViewState extends State<KLineView> {
         child: AnimatedOpacity(
           opacity: _shouldShowCrossLine ? 1.0 : 0.0,
           duration: const Duration(milliseconds: 200),
-          child: KLineDetailView(data: _selectedKLineModel!, preferRight: preferRight),
+          child: KLineDetailView(
+            data: _selectedKLineModel!,
+            preferRight: preferRight,
+          ),
         ),
       ),
     );
