@@ -40,13 +40,23 @@
 
 ## 📸 效果展示
 
-> 截图和 GIF 演示即将添加
+### 📊 技术指标切换
 
-![指标演示](lib/assets/show/flutter_indicator.gif)
+展示如何在主图和副图之间切换不同的技术指标（MA、BOLL、MACD、KDJ 等），所有指标数据实时渲染，流畅无卡顿。
 
-![滚动流畅性演示](lib/assets/show/flutter_scrolling.gif)
+![技术指标切换演示](lib/assets/show/flutter_indicator.gif)
 
-![长按十字线演示](lib/assets/show/flutter_long_press.gif)
+### 🔄 流畅滚动与缩放
+
+展示单指拖动浏览历史数据和双指缩放功能，支持 0.5x-3.0x 缩放范围，60 FPS 流畅渲染 2000+ K 线数据。
+
+![滚动与缩放演示](lib/assets/show/flutter_scrolling.gif)
+
+### 📍 长按十字线详情
+
+展示长按图表时显示十字线和数据详情面板，包括当前 K 线的 OHLCV 数据和所有技术指标数值，精准对齐。
+
+![长按十字线演示](lib/assets/show/flutter_tap_longpress_dataDetail.gif)
 
 ---
 
