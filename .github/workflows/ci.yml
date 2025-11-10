@@ -2,9 +2,7 @@ name: Flutter CI
 
 on:
   push:
-    branches: [main, master, develop, "*-develop-*"]
-  pull_request:
-    branches: [main, master, develop]
+    branches: [master, develop, "*-develop-*"]
 
 # 取消正在运行的相同工作流
 concurrency:
