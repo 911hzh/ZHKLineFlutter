@@ -42,6 +42,12 @@
 
 > 截图和 GIF 演示即将添加
 
+![指标演示](lib/assets/show/flutter_indicator.gif)
+
+![滚动流畅性演示](lib/assets/show/flutter_scrolling.gif)
+
+![长按十字线演示](lib/assets/show/flutter_long_press.gif)
+
 ---
 
 ## 🚀 快速开始
