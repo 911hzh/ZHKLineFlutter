@@ -14,12 +14,12 @@ concurrency:
 jobs:
   # 构建Web
   build-web:
-    name: 构建Web
+    name: build web
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: 📥 检出代码
+      - name: 📥 check out code
         uses: actions/checkout@v4
 
       - name: 🐦 设置Flutter环境
@@ -32,10 +32,3 @@ jobs:
 
       - name: 🌐 构建Web
         run: make build-web
-
-      - name: 📦 上传Web构建产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: build/web/
-          retention-days: 30
