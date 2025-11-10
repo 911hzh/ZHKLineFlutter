@@ -43,8 +43,7 @@ class _ProxyHttpOverrides extends HttpOverrides {
         return 'PROXY $proxyAddress';
       }
       // 忽略证书验证（仅用于开发环境，生产环境请谨慎使用）
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
   }
 }
 
@@ -55,10 +54,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter K线图',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
+      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue), useMaterial3: true),
       home: const ChartPage(),
     );
   }
