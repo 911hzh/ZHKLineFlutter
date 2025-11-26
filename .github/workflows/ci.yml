@@ -1,0 +1,34 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+# 取消正在运行的相同工作流
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 构建Web
+  build-web:
+    name: build web
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 check out code
+        uses: actions/checkout@v4
+
+      - name: 🐦 setup flutter environment
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.29.1"
+          dart-version: "3.7.0"
+          channel: "stable"
+          cache: true
+
+      - name: 🌐 build web
+        run: make build-web
