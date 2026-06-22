@@ -7,6 +7,7 @@ import 'package:example/module/getIt/Injection.dart';
 import 'package:example/module/usecase/pages/kline/KLineDemoCubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_foundation_kit/flutter_foundation_kit.dart';
 import 'package:k_line_flutter/k_line_flutter.dart';
 import 'package:k_line_flutter/kline/models/KLineModel.dart';
 import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
@@ -33,7 +34,21 @@ class KLineDemoPage extends StatefulWidget {
 
 /// 页面状态只保留图表交互控制器，避免把业务数据状态放回 Widget 内。
 class _KLineDemoPageState extends State<KLineDemoPage> {
+  static const _chartLayout = KLineLayoutConfig(
+    candleWidth: 8.5,
+    candleSpacing: 2,
+    mainChartHeight: 342,
+    secondaryPaneHeight: 70,
+    indicatorSelectorHeight: 30,
+    gridHorizontalCount: 5,
+    gridVerticalCount: 6,
+    minScale: 0.6,
+    maxScale: 3,
+  );
+
   final _controller = KLineController(initialIndicators: const ['volume']);
+  static const _edgeLoadThreshold = 20.0;
+  var _shouldScrollToInitialLatest = true;
 
   @override
   void dispose() {
@@ -42,10 +57,36 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
   }
 
   void _selectPeriod(BuildContext context, KLinePeriod period) {
+    _shouldScrollToInitialLatest = true;
     _controller
       ..clearSelection()
       ..setScrollOffset(0);
     context.read<KLineDemoCubit>().selectPeriod(period);
+  }
+
+  void _handleStateChange(KLineDemoState state) {
+    if (!_shouldScrollToInitialLatest || state.data.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _scrollToLatest();
+      if (!state.isLoading) {
+        _shouldScrollToInitialLatest = false;
+      }
+    });
+  }
+
+  void _scrollToLatest() {
+    _controller.setScrollOffset(0);
+  }
+
+  void _handleUserScroll(BuildContext context, KLineChartContext<KLineModel> chartContext, KLineScrollMetrics metrics) {
+    final reachedOlder = metrics.extentAfter <= _edgeLoadThreshold;
+    LoggerFactory.current
+        .getLogger(['KLineDemoPage'])
+        .info('reachedOlder: $reachedOlder, metrics.scrollDelta: ${metrics.scrollDelta}');
+    if (reachedOlder && metrics.scrollDelta > 0) {
+      context.read<KLineDemoCubit>().loadMore();
+    }
   }
 
   /// 示例页右侧放大按钮：以当前屏幕中心作为缩放焦点。
@@ -55,8 +96,7 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
       scale: nextScale,
       baseScale: _controller.scale,
       localFocalX: MediaQuery.sizeOf(context).width / 2,
-      contentFocalX:
-          _controller.scrollOffset + MediaQuery.sizeOf(context).width / 2,
+      contentFocalX: _controller.scrollOffset + MediaQuery.sizeOf(context).width / 2,
     );
   }
 
@@ -67,7 +107,8 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-          child: BlocBuilder<KLineDemoCubit, KLineDemoState>(
+          child: BlocConsumer<KLineDemoCubit, KLineDemoState>(
+            listener: (context, state) => _handleStateChange(state),
             builder: (context, state) {
               return SingleChildScrollView(
                 child: Column(
@@ -95,10 +136,7 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
   /// 根据 Cubit 状态构建图表区域，并在后台刷新时保留缓存图表。
   Widget _buildChart(BuildContext context, KLineDemoState state) {
     if (state.isLoading && state.data.isEmpty) {
-      return const SizedBox(
-        height: 412,
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const SizedBox(height: 412, child: Center(child: CircularProgressIndicator()));
     }
 
     if (state.error != null && state.data.isEmpty) {
@@ -109,10 +147,7 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
           children: [
             Text('加载失败: ${state.error}'),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.read<KLineDemoCubit>().retry(),
-              child: const Text('重试'),
-            ),
+            ElevatedButton(onPressed: () => context.read<KLineDemoCubit>().retry(), child: const Text('重试')),
           ],
         ),
       );
@@ -127,26 +162,14 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
         KLineChart<KLineModel>(
           controller: _controller,
           dataSource: _KLineDemoDataSource(state.data),
-          delegate: const _KLineDemoDelegate(),
-          layout: const KLineLayoutConfig(
-            candleWidth: 8.5,
-            candleSpacing: 2,
-            mainChartHeight: 342,
-            secondaryPaneHeight: 70,
-            indicatorSelectorHeight: 30,
-            gridHorizontalCount: 5,
-            gridVerticalCount: 6,
-            minScale: 0.6,
-            maxScale: 3,
+          delegate: _KLineDemoDelegate(
+            onScroll: (chartContext, metrics) {
+              _handleUserScroll(context, chartContext, metrics);
+            },
           ),
+          layout: _chartLayout,
         ),
-        if (state.isLoading)
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: LinearProgressIndicator(minHeight: 2),
-          ),
+        if (state.isLoading) const Positioned(top: 0, left: 0, right: 0, child: LinearProgressIndicator(minHeight: 2)),
         if (state.error != null)
           Positioned(
             left: 12,
@@ -159,10 +182,7 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(
-                  '刷新失败: ${state.error}',
-                  style: const TextStyle(fontSize: 11),
-                ),
+                child: Text('刷新失败: ${state.error}', style: const TextStyle(fontSize: 11)),
               ),
             ),
           ),

@@ -29,7 +29,13 @@ class _KLineDemoLayoutNode extends KLineLayoutNode<KLineModel> {
 
 /// K 线图表 delegate，集中承接 package 暴露出来的绘制与交互扩展点。
 class _KLineDemoDelegate extends KLineChartDelegate<KLineModel> {
-  const _KLineDemoDelegate();
+  const _KLineDemoDelegate({this.onScroll});
+
+  final void Function(
+    KLineChartContext<KLineModel> context,
+    KLineScrollMetrics metrics,
+  )?
+  onScroll;
 
   static const _contentTopPadding = 30.0;
   static const _contentBottomPadding = 30.0;
@@ -41,6 +47,15 @@ class _KLineDemoDelegate extends KLineChartDelegate<KLineModel> {
         _activeSecondaryTypes(context).length *
             context.layout.secondaryPaneHeight +
         context.layout.indicatorSelectorHeight;
+  }
+
+  /// 仅在用户拖动滚动时由 core 回调，页面可在这里决定左侧或右侧加载。
+  @override
+  void didScroll(
+    KLineChartContext<KLineModel> context,
+    KLineScrollMetrics metrics,
+  ) {
+    onScroll?.call(context, metrics);
   }
 
   /// 根据当前可见数据预计算蜡烛坐标，绘制阶段直接消费 layout node。

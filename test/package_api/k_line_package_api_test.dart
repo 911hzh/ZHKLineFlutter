@@ -55,6 +55,7 @@ class _RecordingDelegate extends KLineChartDelegate<_ExternalCandle> {
   int selectionCount = 0;
   int moveCount = 0;
   int scaleUpdateCount = 0;
+  int scrollCount = 0;
   int visibleItemsRequestCount = 0;
   int layoutNodesRequestCount = 0;
   Size? gridSize;
@@ -62,6 +63,7 @@ class _RecordingDelegate extends KLineChartDelegate<_ExternalCandle> {
   final drawnLayoutNodeIndices = <int>[];
   KLineVisibleItem<_ExternalCandle>? selectedItem;
   KLineChartContext<_ExternalCandle>? lastContext;
+  KLineScrollMetrics? lastScrollMetrics;
 
   @override
   double itemExtent(KLineChartContext<_ExternalCandle> context) => 10;
@@ -170,6 +172,15 @@ class _RecordingDelegate extends KLineChartDelegate<_ExternalCandle> {
     double scale,
   ) {
     scaleUpdateCount += 1;
+  }
+
+  @override
+  void didScroll(
+    KLineChartContext<_ExternalCandle> context,
+    KLineScrollMetrics metrics,
+  ) {
+    scrollCount += 1;
+    lastScrollMetrics = metrics;
   }
 }
 
@@ -339,6 +350,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(controller.scrollOffset, greaterThan(0));
+      expect(delegate.scrollCount, greaterThan(0));
+      expect(delegate.lastScrollMetrics?.pixels, controller.scrollOffset);
+      expect(delegate.lastScrollMetrics?.maxScrollExtent, greaterThan(0));
       expect(controller.selectedIndex, isNull);
       expect(delegate.drawnIndices.first, greaterThan(0));
       expect(delegate.drawnLayoutNodeIndices.first, greaterThan(0));
@@ -358,6 +372,7 @@ void main() {
         find.byType(Scrollable),
       );
       expect(scrollableState.position.pixels, 30);
+      final userScrollCount = delegate.scrollCount;
 
       controller.setScaleAroundFocalPoint(
         scale: 2,
@@ -369,6 +384,49 @@ void main() {
 
       expect(controller.scale, 2);
       expect(scrollableState.position.pixels, 120);
+      expect(delegate.scrollCount, userScrollCount);
     },
   );
+
+  testWidgets('chart reports ballistic scroll after user releases drag', (
+    tester,
+  ) async {
+    final candles = List.generate(
+      200,
+      (index) => _ExternalCandle(
+        open: index,
+        high: index + 2,
+        low: index - 1,
+        close: index + 1,
+        volume: 100,
+        time: index,
+      ),
+    );
+    final dataSource = _RecordingDataSource(candles);
+    final delegate = _RecordingDelegate();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 120,
+            height: 180,
+            child: KLineChart<_ExternalCandle>(
+              dataSource: dataSource,
+              delegate: delegate,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.flingFrom(const Offset(100, 120), const Offset(-600, 0), 2500);
+    await tester.pump();
+    final dragScrollCount = delegate.scrollCount;
+
+    await tester.pump(const Duration(milliseconds: 120));
+
+    expect(dragScrollCount, greaterThan(0));
+    expect(delegate.scrollCount, greaterThan(dragScrollCount));
+  });
 }

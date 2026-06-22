@@ -12,6 +12,7 @@
 import 'package:example/base/api/AppApiClient.dart' as _i225;
 import 'package:example/base/api/AppNetworkProxy.dart' as _i808;
 import 'package:example/base/api/AppRestClientAdapter.dart' as _i1032;
+import 'package:example/base/api/KlineApi.dart' as _i408;
 import 'package:example/base/api/UserApi.dart' as _i1064;
 import 'package:example/base/store/auth/AuthStoreImpl.dart' as _i798;
 import 'package:example/base/store/kline/KlineStore.dart' as _i316;
@@ -54,13 +55,6 @@ extension GetItInjectableX on _i174.GetIt {
         keychainPort: gh<_i38.Repository>(instanceName: 'authRepository'),
       ),
     );
-    gh.lazySingleton<_i316.KlineStore>(
-      () => _i316.KlineStore(
-        preferenceRepositoryPort: gh<_i38.Repository>(
-          instanceName: 'userPreferenceRepository',
-        ),
-      ),
-    );
     gh.lazySingleton<_i698.RestClientAdapter>(
       () =>
           _i1032.AppRestClientAdapter(settingsStore: gh<_i213.SettingsStore>()),
@@ -71,11 +65,17 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i698.NetworkProxy>(),
       ),
     );
+    gh.lazySingleton<_i408.KlineApi>(
+      () => _i408.KlineApi(client: gh<_i698.RestClient>()),
+    );
     gh.lazySingleton<_i1064.UserApi>(
       () => _i1064.UserApi(client: gh<_i698.RestClient>()),
     );
     gh.lazySingleton<_i225.AppApiClient>(
-      () => _i225.AppApiClient(userApi: gh<_i1064.UserApi>()),
+      () => _i225.AppApiClient(
+        userApi: gh<_i1064.UserApi>(),
+        klineApi: gh<_i408.KlineApi>(),
+      ),
     );
     gh.lazySingleton<_i154.UserStoreImpl>(
       () => _i154.UserStoreImpl(
@@ -84,6 +84,14 @@ extension GetItInjectableX on _i174.GetIt {
         preferenceRepositoryPort: gh<_i38.Repository>(
           instanceName: 'userPreferenceRepository',
         ),
+      ),
+    );
+    gh.lazySingleton<_i316.KlineStore>(
+      () => _i316.KlineStore(
+        preferenceRepositoryPort: gh<_i38.Repository>(
+          instanceName: 'userPreferenceRepository',
+        ),
+        apiClient: gh<_i225.AppApiClient>(),
       ),
     );
     return this;

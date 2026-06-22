@@ -42,6 +42,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   late double _lastReportedScale;
   KLineDataRequestReason _requestReason = KLineDataRequestReason.initial;
   KLineChartContext<T>? _latestContext;
+  bool _isUserScrollInProgress = false;
 
   @override
   void initState() {
@@ -225,16 +226,23 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
                     ),
                   ),
                 ),
-                SingleChildScrollView(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: contentWidth,
-                    height: chartHeight,
-                    child: CustomPaint(
-                      painter: _KLineChartContentPainter<T>(
-                        context: chartContext,
-                        delegate: widget.delegate,
+                NotificationListener<ScrollNotification>(
+                  onNotification:
+                      (notification) => _handleUserScrollNotification(
+                        chartContext,
+                        notification,
+                      ),
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: contentWidth,
+                      height: chartHeight,
+                      child: CustomPaint(
+                        painter: _KLineChartContentPainter<T>(
+                          context: chartContext,
+                          delegate: widget.delegate,
+                        ),
                       ),
                     ),
                   ),
@@ -303,6 +311,41 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     if (widget.behavior.clearSelectionOnScroll) {
       _controller.clearSelection();
     }
+  }
+
+  bool _handleUserScrollNotification(
+    KLineChartContext<T> context,
+    ScrollNotification notification,
+  ) {
+    final metrics = notification.metrics;
+    if (metrics.axis != Axis.horizontal) {
+      return false;
+    }
+    if (notification is ScrollStartNotification) {
+      _isUserScrollInProgress = notification.dragDetails != null;
+      return false;
+    }
+    if (notification is ScrollEndNotification) {
+      _isUserScrollInProgress = false;
+      return false;
+    }
+    if (notification is! ScrollUpdateNotification || !_isUserScrollInProgress) {
+      return false;
+    }
+
+    widget.delegate.didScroll(
+      _latestContext ?? context,
+      KLineScrollMetrics(
+        pixels: metrics.pixels,
+        minScrollExtent: metrics.minScrollExtent,
+        maxScrollExtent: metrics.maxScrollExtent,
+        viewportDimension: metrics.viewportDimension,
+        scrollDelta: notification.scrollDelta ?? 0,
+        extentBefore: metrics.extentBefore,
+        extentAfter: metrics.extentAfter,
+      ),
+    );
+    return false;
   }
 
   void _syncScrollPositionFromController() {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:example/base/store/kline/KlineStore.dart';
 import 'package:example/module/usecase/pages/kline/KLineDemoCubit.dart';
 import 'package:flutter_foundation_kit/wcore/Repository.dart';
@@ -29,6 +31,7 @@ void main() {
     expect(states[0].isLoading, isTrue);
     expect(states[1].data.first.close, 11);
     expect(states[1].isLoading, isTrue);
+    expect(states.last.data.map((model) => model.timestamp), [2, 1]);
     expect(states.last.data.first.close, 12);
     expect(states.last.isLoading, isFalse);
     expect(cubit.state.data.first.close, 12);
@@ -47,6 +50,77 @@ void main() {
     expect(cubit.state.selectedPeriod, KLinePeriod.day1);
     expect(cubit.state.data.first.close, 13);
     expect(cubit.state.isLoading, isFalse);
+    await cubit.close();
+  });
+
+  test('refreshLatest keeps current data while loading latest data', () async {
+    var requestCount = 0;
+    final store = KlineStore.withLoader(
+      preferenceRepositoryPort: _MemoryRepository(),
+      dataLoader: (_, _) async {
+        requestCount += 1;
+        return [
+          _sampleData(id: requestCount, close: (10 + requestCount).toDouble()),
+        ];
+      },
+    );
+    final cubit = KLineDemoCubit(klineStore: store);
+
+    await cubit.start();
+    final currentData = cubit.state.data;
+    final refreshing = cubit.refreshLatest();
+
+    expect(cubit.state.isLoading, isTrue);
+    expect(cubit.state.data, same(currentData));
+
+    await refreshing;
+
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.data.map((model) => model.timestamp), [2, 1]);
+    expect(cubit.state.data.first.close, 12);
+    await cubit.close();
+  });
+
+  test('loadMore ignores duplicate calls while loading more', () async {
+    var requestCount = 0;
+    late void Function() completeLoadMore;
+    final store = KlineStore.withLoader(
+      preferenceRepositoryPort: _MemoryRepository(),
+      dataLoader: (_, size) {
+        requestCount += 1;
+        if (requestCount == 2) {
+          final completer = Completer<List<KLineData>>();
+          completeLoadMore = () {
+            completer.complete(
+              List.generate(
+                size,
+                (index) =>
+                    _sampleData(id: index + 1, close: (index + 1).toDouble()),
+              ),
+            );
+          };
+          return completer.future;
+        }
+        return Future.value([_sampleData(id: 1, close: 11)]);
+      },
+    );
+    final cubit = KLineDemoCubit(klineStore: store);
+
+    await cubit.start();
+    final firstLoadMore = cubit.loadMore();
+    final duplicateLoadMore = cubit.loadMore();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(requestCount, 2);
+    expect(cubit.state.isLoading, isTrue);
+
+    completeLoadMore();
+    await firstLoadMore;
+    await duplicateLoadMore;
+
+    expect(requestCount, 2);
+    expect(cubit.state.isLoading, isFalse);
+    expect(cubit.state.data, hasLength(100));
     await cubit.close();
   });
 }

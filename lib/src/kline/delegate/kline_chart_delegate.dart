@@ -127,6 +127,45 @@ class KLineDataRequest {
 /// 数据请求原因。
 enum KLineDataRequestReason { initial, scroll, scale, reload }
 
+/// 用户滚动时传给 delegate 的滚动位置信息。
+///
+/// core 只负责把 ScrollView 的当前位置和边界透出；业务方可根据 [pixels]、
+/// [minScrollExtent]、[maxScrollExtent] 自行判断左侧或右侧阈值，例如距离右侧
+/// 20px 时加载最新数据，或接近左侧时加载更旧数据。
+@immutable
+class KLineScrollMetrics {
+  const KLineScrollMetrics({
+    required this.pixels,
+    required this.minScrollExtent,
+    required this.maxScrollExtent,
+    required this.viewportDimension,
+    required this.scrollDelta,
+    required this.extentBefore,
+    required this.extentAfter,
+  });
+
+  /// 当前横向滚动偏移量。
+  final double pixels;
+
+  /// 最小可滚动位置，通常为 0。
+  final double minScrollExtent;
+
+  /// 最大可滚动位置，也就是内容最右侧。
+  final double maxScrollExtent;
+
+  /// 当前视口宽度。
+  final double viewportDimension;
+
+  /// 本次滚动更新相对上一帧的偏移变化。
+  final double scrollDelta;
+
+  /// 当前位置左侧已经滚过的距离。
+  final double extentBefore;
+
+  /// 当前位置右侧还剩余的距离。
+  final double extentAfter;
+}
+
 /// 图表上下文。
 ///
 /// package 会在布局、绘制、交互回调中把该对象传给 dataSource/delegate。
@@ -322,6 +361,12 @@ abstract class KLineChartDelegate<T> {
     KLineChartContext<T> context,
     KLineVisibleRange visibleRange,
   ) {}
+
+  /// 用户拖动导致横向滚动位置变化时回调。
+  ///
+  /// 首次数据加载、外部 controller 设置 offset、内部同步 scrollPosition 等程序化
+  /// 滚动不会触发该回调。业务方可以在这里根据左右边界和阈值决定加载旧数据或最新数据。
+  void didScroll(KLineChartContext<T> context, KLineScrollMetrics metrics) {}
 
   /// 选中某个 item 时回调。
   void didSelectItem(KLineChartContext<T> context, KLineVisibleItem<T> item) {}

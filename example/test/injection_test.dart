@@ -1,4 +1,5 @@
 import 'package:example/base/api/AppApiClient.dart';
+import 'package:example/base/api/KlineApi.dart';
 import 'package:example/base/api/UserApi.dart';
 import 'package:example/base/store/auth/AuthStoreImpl.dart';
 import 'package:example/base/store/kline/KlineStore.dart';
@@ -23,6 +24,7 @@ void main() {
     final apiClient = getIt<AppApiClient>();
 
     expect(apiClient.userApi, same(getIt<UserApi>()));
+    expect(apiClient.klineApi, same(getIt<KlineApi>()));
     expect(getIt<SettingsStore>(), isA<SettingsStore>());
     expect(getIt<AuthStoreImpl>(), isA<AuthStoreImpl>());
     expect(getIt<UserStoreImpl>(), isA<UserStoreImpl>());

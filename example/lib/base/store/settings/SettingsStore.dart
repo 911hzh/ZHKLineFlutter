@@ -13,7 +13,7 @@ class SettingsStore extends StoreBase<Settings> {
         Settings(
           environment: AppEnvironment.development,
           packageName: "",
-          baseUrl: "https://jsonplaceholder.typicode.com",
+          baseUrl: "https://api.huobi.pro",
         ),
       ) {
     settingsLazyload = Lazyload<Settings>(() async {
