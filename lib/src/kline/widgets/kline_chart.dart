@@ -94,6 +94,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
           itemExtent: widget.layout.candleWidth + widget.layout.candleSpacing,
           visibleRange: const KLineVisibleRange(start: 0, end: 0),
           visibleItems: const [],
+          layoutNodes: const [],
         );
         final itemCount = widget.dataSource.numberOfItems(seedContext);
         if (itemCount == 0) {
@@ -108,25 +109,47 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
             itemExtent: widget.layout.candleWidth + widget.layout.candleSpacing,
             visibleRange: const KLineVisibleRange(start: 0, end: 0),
             visibleItems: const [],
+            layoutNodes: const [],
           ),
         );
-        final visibleRange = _computeVisibleRange(
-          itemCount: itemCount,
-          itemExtent: itemExtent,
-          viewportWidth: viewportSize.width,
-        );
-        final visibleItems = _buildVisibleItems(
-          itemCount: itemCount,
-          itemExtent: itemExtent,
+        final layoutContext = _createContext(
           viewportSize: viewportSize,
-          visibleRange: visibleRange,
+          itemCount: itemCount,
+          itemExtent: itemExtent,
+          visibleRange: const KLineVisibleRange(start: 0, end: 0),
+          visibleItems: const [],
+          layoutNodes: const [],
         );
+        final visibleRange = widget.delegate.getVisibleRange(layoutContext);
+        final visibleItemsContext = _createContext(
+          viewportSize: viewportSize,
+          itemCount: itemCount,
+          itemExtent: itemExtent,
+          visibleRange: visibleRange,
+          visibleItems: const [],
+          layoutNodes: const [],
+        );
+        final visibleItems = widget.delegate.getVisibleItems(
+          visibleItemsContext,
+          widget.dataSource,
+          visibleRange,
+        );
+        final layoutNodesContext = _createContext(
+          viewportSize: viewportSize,
+          itemCount: itemCount,
+          itemExtent: itemExtent,
+          visibleRange: visibleRange,
+          visibleItems: visibleItems,
+          layoutNodes: const [],
+        );
+        final layoutNodes = widget.delegate.getLayoutNodes(layoutNodesContext);
         final chartContext = _createContext(
           viewportSize: viewportSize,
           itemCount: itemCount,
           itemExtent: itemExtent,
           visibleRange: visibleRange,
           visibleItems: visibleItems,
+          layoutNodes: layoutNodes,
         );
         _latestContext = chartContext;
         _syncVisibleRange(chartContext);
@@ -243,6 +266,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     required double itemExtent,
     required KLineVisibleRange visibleRange,
     required List<KLineVisibleItem<T>> visibleItems,
+    required List<KLineLayoutNode<T>> layoutNodes,
   }) {
     return KLineChartContext<T>(
       controller: _controller,
@@ -254,48 +278,8 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
       contentWidth: itemCount * itemExtent,
       visibleRange: visibleRange,
       visibleItems: visibleItems,
+      layoutNodes: layoutNodes,
     );
-  }
-
-  KLineVisibleRange _computeVisibleRange({
-    required int itemCount,
-    required double itemExtent,
-    required double viewportWidth,
-  }) {
-    final start = (_controller.scrollOffset / itemExtent).floor().clamp(
-      0,
-      itemCount - 1,
-    );
-    final visibleCount = (viewportWidth / itemExtent).ceil() + 1;
-    final end = (start + visibleCount).clamp(start, itemCount - 1);
-    return KLineVisibleRange(start: start, end: end);
-  }
-
-  List<KLineVisibleItem<T>> _buildVisibleItems({
-    required int itemCount,
-    required double itemExtent,
-    required Size viewportSize,
-    required KLineVisibleRange visibleRange,
-  }) {
-    final context = _createContext(
-      viewportSize: viewportSize,
-      itemCount: itemCount,
-      itemExtent: itemExtent,
-      visibleRange: visibleRange,
-      visibleItems: const [],
-    );
-    final items = <KLineVisibleItem<T>>[];
-    for (var index = visibleRange.start; index <= visibleRange.end; index++) {
-      final left = index * itemExtent;
-      items.add(
-        KLineVisibleItem<T>(
-          index: index,
-          item: widget.dataSource.itemAt(context, index),
-          frame: Rect.fromLTWH(left, 0, itemExtent, viewportSize.height),
-        ),
-      );
-    }
-    return items;
   }
 
   void _syncVisibleRange(KLineChartContext<T> context) {
@@ -447,9 +431,7 @@ class _KLineChartContentPainter<T> extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final item in context.visibleItems) {
-      delegate.drawItem(canvas, size, context, item);
-    }
+    delegate.drawLayoutNodes(canvas, size, context, context.layoutNodes);
   }
 
   @override

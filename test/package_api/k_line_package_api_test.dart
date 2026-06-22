@@ -49,17 +49,40 @@ class _RecordingDataSource extends KLineChartDataSource<_ExternalCandle> {
 class _RecordingDelegate extends KLineChartDelegate<_ExternalCandle> {
   int drawGridCount = 0;
   int drawItemCount = 0;
+  int drawLayoutNodesCount = 0;
+  int drawLayoutNodeCount = 0;
   int drawOverlayCount = 0;
   int selectionCount = 0;
   int moveCount = 0;
   int scaleUpdateCount = 0;
+  int visibleItemsRequestCount = 0;
+  int layoutNodesRequestCount = 0;
   Size? gridSize;
   final drawnIndices = <int>[];
+  final drawnLayoutNodeIndices = <int>[];
   KLineVisibleItem<_ExternalCandle>? selectedItem;
   KLineChartContext<_ExternalCandle>? lastContext;
 
   @override
   double itemExtent(KLineChartContext<_ExternalCandle> context) => 10;
+
+  @override
+  List<KLineVisibleItem<_ExternalCandle>> getVisibleItems(
+    KLineChartContext<_ExternalCandle> context,
+    KLineChartDataSource<_ExternalCandle> dataSource,
+    KLineVisibleRange visibleRange,
+  ) {
+    visibleItemsRequestCount += 1;
+    return super.getVisibleItems(context, dataSource, visibleRange);
+  }
+
+  @override
+  List<KLineLayoutNode<_ExternalCandle>> getLayoutNodes(
+    KLineChartContext<_ExternalCandle> context,
+  ) {
+    layoutNodesRequestCount += 1;
+    return super.getLayoutNodes(context);
+  }
 
   @override
   void drawGrid(
@@ -70,6 +93,29 @@ class _RecordingDelegate extends KLineChartDelegate<_ExternalCandle> {
     drawGridCount += 1;
     gridSize = size;
     lastContext = context;
+  }
+
+  @override
+  void drawLayoutNodes(
+    Canvas canvas,
+    Size size,
+    KLineChartContext<_ExternalCandle> context,
+    List<KLineLayoutNode<_ExternalCandle>> nodes,
+  ) {
+    drawLayoutNodesCount += 1;
+    super.drawLayoutNodes(canvas, size, context, nodes);
+  }
+
+  @override
+  void drawLayoutNode(
+    Canvas canvas,
+    Size size,
+    KLineChartContext<_ExternalCandle> context,
+    KLineLayoutNode<_ExternalCandle> node,
+  ) {
+    drawLayoutNodeCount += 1;
+    drawnLayoutNodeIndices.add(node.visibleItem.index);
+    super.drawLayoutNode(canvas, size, context, node);
   }
 
   @override
@@ -209,6 +255,11 @@ void main() {
       expect(delegate.drawOverlayCount, greaterThan(0));
       expect(delegate.gridSize?.width, 320);
       expect(delegate.lastContext?.visibleItems, hasLength(3));
+      expect(delegate.lastContext?.layoutNodes, hasLength(3));
+      expect(delegate.visibleItemsRequestCount, greaterThan(0));
+      expect(delegate.layoutNodesRequestCount, greaterThan(0));
+      expect(delegate.drawLayoutNodesCount, greaterThan(0));
+      expect(delegate.drawLayoutNodeCount, 3);
       expect(
         dataSource.requestedRanges,
         contains(const KLineVisibleRange(start: 0, end: 2)),
@@ -275,6 +326,7 @@ void main() {
 
       expect(delegate.gridSize?.width, 120);
       expect(delegate.drawnIndices.first, 0);
+      expect(delegate.drawnLayoutNodeIndices.first, 0);
       expect(delegate.drawnIndices.length, lessThan(candles.length));
 
       controller.selectIndex(0);
@@ -282,12 +334,14 @@ void main() {
       expect(controller.selectedIndex, isNotNull);
 
       delegate.drawnIndices.clear();
+      delegate.drawnLayoutNodeIndices.clear();
       await tester.dragFrom(const Offset(100, 120), const Offset(-80, 0));
       await tester.pumpAndSettle();
 
       expect(controller.scrollOffset, greaterThan(0));
       expect(controller.selectedIndex, isNull);
       expect(delegate.drawnIndices.first, greaterThan(0));
+      expect(delegate.drawnLayoutNodeIndices.first, greaterThan(0));
       expect(dataSource.requestedRanges.last.start, greaterThan(0));
 
       controller.setScale(2);

@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:example/module/getIt/GetItInstanceName.dart';
 import 'package:flutter_foundation_kit/wcore/Repository.dart';
 import 'package:flutter_foundation_kit/wcore/store/StoreBase.dart';

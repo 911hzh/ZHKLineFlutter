@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:example/base/store/kline/KlineStore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:k_line_flutter/kline/models/KLineModel.dart';
