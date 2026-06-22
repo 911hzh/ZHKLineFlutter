@@ -76,62 +76,131 @@ flutter pub get
 flutter run -d macos  # 或 ios / android
 ```
 
-### 基础用法
+### Package 基础用法
+
+新的 package API 推荐只导入一个公共入口。核心思想类似 `UITableViewDataSource` / `UITableViewDelegate`：package 内部只负责滚动、手势、视口状态和回调调度，数据、网格、蜡烛、指标、覆盖层和选中 UI 都由外部实现。
 
 ```dart
-import 'package:k_line_flutter/kline/widgets/KLineView.dart';
+import 'package:k_line_flutter/k_line_flutter.dart';
 
-class MyKLinePage extends StatefulWidget {
-  @override
-  _MyKLinePageState createState() => _MyKLinePageState();
+class MyCandle {
+  final double open;
+  final double high;
+  final double low;
+  final double close;
+  final double volume;
+  final DateTime time;
+
+  MyCandle({
+    required this.open,
+    required this.high,
+    required this.low,
+    required this.close,
+    required this.volume,
+    required this.time,
+  });
 }
 
-class _MyKLinePageState extends State<MyKLinePage> {
-  List<KLineModel> _datas = [];
+class MyDataSource extends KLineChartDataSource<MyCandle> {
+  const MyDataSource(this.items);
+
+  final List<MyCandle> items;
 
   @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
+  int numberOfItems(KLineChartContext<MyCandle> context) => items.length;
 
-  Future<void> _loadData() async {
-    // 1. 获取 K 线数据
-    final klineApi = KlineApi.shared;
-    final rawData = await klineApi.getKLineModels(
-      symbol: 'btcusdt',
-      period: KLinePeriod.day1,
-      size: 200,
-    );
-
-    // 2. 计算技术指标（自动完成）
-    final modelsWithIndicators = DataUtil.toKLineModelsWithIndicators(
-      rawData,
-      KLinePeriod.day1,
-    );
-
-    setState(() {
-      _datas = modelsWithIndicators;
-    });
+  @override
+  MyCandle itemAt(KLineChartContext<MyCandle> context, int index) {
+    return items[index];
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('K 线图')),
-      body: _datas.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : KLineView(
-              datas: _datas,
-              mainChartIndicatorSelection: [
-                KLineTechnicalIndicatorType.ma,  // 显示 MA 指标
-              ],
-              secondChartIndicatorSelection: [
-                KLineTechnicalIndicatorType.volume,  // 显示成交量
-                KLineTechnicalIndicatorType.macd,    // 显示 MACD
-              ],
-              scale: KLineConfig.scale,
-            ),
+  void chartDidRequestData(
+    KLineChartContext<MyCandle> context,
+    KLineDataRequest request,
+  ) {
+    // 根据 request.visibleRange 决定是否加载更多历史数据。
+  }
+}
+
+class MyDelegate extends KLineChartDelegate<MyCandle> {
+  const MyDelegate();
+
+  @override
+  void drawGrid(Canvas canvas, Size size, KLineChartContext<MyCandle> context) {
+    // 外部决定网格如何绘制。
+  }
+
+  @override
+  void drawItem(
+    Canvas canvas,
+    Size size,
+    KLineChartContext<MyCandle> context,
+    KLineVisibleItem<MyCandle> item,
+  ) {
+    // 外部决定蜡烛、折线、柱状图等如何绘制。
+  }
+
+  @override
+  void drawOverlay(Canvas canvas, Size size, KLineChartContext<MyCandle> context) {
+    // 外部决定订单线、买卖点、预警线等覆盖层如何绘制。
+  }
+
+  @override
+  Widget? buildSelectionView(
+    BuildContext context,
+    KLineChartContext<MyCandle> chartContext,
+    KLineVisibleItem<MyCandle> selectedItem,
+  ) {
+    return Text('Close: ${selectedItem.item.close}');
+  }
+
+  @override
+  void didSelectItem(
+    KLineChartContext<MyCandle> context,
+    KLineVisibleItem<MyCandle> item,
+  ) {
+    // 外部处理长按/点击选中。
+  }
+
+  @override
+  void didMoveSelection(
+    KLineChartContext<MyCandle> context,
+    KLineVisibleItem<MyCandle> item,
+  ) {
+    // 外部处理长按后移动到另一个数据点。
+  }
+}
+
+KLineChart<MyCandle>(
+  dataSource: MyDataSource(candles),
+  delegate: const MyDelegate(),
+  controller: KLineController(),
+  theme: const KLineTheme(),
+)
+```
+
+这套 API 的核心是：
+
+- `KLineChartDataSource<T>`：外部提供数量、指定位置的数据，以及可见区变化后的数据请求入口。
+- `KLineChartDelegate<T>`：外部决定 item 宽度、图表高度、网格绘制、蜡烛绘制、覆盖层绘制、选中 UI 和交互回调。
+- `KLineChartContext<T>`：package 在每次绘制和交互时传入的上下文，包含 controller、可见区、可见 item、视口尺寸、主题和布局配置。
+- `KLineController`：对外暴露缩放、滚动、选中项、可见区间等状态。
+
+### 自定义绘制示例
+
+```dart
+class OrderLineDelegate extends KLineChartDelegate<MyCandle> {
+  @override
+  void drawOverlay(Canvas canvas, Size size, KLineChartContext<MyCandle> context) {
+    final paint = Paint()
+      ..color = Colors.orange
+      ..strokeWidth = 1;
+
+    canvas.drawLine(
+      Offset(0, size.height / 2),
+      Offset(size.width, size.height / 2),
+      paint,
     );
   }
 }
@@ -140,77 +209,80 @@ class _MyKLinePageState extends State<MyKLinePage> {
 ### 自定义配置
 
 ```dart
-// 全局配置（单例模式）
-final config = KLineConfig.shared;
-
-// 蜡烛图样式
-config.candleUpColor = Color(0xFFF14965);    // 涨势红色
-config.candleDownColor = Color(0xFF00B066);  // 跌势绿色
-
-// 技术指标颜色
-config.ma5Color = Color(0xFFFFD700);   // MA5 金色
-config.ma10Color = Color(0xFF00BFFF);  // MA10 蓝色
-config.ma30Color = Color(0xFFDA70D6);  // MA30 紫色
-
-// 缩放
-KLineConfig.scale = 1.5;  // 1.5 倍缩放
+KLineChart<MyCandle>(
+  dataSource: MyDataSource(candles),
+  delegate: const MyDelegate(),
+  theme: const KLineTheme(
+    candleUpColor: Color(0xFFF14965),
+    candleDownColor: Color(0xFF00B066),
+  ),
+  layout: const KLineLayoutConfig(
+    candleWidth: 8,
+    candleSpacing: 2,
+    mainChartHeight: 360,
+  ),
+  behavior: const KLineBehaviorConfig(
+    enableScale: true,
+    enableCrosshair: true,
+  ),
+)
 ```
 
 ---
 
 ## 📖 核心组件
 
-### KLineView
+### KLineChart
 
-主视图组件，包含完整的 K 线图表功能
+package 核心组件，只负责滚动、手势、视口上下文和代理调度，不包含具体 K 线业务绘制。
 
 ```dart
-KLineView(
-  datas: List<KLineModel>,                              // K 线数据（必需）
-  mainChartIndicatorSelection: List<KLineTechnicalIndicatorType>,  // 主图指标
-  secondChartIndicatorSelection: List<KLineTechnicalIndicatorType>, // 副图指标
-  scale: double,                                        // 缩放比例
+KLineChart<T>(
+  dataSource: KLineChartDataSource<T>, // 数据代理
+  delegate: KLineChartDelegate<T>,     // 绘制和交互代理
+  controller: KLineController?,        // 状态控制器
+  theme: KLineTheme,                   // 主题配置
+  layout: KLineLayoutConfig,           // 布局配置
+  behavior: KLineBehaviorConfig,       // 交互配置
 )
 ```
 
-### KLineModel
+### KLineChartDataSource
 
-K 线数据模型，包含 OHLCV 数据和技术指标
+数据源协议，外部负责提供数据数量、指定位置的数据，以及可见区变化后的数据请求处理。
 
 ```dart
-class KLineModel {
-  final double open;       // 开盘价
-  final double close;      // 收盘价
-  final double high;       // 最高价
-  final double low;        // 最低价
-  final double amount;     // 成交量
-  final int id;            // 时间戳
-
-  // 技术指标（由库自动计算）
-  KLineTechnicalIndicatorsModel? kLineTechnicalIndicatorsModel;
+abstract class KLineChartDataSource<T> {
+  int numberOfItems(KLineChartContext<T> context);
+  T itemAt(KLineChartContext<T> context, int index);
+  void chartDidRequestData(
+    KLineChartContext<T> context,
+    KLineDataRequest request,
+  );
 }
 ```
 
-### KLineConfig
+### KLineChartDelegate
 
-配置类，控制图表外观和行为（单例模式）
+绘制和交互协议，外部负责网格、蜡烛、指标、覆盖层、选中 UI 和交互回调。
 
 ```dart
-class KLineConfig {
-  static final KLineConfig shared = KLineConfig._internal();
-  static double scale = 1.0;  // 全局缩放因子
-
-  // 蜡烛图配置
-  double get candleWidth => 8.5 * scale;
-  double get candleSpace => 2.0 * scale;
-  Color candleUpColor = Color(0xFFF14965);
-  Color candleDownColor = Color(0xFF00B066);
-
-  // 网格配置
-  int crossHorCount = 5;      // 横向网格线数量
-  int crossVerticalCount = 6; // 纵向网格线数量
-
-  // ... 更多配置项
+abstract class KLineChartDelegate<T> {
+  double itemExtent(KLineChartContext<T> context);
+  double chartHeight(KLineChartContext<T> context);
+  void drawGrid(Canvas canvas, Size size, KLineChartContext<T> context);
+  void drawItem(
+    Canvas canvas,
+    Size size,
+    KLineChartContext<T> context,
+    KLineVisibleItem<T> item,
+  );
+  void drawOverlay(Canvas canvas, Size size, KLineChartContext<T> context);
+  Widget? buildSelectionView(
+    BuildContext context,
+    KLineChartContext<T> chartContext,
+    KLineVisibleItem<T> selectedItem,
+  );
 }
 ```
 
@@ -234,61 +306,35 @@ KLineData  →  Indicators  →  DrawPoints  →  Canvas.draw  →  GestureDetec
 
 ### 关键组件
 
-| 组件                        | 职责                   |
-| --------------------------- | ---------------------- |
-| **DataUtil**                | 技术指标计算引擎       |
-| **KLineCrandleIndexUtil**   | 坐标位置计算工具       |
-| **KLineMainPainter**        | 主图 CustomPainter     |
-| **KLineSecondLayerPainter** | 副图 CustomPainter     |
-| **IndicatorRenderer**       | 指标渲染器（策略模式） |
+| 组件                     | 职责                                   |
+| ------------------------ | -------------------------------------- |
+| **KLineChart**           | 滚动、手势、视口上下文和代理调度       |
+| **KLineChartDataSource** | 数据数量、索引数据、可见区数据请求     |
+| **KLineChartDelegate**   | 网格、蜡烛、指标、覆盖层、选中 UI 绘制 |
+| **KLineChartContext**    | 每次绘制和交互时传给外部的上下文       |
+| **KLineController**      | 缩放、滚动、选中项、可见区间状态       |
 
 ---
 
 ## 📊 技术指标
 
-| 指标 | 说明               | 参数                          | 用途             |
-| ---- | ------------------ | ----------------------------- | ---------------- |
-| MA   | 移动平均线         | 周期: 5, 10, 30               | 判断趋势方向     |
-| EMA  | 指数移动平均线     | 周期: 5, 10, 30               | 更敏感的趋势判断 |
-| BOLL | 布林带             | 周期: 20, 倍数: 2             | 判断价格波动范围 |
-| MACD | 指数平滑异同平均线 | 快线: 12, 慢线: 26, 信号线: 9 | 判断买卖时机     |
-| KDJ  | 随机指标           | 周期: 9, K: 3, D: 3           | 判断超买超卖     |
-| RSI  | 相对强弱指标       | 周期: 6, 12, 24               | 判断价格强弱     |
-| WR   | 威廉指标           | 周期: 6, 10, 14               | 判断超买超卖     |
-| VOL  | 成交量             | MA 周期: 5, 10                | 判断市场活跃度   |
+核心 package 不内置 MA、EMA、BOLL、MACD 等业务指标计算和绘制。外部可以在 `KLineChartDelegate.drawItem` / `drawOverlay` 中自行计算并绘制，也可以在业务层预先计算好指标数据后通过 `KLineChartDataSource.itemAt` 返回。
 
 ---
 
 ## 📁 项目结构
 
 ```
-lib/kline/
-├── api/                      # 网络层
-│   ├── ApiClient.dart        # Dio 网络请求
-│   └── KlineApi.dart         # K 线 API（火币）
-├── config/                   # 配置层
-│   ├── ColorExtension.dart   # 颜色扩展
-│   └── KLineConfig.dart      # K 线配置（单例）
-├── models/                   # 数据模型
-│   ├── KLineModel.dart
-│   ├── KLinePositionModel.dart
-│   ├── KLineTechnicalIndicatorsModel.dart
-│   └── ...
-├── utils/                    # 工具类
-│   ├── DataUtil.dart         # 技术指标计算
-│   └── KLineCrandleIndexUtil.dart  # 位置计算
-└── widgets/                  # UI 组件
-    ├── chart/                # 图表组件
-    │   ├── KLineChartView.dart
-    │   ├── KLineMainPainter.dart
-    │   └── KLineSecondLayerPainter.dart
-    ├── renderers/            # 指标渲染器
-    │   ├── VolumeIndicatorRenderer.dart
-    │   ├── MacdIndicatorRenderer.dart
-    │   └── ...
-    ├── KLineView.dart        # 主视图
-    ├── ChartPage.dart        # K 线页面
-    └── ...
+lib/
+├── k_line_flutter.dart              # package 公共入口
+└── src/kline/
+    ├── controller/                  # KLineController
+    ├── delegate/                    # DataSource / Delegate / Context
+    ├── theme/                       # Theme / Layout / Behavior 配置
+    └── widgets/                     # KLineChart 核心组件
+
+example/
+└── main.dart                        # 如何实现 dataSource / delegate 完成具体绘制
 ```
 
 ---
@@ -302,8 +348,9 @@ lib/kline/
 | **滚动**   | UIScrollView       | SingleChildScrollView |
 | **缩放**   | UIPinchGesture     | onScaleUpdate         |
 | **长按**   | UILongPressGesture | onLongPress           |
-| **配置**   | KLineConfig.shared | KLineConfig.shared    |
-| **计算**   | DataUtil           | DataUtil              |
+| **配置**   | 配置对象           | KLineTheme/Layout     |
+| **数据**   | DataSource         | KLineChartDataSource  |
+| **代理**   | Delegate           | KLineChartDelegate    |
 
 ---
 

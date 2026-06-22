@@ -1,30 +1,67 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:k_line_flutter/k_line_flutter.dart';
 
-import 'package:k_line_flutter/main.dart';
+class _Candle {
+  const _Candle(
+    this.open,
+    this.high,
+    this.low,
+    this.close,
+    this.volume,
+    this.time,
+  );
+
+  final double open;
+  final double high;
+  final double low;
+  final double close;
+  final double volume;
+  final DateTime time;
+}
+
+class _DataSource extends KLineChartDataSource<_Candle> {
+  const _DataSource(this.data);
+
+  final List<_Candle> data;
+
+  @override
+  int numberOfItems(KLineChartContext<_Candle> context) => data.length;
+
+  @override
+  _Candle itemAt(KLineChartContext<_Candle> context, int index) => data[index];
+}
+
+class _Delegate extends KLineChartDelegate<_Candle> {
+  @override
+  Widget? buildOverlayView(
+    BuildContext context,
+    KLineChartContext<_Candle> chartContext,
+  ) {
+    return Text('items:${chartContext.visibleItems.length}');
+  }
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('KLineChart renders as package widget', (tester) async {
+    final data = [
+      _Candle(1, 3, 0.5, 2, 100, DateTime(2026)),
+      _Candle(2, 4, 1, 3, 120, DateTime(2026, 1, 2)),
+    ];
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 300,
+          height: 240,
+          child: KLineChart<_Candle>(
+            dataSource: _DataSource(data),
+            delegate: _Delegate(),
+          ),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('items:2'), findsOneWidget);
   });
 }

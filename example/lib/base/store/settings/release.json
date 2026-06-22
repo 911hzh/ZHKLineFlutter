@@ -1,0 +1,4 @@
+{
+  "baseUrl": "https://jsonplaceholder.typicode.com",
+  "instabugToken": "release-instabug-token"
+}

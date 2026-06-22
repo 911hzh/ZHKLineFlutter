@@ -1,8 +1,5 @@
 name: k_line_flutter
-description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: "none" # Remove this line if you wish to publish to pub.dev
+description: "A delegate-driven Flutter K-line/candlestick chart package with external data, drawing, and interaction hooks."
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -35,8 +32,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   dio: ^5.9.0
-  injectable: ^2.5.1
-  get_it: ^8.2.0
+  injectable: ">=2.5.1 <4.0.0"
+  get_it: ">=8.2.0 <10.0.0"
   intl: ^0.19.0
 
 dev_dependencies:
