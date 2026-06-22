@@ -54,21 +54,14 @@ class KLineMainPainter extends CustomPainter {
       // 添加上影线
       completePath.moveTo(position.candleCenterX, position.candleUpperWickTopY);
       final topY =
-          position.candleBodyTopY < position.candleBodyBottomY
-              ? position.candleBodyTopY
-              : position.candleBodyBottomY;
+          position.candleBodyTopY < position.candleBodyBottomY ? position.candleBodyTopY : position.candleBodyBottomY;
       completePath.lineTo(position.candleCenterX, topY);
 
       // 添加下影线
       final bottomY =
-          position.candleBodyTopY > position.candleBodyBottomY
-              ? position.candleBodyTopY
-              : position.candleBodyBottomY;
+          position.candleBodyTopY > position.candleBodyBottomY ? position.candleBodyTopY : position.candleBodyBottomY;
       completePath.moveTo(position.candleCenterX, bottomY);
-      completePath.lineTo(
-        position.candleCenterX,
-        position.candleLowerWickBottomY,
-      );
+      completePath.lineTo(position.candleCenterX, position.candleLowerWickBottomY);
 
       // 根据涨跌情况添加到不同的路径
       if (isRising) {
@@ -103,46 +96,20 @@ class KLineMainPainter extends CustomPainter {
 
     // 绘制MA指标
     if (mainChartIndicatorSelection.contains(KLineTechnicalIndicatorType.ma)) {
-      _drawIndicatorLine(
-        canvas,
-        positionDatas.map((p) => p.indicatorPosition?.ma5Point).toList(),
-        config.ma5Color,
-      );
-      _drawIndicatorLine(
-        canvas,
-        positionDatas.map((p) => p.indicatorPosition?.ma10Point).toList(),
-        config.ma10Color,
-      );
-      _drawIndicatorLine(
-        canvas,
-        positionDatas.map((p) => p.indicatorPosition?.ma30Point).toList(),
-        config.ma30Color,
-      );
+      _drawIndicatorLine(canvas, positionDatas.map((p) => p.indicatorPosition?.ma5Point).toList(), config.ma5Color);
+      _drawIndicatorLine(canvas, positionDatas.map((p) => p.indicatorPosition?.ma10Point).toList(), config.ma10Color);
+      _drawIndicatorLine(canvas, positionDatas.map((p) => p.indicatorPosition?.ma30Point).toList(), config.ma30Color);
     }
 
     // 绘制EMA指标
     if (mainChartIndicatorSelection.contains(KLineTechnicalIndicatorType.ema)) {
-      _drawIndicatorLine(
-        canvas,
-        positionDatas.map((p) => p.indicatorPosition?.ema5Point).toList(),
-        config.ema5Color,
-      );
-      _drawIndicatorLine(
-        canvas,
-        positionDatas.map((p) => p.indicatorPosition?.ema10Point).toList(),
-        config.ema10Color,
-      );
-      _drawIndicatorLine(
-        canvas,
-        positionDatas.map((p) => p.indicatorPosition?.ema30Point).toList(),
-        config.ema30Color,
-      );
+      _drawIndicatorLine(canvas, positionDatas.map((p) => p.indicatorPosition?.ema5Point).toList(), config.ema5Color);
+      _drawIndicatorLine(canvas, positionDatas.map((p) => p.indicatorPosition?.ema10Point).toList(), config.ema10Color);
+      _drawIndicatorLine(canvas, positionDatas.map((p) => p.indicatorPosition?.ema30Point).toList(), config.ema30Color);
     }
 
     // 绘制BOLL指标
-    if (mainChartIndicatorSelection.contains(
-      KLineTechnicalIndicatorType.boll,
-    )) {
+    if (mainChartIndicatorSelection.contains(KLineTechnicalIndicatorType.boll)) {
       _drawIndicatorLine(
         canvas,
         positionDatas.map((p) => p.indicatorPosition?.bollUpperPoint).toList(),
@@ -225,53 +192,31 @@ class CrossGridPainter extends CustomPainter {
     final offset = lineWidth / 2.0;
 
     // 绘制顶部边界线
-    canvas.drawLine(
-      Offset(offset, offset),
-      Offset(size.width - offset, offset),
-      paint,
-    );
+    canvas.drawLine(Offset(offset, offset), Offset(size.width - offset, offset), paint);
 
-    final itemHeight =
-        (size.height - topHeight - bottomHeight - offset) / (horLineCount - 1);
+    final itemHeight = (size.height - topHeight - bottomHeight - offset) / (horLineCount - 1);
     final itemWidth = (size.width - offset * 2) / (verticalLineCount - 1);
     double lastY = topHeight;
 
     // 绘制横线和价格标签
     for (int i = 0; i < horLineCount; i++) {
-      canvas.drawLine(
-        Offset(offset, lastY),
-        Offset(size.width - offset, lastY),
-        paint,
-      );
+      canvas.drawLine(Offset(offset, lastY), Offset(size.width - offset, lastY), paint);
       // 绘制价格标签
       if (i < horLineTexts.length) {
-        _drawText(
-          canvas,
-          horLineTexts[i],
-          Offset(size.width - 50, i == 0 ? lastY + lineWidth : lastY - 12),
-          lineColor,
-        );
+        _drawText(canvas, horLineTexts[i], Offset(size.width - 50, i == 0 ? lastY + lineWidth : lastY - 12), lineColor);
       }
 
       lastY += itemHeight;
     }
 
     // 绘制底部边界线
-    canvas.drawLine(
-      Offset(offset, size.height - offset),
-      Offset(size.width - offset, size.height - offset),
-      paint,
-    );
+    canvas.drawLine(Offset(offset, size.height - offset), Offset(size.width - offset, size.height - offset), paint);
 
     double lastX = offset;
 
     // 绘制竖线和时间标签
     for (int i = 0; i < verticalLineCount; i++) {
-      canvas.drawLine(
-        Offset(lastX, offset),
-        Offset(lastX, size.height - bottomHeight - offset),
-        paint,
-      );
+      canvas.drawLine(Offset(lastX, offset), Offset(lastX, size.height - bottomHeight - offset), paint);
 
       // 绘制时间标签
       if (i < verticalLineTexts.length) {
@@ -298,8 +243,7 @@ class CrossGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CrossGridPainter oldDelegate) {
-    return oldDelegate.horLineTexts != horLineTexts ||
-        oldDelegate.verticalLineTexts != verticalLineTexts;
+    return oldDelegate.horLineTexts != horLineTexts || oldDelegate.verticalLineTexts != verticalLineTexts;
   }
 }
 
@@ -358,35 +302,17 @@ class CrossLinePainter extends CustomPainter {
     }
 
     // 绘制垂直线（在日期标签处断开）
-    if (dateLabelFrame != null &&
-        point.dx >= dateLabelFrame.left &&
-        point.dx <= dateLabelFrame.right) {
+    if (dateLabelFrame != null && point.dx >= dateLabelFrame.left && point.dx <= dateLabelFrame.right) {
       // 上半部分
-      canvas.drawLine(
-        Offset(point.dx, verticalLineTopY),
-        Offset(point.dx, dateLabelFrame.top),
-        paint,
-      );
+      canvas.drawLine(Offset(point.dx, verticalLineTopY), Offset(point.dx, dateLabelFrame.top), paint);
       // 下半部分
-      canvas.drawLine(
-        Offset(point.dx, dateLabelFrame.bottom),
-        Offset(point.dx, verticalLineBottomY),
-        paint,
-      );
+      canvas.drawLine(Offset(point.dx, dateLabelFrame.bottom), Offset(point.dx, verticalLineBottomY), paint);
     } else {
-      canvas.drawLine(
-        Offset(point.dx, verticalLineTopY),
-        Offset(point.dx, verticalLineBottomY),
-        paint,
-      );
+      canvas.drawLine(Offset(point.dx, verticalLineTopY), Offset(point.dx, verticalLineBottomY), paint);
     }
 
     // 绘制水平线
-    canvas.drawLine(
-      Offset(horizontalLineLeftX, point.dy),
-      Offset(horizontalLineRightX, point.dy),
-      paint,
-    );
+    canvas.drawLine(Offset(horizontalLineLeftX, point.dy), Offset(horizontalLineRightX, point.dy), paint);
 
     // 绘制圆点
     final dotPaint =
@@ -420,26 +346,19 @@ class CrossLinePainter extends CustomPainter {
 
       // 绘制文字
       final textPainter = TextPainter(
-        text: TextSpan(
-          text: selectedKLineModel!.dateString,
-          style: const TextStyle(color: Colors.black, fontSize: 10),
-        ),
+        text: TextSpan(text: selectedKLineModel!.dateString, style: const TextStyle(color: Colors.black, fontSize: 10)),
         textDirection: TextDirection.ltr,
       );
       textPainter.layout();
       textPainter.paint(
         canvas,
-        Offset(
-          dateLabelFrame.left + 4,
-          dateLabelFrame.top + (dateLabelFrame.height - textPainter.height) / 2,
-        ),
+        Offset(dateLabelFrame.left + 4, dateLabelFrame.top + (dateLabelFrame.height - textPainter.height) / 2),
       );
     }
   }
 
   @override
   bool shouldRepaint(covariant CrossLinePainter oldDelegate) {
-    return oldDelegate.point != point ||
-        oldDelegate.selectedKLineModel != selectedKLineModel;
+    return oldDelegate.point != point || oldDelegate.selectedKLineModel != selectedKLineModel;
   }
 }
