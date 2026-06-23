@@ -1,26 +1,34 @@
-import 'package:example/module/usecase/pages/apiImpl/ApiImplPage.dart';
-import 'package:example/module/usecase/pages/cutil/CUtilPage.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_controller_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_core_chart_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_grid_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_indicator_entries_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_main_chart_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_overlay_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_secondary_chart_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_selection_view_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_state_builder_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_theme_layout_page.dart';
 import 'package:example/module/usecase/pages/home/HomePage.dart';
 import 'package:example/module/usecase/pages/kline/KLineDemoPage.dart';
-import 'package:example/module/usecase/pages/login/LoginPage.dart';
-import 'package:example/module/usecase/pages/logout/LogoutPage.dart';
-import 'package:example/module/usecase/pages/logger/LoggerPage.dart';
-import 'package:example/module/usecase/pages/settings/SettingsDemoPage.dart';
-import 'package:example/module/usecase/pages/store/StoreDemoPage.dart';
-import 'package:example/module/usecase/pages/userStore/UserStoreDemoPage.dart';
 import 'package:flutter/material.dart';
 
 class RouteConfig {
   static Map<String, WidgetBuilder> routes = {
-    "/login": (context) => const LoginPage(),
-    "/logout": (context) => const LogoutPage(),
-    "/home": (context) => const HomePage(),
-    "/cutil": (context) => const CUtilPage(),
-    "/apiImpl": (context) => const ApiImplPage(),
-    "/logger": (context) => const LoggerPage(),
-    "/kline": (context) => const KLineDemoPage(),
-    "/settings": (context) => const SettingsDemoPage(),
-    "/store": (context) => const StoreDemoPage(),
-    "/userStore": (context) => const UserStoreDemoPage(),
+    '/home': (context) => const HomePage(),
+    KLineDemoPage.routeName: (context) => const KLineDemoPage(),
+    CustomThemeLayoutPage.routeName: (context) => const CustomThemeLayoutPage(),
+    CustomIndicatorEntriesPage.routeName: (context) =>
+        const CustomIndicatorEntriesPage(),
+    CustomOverlayPage.routeName: (context) => const CustomOverlayPage(),
+    CustomSelectionViewPage.routeName: (context) =>
+        const CustomSelectionViewPage(),
+    CustomGridPage.routeName: (context) => const CustomGridPage(),
+    CustomMainChartPage.routeName: (context) => const CustomMainChartPage(),
+    CustomSecondaryChartPage.routeName: (context) =>
+        const CustomSecondaryChartPage(),
+    CustomControllerPage.routeName: (context) => const CustomControllerPage(),
+    CustomStateBuilderPage.routeName: (context) =>
+        const CustomStateBuilderPage(),
+    CustomCoreChartPage.routeName: (context) => const CustomCoreChartPage(),
   };
 }

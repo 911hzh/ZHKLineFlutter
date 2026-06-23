@@ -7,5 +7,5 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await configureDependencies();
   final authToken = await getIt<AuthStoreImpl>().get();
-  runApp(App(initialRoute: authToken.token.isEmpty ? "/login" : "/home"));
+  runApp(App(initialRoute: '/home'));
 }

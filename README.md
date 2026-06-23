@@ -4,7 +4,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.7.0+-blue.svg)](https://dart.dev/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-一个高性能、功能完整的 Flutter K 线图表库，专为金融应用设计。本项目是 [ZHKLine Swift 版本](https://github.com/911hzh/ZHKLineFlutter/tree/develop)的 Flutter 跨平台实现，采用先进的绘制架构，支持多种技术指标，提供流畅的用户交互体验。
+一个高性能、功能完整且高度可扩展的 Flutter K 线图表库，专为金融应用设计。本项目是 [ZHKLine Swift 版本](https://github.com/911hzh/ZHKLineFlutter/tree/develop)的 Flutter 跨平台实现，采用 delegate 驱动的绘制架构，支持业务方深度自定义图表布局、绘制内容、指标展示、覆盖层、选中详情和交互行为。
 
 **参考火币的 UI 设计实现，数据来源于火币 API**
 
@@ -17,13 +17,20 @@
 - ⚡️ **CustomPainter 自定义绘制** - 60 FPS 流畅渲染 2000+ K 线数据
 - 📊 **分层架构** - 网格线、蜡烛图、指标线、十字线分层管理，避免重复绘制
 - 🎯 **智能渲染** - 只绘制可见区域，大幅降低 CPU/GPU 负载
-- 💾 **预计算缓存** - 所有技术指标和位置信息预先计算，避免实时运算
+- 💾 **布局节点缓存** - 可见区节点缓存坐标、宽度和颜色，减少绘制阶段重复计算
+
+### 🧩 高扩展性与自定义 UI
+
+- **Delegate 驱动**: `KLineChartDelegate<T>` 接管高度、布局节点、网格、主图、副图、覆盖层和选中 UI。
+- **默认 UI 可替换**: 快速接入可使用 `KLineWidget<T>`，复杂业务可替换 delegate 或复用默认绘制工具。
+- **业务模型无侵入**: 通过 `KLineDataAdapter<T>` 适配任意数据结构，不要求继承 package 内置模型。
+- **交互可外部控制**: `KLineController` 支持外部读取和驱动缩放、滚动、选中项、可见区和指标状态。
 
 ### 📈 完整的技术指标
 
 - **主图指标**: MA (5/10/30)、EMA (5/10/30)、BOLL (20, 2)
 - **副图指标**: MACD (12/26/9)、KDJ (9/3/3)、RSI (6/12/24)、WR (6/10/14)、VOL (5/10)
-- **自动计算**: 所有技术指标由库自动计算，无需手动处理
+- **指标适配**: 默认 UI 可读取 MA、EMA、BOLL、MACD 等预计算指标，业务方可自定义指标字段和展示文案
 
 ### 🎮 流畅的手势交互
 
@@ -67,12 +74,14 @@
 ```bash
 # 克隆项目
 git clone https://github.com/911hzh/ZHKLineFlutter.git
-cd k_line_flutter
+cd ZHKLineFlutter
 
 # 安装依赖
 flutter pub get
 
-# 运行项目
+# 运行 example
+cd example
+flutter pub get
 flutter run -d macos  # 或 ios / android
 ```
 
@@ -158,6 +167,7 @@ class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
 KLineWidget<MyCandle>(
   dataSource: candles,
   adapter: const MyCandleAdapter(),
+  initialIndicators: const ['volume'],
   onScroll: (context, metrics) {
     // 根据 metrics.extentBefore / extentAfter 判断是否加载更多数据。
   },
@@ -169,7 +179,7 @@ KLineWidget<MyCandle>(
 
 - `dataSource: List<T>`：外部直接提供需要绘制的数据数组。
 - `KLineDataAdapter<T>`：把任意业务模型映射成默认绘制需要的字段，不要求业务模型继承 package model。
-- `KLineWidget<T>`：内置默认网格、蜡烛、指标、副图、选中详情和 loading/error/empty UI。
+- `KLineWidget<T>`：内置默认网格、蜡烛、指标、副图、选中详情和 loading/error/empty UI，也支持传入自定义 delegate。
 - `KLineChartDelegate<T>`：外部决定图表高度、布局节点、网格层、主图、副图、选中 UI 和交互回调。
 - `KLineChartContext<T>`：package 在每次绘制和交互时传入的上下文，包含 controller、可见区、布局节点、视口尺寸、主题和布局配置。
 - `KLineController`：对外暴露缩放、滚动、选中项、可见区间等状态。
@@ -232,21 +242,30 @@ KLineChart<T>(
   theme: KLineTheme,                   // 主题配置
   layout: KLineLayoutConfig,           // 布局配置
   behavior: KLineBehaviorConfig,       // 交互配置
+  isLoading: bool,                     // 是否展示核心 loading 占位
+  loadingBuilder: WidgetBuilder?,      // 自定义 loading UI
+  emptyBuilder: WidgetBuilder?,        // 自定义空数据 UI
 )
 ```
 
 ### KLineWidget
 
-默认 UI 组件，内部使用 `KLineDefaultDelegate<T>`，适合快速接入一套完整 K 线图。
+默认 UI 组件，内部使用 `KLineDefaultDelegateImpl<T>`，适合快速接入一套完整 K 线图。
 
 ```dart
 KLineWidget<T>(
   dataSource: List<T>,              // 数据数组
   adapter: KLineDataAdapter<T>,     // 数据适配器
+  delegate: KLineChartDelegate<T>?, // 自定义绘制和交互代理
   controller: KLineController?,     // 状态控制器
+  initialIndicators: Iterable<String>?, // 内部 controller 的初始指标
   onScroll: (context, metrics) {},  // 用户滚动回调，可用于加载更多
   isLoading: bool,                  // 后台刷新或首次加载状态
   error: Object?,                   // 错误覆盖层
+  onRetry: VoidCallback?,           // 默认错误占位的重试回调
+  loadingBuilder: WidgetBuilder?,   // 自定义 loading UI
+  emptyBuilder: WidgetBuilder?,     // 自定义空数据 UI
+  errorBuilder: Widget Function(BuildContext, Object, VoidCallback?)?, // 自定义错误 UI
 )
 ```
 
@@ -265,6 +284,7 @@ abstract class KLineDataAdapter<T> {
   double? indicatorValue(T item, KLineDefaultIndicatorValue value);
   List<KLineIndicatorEntry> mainIndicatorEntries(T item, KLineDefaultIndicatorType type);
   List<KLineIndicatorEntry> secondaryIndicatorEntries(T item, KLineDefaultIndicatorType type);
+  List<KLineDetailEntry> detailEntries(T item);
 }
 ```
 
@@ -301,16 +321,17 @@ abstract class KLineChartDelegate<T> {
 
 ### 核心设计原则
 
-1. **职责分离** - 数据计算、位置计算、视图渲染完全分离
-2. **预计算优化** - 所有位置信息预先计算，避免重复计算
-3. **分层绘制** - 网格、蜡烛、指标、十字线分层管理
+1. **数据外置** - package 不绑定固定业务模型，外部通过 `List<T>` 和 `KLineDataAdapter<T>` 提供字段。
+2. **Delegate 驱动** - core 只负责视口、滚动、手势和调度，业务绘制由 `KLineChartDelegate<T>` 决定。
+3. **默认实现可替换** - `KLineWidget<T>` 提供开箱即用 UI，深度定制时可以替换 delegate 或复用默认 util。
+4. **分层绘制** - 固定网格、滚动内容、覆盖层、选中详情分层管理，降低重复绘制成本。
 
 ### 绘制流程
 
 ```
-原始数据 → 技术指标计算 → 坐标位置计算 → CustomPainter 绘制 → 手势交互
-    ↓            ↓                ↓                  ↓              ↓
-KLineData  →  Indicators  →  DrawPoints  →  Canvas.draw  →  GestureDetector
+业务数据 → Adapter / Delegate → 可见区与布局节点 → CustomPainter 绘制 → 手势与 Controller 状态
+   ↓             ↓                  ↓                    ↓                    ↓
+List<T>  →  KLineDataAdapter  →  KLineLayoutNode  →  Canvas.draw  →  KLineController
 ```
 
 ### 关键组件
@@ -330,7 +351,7 @@ KLineData  →  Indicators  →  DrawPoints  →  Canvas.draw  →  GestureDetec
 
 ## 📊 技术指标
 
-核心 package 不强制接管 MA、EMA、BOLL、MACD 等业务指标计算。使用默认 UI 时，业务层可以预先计算好指标数据，并通过 `KLineDataAdapter.indicatorValue` 返回数值；如果指标参数、标题或展示顺序不同，可以覆盖 `mainIndicatorEntries` / `secondaryIndicatorEntries` 返回自己的 label 配置。深度自定义时，也可以在 `KLineChartDelegate.getLayoutNodes` / `drawMainChart` / `drawSecondaryCharts` 中自行计算并绘制。
+核心 package 不强制接管 MA、EMA、BOLL、MACD 等业务指标计算。使用默认 UI 时，业务层可以预先计算好指标数据，并通过 `KLineDataAdapter.indicatorValue` 返回数值；如果指标参数、标题、颜色或展示顺序不同，可以覆盖 `mainIndicatorEntries` / `secondaryIndicatorEntries` 返回自己的 label 配置。长按详情字段可以通过 `detailEntries` 本地化或扩展。深度自定义时，也可以在 `KLineChartDelegate.getLayoutNodes` / `drawMainChart` / `drawSecondaryCharts` 中自行计算并绘制。
 
 ---
 
@@ -341,13 +362,21 @@ lib/
 ├── k_line_flutter.dart              # package 公共入口
 └── src/kline/
     ├── controller/                  # KLineController
-    ├── default_impl/                # Adapter / 默认 Delegate / KLineWidget
     ├── delegate/                    # Delegate / Context
     ├── theme/                       # Theme / Layout / Behavior 配置
+    ├── u_default_impl/              # Adapter / 默认 Delegate / KLineWidget / 默认绘制工具
     └── widgets/                     # KLineChart 核心组件
 
 example/
-└── main.dart                        # 如何传入数据并实现 delegate 完成具体绘制
+├── lib/base/
+│   ├── api/                         # RestClient、火币 K 线 API 和返回模型
+│   ├── store/                       # KlineStore、认证、设置等状态与持久化示例
+│   └── util/                        # K 线指标计算和通用工具
+└── lib/module/usecase/pages/kline/
+    ├── KLineDemoCubit.dart          # 页面状态、周期切换、刷新和加载更多
+    ├── KLineDemoPage.dart           # KLineWidget 装配和交互入口
+    ├── kline_model_adapter.dart     # example 模型到 package adapter 的映射
+    └── kline_demo_widgets.dart      # 顶部栏、周期选择等页面组件
 ```
 
 ---
@@ -382,10 +411,11 @@ example/
 
 - **Flutter**: 3.7.0+
 - **Dart**: 3.7.0+
-- **dio**: ^5.9.0 - HTTP 网络请求
-- **get_it**: ^8.2.0 - 依赖注入
-- **injectable**: ^2.5.1 - 依赖注入代码生成
 - **intl**: ^0.19.0 - 日期格式化
+- **dio**: ^5.9.0 - example 网络请求
+- **get_it / injectable** - example 依赖注入
+- **flutter_bloc** - example K 线 Demo 页面状态管理
+- **flutter_foundation_kit** - example RestClient、Store 和 Repository 基础能力
 
 ---
 

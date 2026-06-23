@@ -18,9 +18,9 @@ class HomePage extends StatelessWidget {
             appBar: AppBar(title: Text(state.title)),
             body: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: state.list.length,
+              itemCount: state.entries.length,
               itemBuilder: (context, index) {
-                final item = state.list[index];
+                final item = state.entries[index];
                 final random = Random(index);
                 final color = Color.fromARGB(
                   255,
@@ -45,7 +45,7 @@ class HomePage extends StatelessWidget {
                         child: const Icon(Icons.widgets_rounded),
                       ),
                       title: Text(
-                        item['title'] ?? '',
+                        item.title,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -57,7 +57,7 @@ class HomePage extends StatelessWidget {
                         color: Colors.white,
                       ),
                       onTap: () {
-                        context.pushNamed(item['route'] ?? '');
+                        context.pushNamed(item.routeName);
                       },
                     ),
                   ),

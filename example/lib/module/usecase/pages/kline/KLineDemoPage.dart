@@ -8,8 +8,6 @@ import 'package:example/module/usecase/pages/kline/KLineDemoCubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:k_line_flutter/k_line_flutter.dart';
-import 'package:example/base/api/models/KLineModel.dart';
-import 'package:example/base/api/model/kline/KLinePeriod.dart';
 
 part 'kline_model_adapter.dart';
 part 'kline_demo_widgets.dart';
@@ -20,6 +18,8 @@ part 'kline_demo_widgets.dart';
 /// 默认绘制和交互 UI 由 package 的 [KLineWidget] 负责。
 class KLineDemoPage extends StatefulWidget {
   const KLineDemoPage({super.key});
+
+  static const routeName = '/kline';
 
   @override
   State<KLineDemoPage> createState() => _KLineDemoPageState();
@@ -72,7 +72,11 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
     _controller.setScrollOffset(0);
   }
 
-  void _handleUserScroll(BuildContext context, KLineChartContext<KLineModel> chartContext, KLineScrollMetrics metrics) {
+  void _handleUserScroll(
+    BuildContext context,
+    KLineChartContext<KLineModel> chartContext,
+    KLineScrollMetrics metrics,
+  ) {
     final reachedOlder = metrics.extentAfter <= _edgeLoadThreshold;
     // LoggerFactory.current
     //     .getLogger(['KLineDemoPage'])
@@ -91,7 +95,8 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
       scale: nextScale,
       baseScale: _controller.scale,
       localFocalX: MediaQuery.sizeOf(context).width / 2,
-      contentFocalX: _controller.scrollOffset + MediaQuery.sizeOf(context).width / 2,
+      contentFocalX:
+          _controller.scrollOffset + MediaQuery.sizeOf(context).width / 2,
     );
   }
 
@@ -131,7 +136,10 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
   /// 根据 Cubit 状态构建图表区域，并在后台刷新时保留缓存图表。
   Widget _buildChart(BuildContext context, KLineDemoState state) {
     if (state.isLoading && state.data.isEmpty) {
-      return const SizedBox(height: 412, child: Center(child: CircularProgressIndicator()));
+      return const SizedBox(
+        height: 412,
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (state.error != null && state.data.isEmpty) {
@@ -142,7 +150,10 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
           children: [
             Text('加载失败: ${state.error}'),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: () => context.read<KLineDemoCubit>().retry(), child: const Text('重试')),
+            ElevatedButton(
+              onPressed: () => context.read<KLineDemoCubit>().retry(),
+              child: const Text('重试'),
+            ),
           ],
         ),
       );

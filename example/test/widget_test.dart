@@ -1,7 +1,6 @@
 import 'package:example/App.dart';
 import 'package:example/module/getIt/Injection.dart';
-import 'package:example/module/route/RouteConfig.dart';
-import 'package:flutter/material.dart';
+import 'package:example/module/usecase/pages/home/HomePageVM.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -14,31 +13,16 @@ void main() {
     await getIt.reset();
   });
 
-  testWidgets('shows login before authentication', (WidgetTester tester) async {
-    await tester.pumpWidget(const App(initialRoute: '/login'));
-
-    expect(find.text('Login'), findsWidgets);
-  });
-
-  testWidgets('shows module demo entries after login route', (
-    WidgetTester tester,
+  testWidgets('shows registered module demo entries on home route', (
+    tester,
   ) async {
-    await tester.pumpWidget(
-      MaterialApp(routes: RouteConfig.routes, initialRoute: '/home'),
-    );
+    const state = HomePageState();
+    await tester.pumpWidget(const App(initialRoute: '/home'));
 
     expect(find.text('Foundation Kit Demo'), findsOneWidget);
-    expect(find.text('Logout Demo'), findsOneWidget);
-    expect(find.text('UserStore Demo'), findsOneWidget);
-    expect(find.text('CUtil Demo'), findsOneWidget);
-    expect(find.text('REST Client Demo'), findsOneWidget);
-    expect(find.text('KLine Delegate Demo'), findsOneWidget);
-    expect(find.text('Logger Demo'), findsOneWidget);
-    expect(find.text('Settings Demo'), findsOneWidget);
-
-    await tester.drag(find.byType(ListView), const Offset(0, -300));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Store Demo'), findsOneWidget);
+    for (final entry in state.entries) {
+      await tester.scrollUntilVisible(find.text(entry.title), 250);
+      expect(find.text(entry.title), findsOneWidget);
+    }
   });
 }
