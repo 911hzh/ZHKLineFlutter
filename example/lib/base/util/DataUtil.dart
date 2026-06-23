@@ -1,8 +1,9 @@
 import 'dart:math' as math;
-import 'package:k_line_flutter/kline/models/KLineResponse.dart';
-import 'package:k_line_flutter/kline/models/KLineModel.dart';
-import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
-import 'package:k_line_flutter/kline/models/KLineTechnicalIndicatorsModel.dart';
+
+import 'package:example/base/api/model/kline/KLineResponse.dart';
+import 'package:example/base/api/models/KLineModel.dart';
+import 'package:example/base/api/model/kline/KLinePeriod.dart';
+import 'package:example/base/api/model/kline/KLineTechnicalIndicatorsModel.dart';
 
 /// 数据计算工具类
 class DataUtil {
@@ -50,8 +51,7 @@ class DataUtil {
   }
 
   /// 计算布林带 (Bollinger Bands)
-  static ({List<double?> upper, List<double?> middle, List<double?> lower})
-  calculateBOLL(
+  static ({List<double?> upper, List<double?> middle, List<double?> lower}) calculateBOLL(
     List<double> prices, {
     int period = 20,
     double multiplier = 2.0,
@@ -79,8 +79,7 @@ class DataUtil {
   }
 
   /// 计算MACD指标
-  static ({List<double?> macd, List<double?> dif, List<double?> dea})
-  calculateMACD(
+  static ({List<double?> macd, List<double?> dif, List<double?> dea}) calculateMACD(
     List<double> prices, {
     int fastPeriod = 12,
     int slowPeriod = 26,
@@ -152,10 +151,7 @@ class DataUtil {
       final lowest = periodData.map((e) => e.low).reduce(math.min);
       final close = klineData[i].close;
 
-      final rsvValue =
-          highest == lowest
-              ? 50.0
-              : ((close - lowest) / (highest - lowest)) * 100;
+      final rsvValue = highest == lowest ? 50.0 : ((close - lowest) / (highest - lowest)) * 100;
       rsv.add(rsvValue);
     }
 
@@ -253,10 +249,7 @@ class DataUtil {
   }
 
   /// 将K线数据转换为带技术指标的KLineModel数组
-  static List<KLineModel> toKLineModelsWithIndicators(
-    List<KLineData> datas,
-    KLinePeriod selectedPeriod,
-  ) {
+  static List<KLineModel> toKLineModelsWithIndicators(List<KLineData> datas, KLinePeriod selectedPeriod) {
     final indicators = calculateAllIndicators(datas);
 
     // 使用map创建KLineModel并赋值技术指标
@@ -273,9 +266,7 @@ class DataUtil {
   }
 
   /// 为K线数据数组计算所有技术指标
-  static List<KLineTechnicalIndicatorsModel> calculateAllIndicators(
-    List<KLineData> klineData,
-  ) {
+  static List<KLineTechnicalIndicatorsModel> calculateAllIndicators(List<KLineData> klineData) {
     final closePrices = klineData.map((e) => e.close).toList();
     final volumes = klineData.map((e) => e.vol).toList();
 

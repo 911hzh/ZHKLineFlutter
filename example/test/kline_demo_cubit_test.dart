@@ -1,17 +1,17 @@
 import 'dart:async';
 
+import 'package:example/base/api/model/kline/KLinePeriod.dart';
+import 'package:example/base/api/model/kline/KLineResponse.dart';
 import 'package:example/base/store/kline/KlineStore.dart';
 import 'package:example/module/usecase/pages/kline/KLineDemoCubit.dart';
 import 'package:flutter_foundation_kit/wcore/Repository.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
-import 'package:k_line_flutter/kline/models/KLineResponse.dart';
 
 void main() {
   test('start emits cached data before refreshed remote data', () async {
     final repository = _MemoryRepository();
     await repository.setValue<String, Map<String, dynamic>>(
-      'kline.demo.15min',
+      'kline.demo.15min.50',
       {
         'data': [_sampleData(id: 1, close: 11).toJson()],
       },

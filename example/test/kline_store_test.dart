@@ -1,8 +1,8 @@
 import 'package:example/base/store/kline/KlineStore.dart';
+import 'package:example/base/api/model/kline/KLinePeriod.dart';
+import 'package:example/base/api/model/kline/KLineResponse.dart';
 import 'package:flutter_foundation_kit/wcore/Repository.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
-import 'package:k_line_flutter/kline/models/KLineResponse.dart';
 
 void main() {
   test('readCached restores period data from user preferences', () async {

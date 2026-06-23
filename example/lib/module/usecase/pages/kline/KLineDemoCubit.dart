@@ -2,8 +2,8 @@
 
 import 'package:example/base/store/kline/KlineStore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:k_line_flutter/kline/models/KLineModel.dart';
-import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
+import 'package:example/base/api/models/KLineModel.dart';
+import 'package:example/base/api/model/kline/KLinePeriod.dart';
 
 class KLineDemoState {
   const KLineDemoState({

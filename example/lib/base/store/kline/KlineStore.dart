@@ -5,10 +5,10 @@ import 'package:example/module/getIt/GetItInstanceName.dart';
 import 'package:flutter_foundation_kit/wcore/Repository.dart';
 import 'package:flutter_foundation_kit/wcore/store/StoreBase.dart';
 import 'package:injectable/injectable.dart';
-import 'package:k_line_flutter/kline/models/KLineModel.dart';
-import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
-import 'package:k_line_flutter/kline/models/KLineResponse.dart';
-import 'package:k_line_flutter/kline/utils/DataUtil.dart';
+import 'package:example/base/api/models/KLineModel.dart';
+import 'package:example/base/api/model/kline/KLinePeriod.dart';
+import 'package:example/base/api/model/kline/KLineResponse.dart';
+import 'package:example/base/util/DataUtil.dart';
 
 typedef KlineDataLoader = Future<List<KLineData>> Function(KLinePeriod period, int size);
 

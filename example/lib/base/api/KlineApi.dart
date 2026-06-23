@@ -1,9 +1,9 @@
 // ignore_for_file: file_names
 
+import 'package:example/base/api/model/kline/KLinePeriod.dart';
+import 'package:example/base/api/model/kline/KLineResponse.dart';
 import 'package:flutter_foundation_kit/flutter_foundation_kit.dart';
 import 'package:injectable/injectable.dart';
-import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
-import 'package:k_line_flutter/kline/models/KLineResponse.dart';
 
 /// K 线网络接口，统一走 example 工程注册的 RestClient。
 @lazySingleton
@@ -19,14 +19,7 @@ class KlineApi {
     required int size,
   }) async {
     final response = await client
-        .get(
-          '/market/history/kline',
-          queryParameters: {
-            'period': period.value,
-            'size': size,
-            'symbol': symbol,
-          },
-        )
+        .get('/market/history/kline', queryParameters: {'period': period.value, 'size': size, 'symbol': symbol})
         .toModel(KLineResponse.fromJson);
     return response.data.data;
   }
