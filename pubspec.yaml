@@ -38,9 +38,9 @@ dependencies:
 
 dev_dependencies:
   # add the generator to your dev_dependencies
-  injectable_generator:
+  injectable_generator: ">=2.8.1 <2.9.0"
   # add build runner if not already added
-  build_runner:
+  build_runner: ">=2.7.1 <2.8.0"
   flutter_test:
     sdk: flutter
 

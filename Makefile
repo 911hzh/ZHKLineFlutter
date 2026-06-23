@@ -4,6 +4,8 @@
 # 包含CI专用配置（Makefile.ci中的命令可以直接使用）
 -include Makefile.ci
 
+FLUTTER ?= $(shell if command -v fvm >/dev/null 2>&1 && [ -f .fvmrc ]; then echo "fvm flutter"; else echo "flutter"; fi)
+
 .PHONY: help gen clean build run test get upgrade analyze format format-check watch deep-clean build-ios build-web check-version
 
 # 默认显示帮助信息
@@ -37,12 +39,12 @@ help:
 # 运行代码生成器
 gen:
 	@echo "🚀 运行代码生成器..."
-	flutter pub run build_runner build --delete-conflicting-outputs
+	$(FLUTTER) pub run build_runner build --delete-conflicting-outputs --build-filter="lib/**"
 
 # 监听文件变化并自动生成代码
 watch:
 	@echo "👀 监听文件变化中..."
-	flutter pub run build_runner watch --delete-conflicting-outputs
+	$(FLUTTER) pub run build_runner watch --delete-conflicting-outputs --build-filter="lib/**"
 
 # 清理项目
 clean:
