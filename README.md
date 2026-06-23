@@ -78,7 +78,7 @@ flutter run -d macos  # 或 ios / android
 
 ### Package 基础用法
 
-新的 package API 推荐只导入一个公共入口。核心思想类似 `UITableViewDataSource` / `UITableViewDelegate`：package 内部只负责滚动、手势、视口状态和回调调度，数据、网格、蜡烛、指标、覆盖层和选中 UI 都由外部实现。
+新的 package API 推荐只导入一个公共入口。核心思想是：package 内部只负责滚动、手势、视口状态和回调调度；数据直接传入数组，网格、蜡烛、指标、覆盖层和选中 UI 都由外部 delegate 实现。
 
 ```dart
 import 'package:k_line_flutter/k_line_flutter.dart';
@@ -101,30 +101,17 @@ class MyCandle {
   });
 }
 
-class MyDataSource extends KLineChartDataSource<MyCandle> {
-  const MyDataSource(this.items);
-
-  final List<MyCandle> items;
-
-  @override
-  int numberOfItems(KLineChartContext<MyCandle> context) => items.length;
-
-  @override
-  MyCandle itemAt(KLineChartContext<MyCandle> context, int index) {
-    return items[index];
-  }
-
-  @override
-  void chartDidRequestData(
-    KLineChartContext<MyCandle> context,
-    KLineDataRequest request,
-  ) {
-    // 根据 request.visibleRange 决定是否加载更多历史数据。
-  }
-}
-
 class MyDelegate extends KLineChartDelegate<MyCandle> {
   const MyDelegate();
+
+  @override
+  List<KLineLayoutNode<MyCandle>> getLayoutNodes(
+    KLineChartContext<MyCandle> context,
+    List<MyCandle> dataSource,
+  ) {
+    // 可以复用默认工具，也可以返回业务自己的 KLineLayoutNode 子类。
+    return super.getLayoutNodes(context, dataSource);
+  }
 
   @override
   void drawGrid(Canvas canvas, Size size, KLineChartContext<MyCandle> context) {
@@ -132,33 +119,36 @@ class MyDelegate extends KLineChartDelegate<MyCandle> {
   }
 
   @override
-  void drawItem(
+  void drawMainChart(
     Canvas canvas,
     Size size,
     KLineChartContext<MyCandle> context,
-    KLineVisibleItem<MyCandle> item,
   ) {
-    // 外部决定蜡烛、折线、柱状图等如何绘制。
+    // 外部决定主图蜡烛、折线、MA/BOLL 等如何绘制。
   }
 
   @override
-  void drawOverlay(Canvas canvas, Size size, KLineChartContext<MyCandle> context) {
-    // 外部决定订单线、买卖点、预警线等覆盖层如何绘制。
+  void drawSecondaryCharts(
+    Canvas canvas,
+    Size size,
+    KLineChartContext<MyCandle> context,
+  ) {
+    // 外部决定 VOL、MACD、KDJ 等副图如何绘制。
   }
 
   @override
   Widget? buildSelectionView(
     BuildContext context,
     KLineChartContext<MyCandle> chartContext,
-    KLineVisibleItem<MyCandle> selectedItem,
+    KLineLayoutNode<MyCandle> selectedNode,
   ) {
-    return Text('Close: ${selectedItem.item.close}');
+    return Text('Close: ${selectedNode.item.close}');
   }
 
   @override
   void didSelectItem(
     KLineChartContext<MyCandle> context,
-    KLineVisibleItem<MyCandle> item,
+    KLineLayoutNode<MyCandle> node,
   ) {
     // 外部处理长按/点击选中。
   }
@@ -166,14 +156,19 @@ class MyDelegate extends KLineChartDelegate<MyCandle> {
   @override
   void didMoveSelection(
     KLineChartContext<MyCandle> context,
-    KLineVisibleItem<MyCandle> item,
+    KLineLayoutNode<MyCandle> node,
   ) {
     // 外部处理长按后移动到另一个数据点。
+  }
+
+  @override
+  void didScroll(KLineChartContext<MyCandle> context, KLineScrollMetrics metrics) {
+    // 根据 metrics.extentBefore / extentAfter 判断是否加载更多数据。
   }
 }
 
 KLineChart<MyCandle>(
-  dataSource: MyDataSource(candles),
+  dataSource: candles,
   delegate: const MyDelegate(),
   controller: KLineController(),
   theme: const KLineTheme(),
@@ -182,9 +177,9 @@ KLineChart<MyCandle>(
 
 这套 API 的核心是：
 
-- `KLineChartDataSource<T>`：外部提供数量、指定位置的数据，以及可见区变化后的数据请求入口。
-- `KLineChartDelegate<T>`：外部决定 item 宽度、图表高度、网格绘制、蜡烛绘制、覆盖层绘制、选中 UI 和交互回调。
-- `KLineChartContext<T>`：package 在每次绘制和交互时传入的上下文，包含 controller、可见区、可见 item、视口尺寸、主题和布局配置。
+- `dataSource: List<T>`：外部直接提供需要绘制的数据数组。
+- `KLineChartDelegate<T>`：外部决定图表高度、布局节点、网格层、主图、副图、选中 UI 和交互回调。
+- `KLineChartContext<T>`：package 在每次绘制和交互时传入的上下文，包含 controller、可见区、布局节点、视口尺寸、主题和布局配置。
 - `KLineController`：对外暴露缩放、滚动、选中项、可见区间等状态。
 
 ### 自定义绘制示例
@@ -192,7 +187,8 @@ KLineChart<MyCandle>(
 ```dart
 class OrderLineDelegate extends KLineChartDelegate<MyCandle> {
   @override
-  void drawOverlay(Canvas canvas, Size size, KLineChartContext<MyCandle> context) {
+  void drawGrid(Canvas canvas, Size size, KLineChartContext<MyCandle> context) {
+    super.drawGrid(canvas, size, context);
     final paint = Paint()
       ..color = Colors.orange
       ..strokeWidth = 1;
@@ -210,7 +206,7 @@ class OrderLineDelegate extends KLineChartDelegate<MyCandle> {
 
 ```dart
 KLineChart<MyCandle>(
-  dataSource: MyDataSource(candles),
+  dataSource: candles,
   delegate: const MyDelegate(),
   theme: const KLineTheme(
     candleUpColor: Color(0xFFF14965),
@@ -238,7 +234,7 @@ package 核心组件，只负责滚动、手势、视口上下文和代理调度
 
 ```dart
 KLineChart<T>(
-  dataSource: KLineChartDataSource<T>, // 数据代理
+  dataSource: List<T>,                 // 数据数组
   delegate: KLineChartDelegate<T>,     // 绘制和交互代理
   controller: KLineController?,        // 状态控制器
   theme: KLineTheme,                   // 主题配置
@@ -247,42 +243,30 @@ KLineChart<T>(
 )
 ```
 
-### KLineChartDataSource
-
-数据源协议，外部负责提供数据数量、指定位置的数据，以及可见区变化后的数据请求处理。
-
-```dart
-abstract class KLineChartDataSource<T> {
-  int numberOfItems(KLineChartContext<T> context);
-  T itemAt(KLineChartContext<T> context, int index);
-  void chartDidRequestData(
-    KLineChartContext<T> context,
-    KLineDataRequest request,
-  );
-}
-```
-
 ### KLineChartDelegate
 
 绘制和交互协议，外部负责网格、蜡烛、指标、覆盖层、选中 UI 和交互回调。
 
 ```dart
 abstract class KLineChartDelegate<T> {
-  double itemExtent(KLineChartContext<T> context);
   double chartHeight(KLineChartContext<T> context);
-  void drawGrid(Canvas canvas, Size size, KLineChartContext<T> context);
-  void drawItem(
-    Canvas canvas,
-    Size size,
+  List<KLineLayoutNode<T>> getLayoutNodes(
     KLineChartContext<T> context,
-    KLineVisibleItem<T> item,
+    List<T> dataSource,
   );
-  void drawOverlay(Canvas canvas, Size size, KLineChartContext<T> context);
+  void drawChart(Canvas canvas, Size size, KLineChartContext<T> context);
+  void drawGrid(Canvas canvas, Size size, KLineChartContext<T> context);
+  void drawMainChart(Canvas canvas, Size size, KLineChartContext<T> context);
+  void drawSecondaryCharts(Canvas canvas, Size size, KLineChartContext<T> context);
   Widget? buildSelectionView(
     BuildContext context,
     KLineChartContext<T> chartContext,
-    KLineVisibleItem<T> selectedItem,
+    KLineLayoutNode<T> selectedNode,
   );
+  Widget? buildOverlayView(BuildContext context, KLineChartContext<T> chartContext);
+  void didScroll(KLineChartContext<T> context, KLineScrollMetrics metrics);
+  void didSelectItem(KLineChartContext<T> context, KLineLayoutNode<T> node);
+  void didMoveSelection(KLineChartContext<T> context, KLineLayoutNode<T> node);
 }
 ```
 
@@ -309,8 +293,8 @@ KLineData  →  Indicators  →  DrawPoints  →  Canvas.draw  →  GestureDetec
 | 组件                     | 职责                                   |
 | ------------------------ | -------------------------------------- |
 | **KLineChart**           | 滚动、手势、视口上下文和代理调度       |
-| **KLineChartDataSource** | 数据数量、索引数据、可见区数据请求     |
-| **KLineChartDelegate**   | 网格、蜡烛、指标、覆盖层、选中 UI 绘制 |
+| **List<T> dataSource**   | 当前图表需要绘制的数据数组             |
+| **KLineChartDelegate**   | 布局节点、网格、主图、副图、选中 UI 绘制 |
 | **KLineChartContext**    | 每次绘制和交互时传给外部的上下文       |
 | **KLineController**      | 缩放、滚动、选中项、可见区间状态       |
 
@@ -318,7 +302,7 @@ KLineData  →  Indicators  →  DrawPoints  →  Canvas.draw  →  GestureDetec
 
 ## 📊 技术指标
 
-核心 package 不内置 MA、EMA、BOLL、MACD 等业务指标计算和绘制。外部可以在 `KLineChartDelegate.drawItem` / `drawOverlay` 中自行计算并绘制，也可以在业务层预先计算好指标数据后通过 `KLineChartDataSource.itemAt` 返回。
+核心 package 不内置 MA、EMA、BOLL、MACD 等业务指标计算和绘制。外部可以在 `KLineChartDelegate.getLayoutNodes` / `drawMainChart` / `drawSecondaryCharts` 中自行计算并绘制，也可以在业务层预先计算好指标数据后放入 `dataSource` 数组。
 
 ---
 
@@ -329,12 +313,12 @@ lib/
 ├── k_line_flutter.dart              # package 公共入口
 └── src/kline/
     ├── controller/                  # KLineController
-    ├── delegate/                    # DataSource / Delegate / Context
+    ├── delegate/                    # Delegate / Context
     ├── theme/                       # Theme / Layout / Behavior 配置
     └── widgets/                     # KLineChart 核心组件
 
 example/
-└── main.dart                        # 如何实现 dataSource / delegate 完成具体绘制
+└── main.dart                        # 如何传入数据并实现 delegate 完成具体绘制
 ```
 
 ---
@@ -349,7 +333,7 @@ example/
 | **缩放**   | UIPinchGesture     | onScaleUpdate         |
 | **长按**   | UILongPressGesture | onLongPress           |
 | **配置**   | 配置对象           | KLineTheme/Layout     |
-| **数据**   | DataSource         | KLineChartDataSource  |
+| **数据**   | DataSource         | List<T> dataSource    |
 | **代理**   | Delegate           | KLineChartDelegate    |
 
 ---

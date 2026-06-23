@@ -20,25 +20,13 @@ class _Candle {
   final DateTime time;
 }
 
-class _DataSource extends KLineChartDataSource<_Candle> {
-  const _DataSource(this.data);
-
-  final List<_Candle> data;
-
-  @override
-  int numberOfItems(KLineChartContext<_Candle> context) => data.length;
-
-  @override
-  _Candle itemAt(KLineChartContext<_Candle> context, int index) => data[index];
-}
-
 class _Delegate extends KLineChartDelegate<_Candle> {
   @override
   Widget? buildOverlayView(
     BuildContext context,
     KLineChartContext<_Candle> chartContext,
   ) {
-    return Text('items:${chartContext.visibleItems.length}');
+    return Text('items:${chartContext.layoutNodes.length}');
   }
 }
 
@@ -54,10 +42,7 @@ void main() {
         home: SizedBox(
           width: 300,
           height: 240,
-          child: KLineChart<_Candle>(
-            dataSource: _DataSource(data),
-            delegate: _Delegate(),
-          ),
+          child: KLineChart<_Candle>(dataSource: data, delegate: _Delegate()),
         ),
       ),
     );

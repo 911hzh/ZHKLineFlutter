@@ -18,7 +18,7 @@ class KLineChart<T> extends StatefulWidget {
     this.isLoading = false,
   });
 
-  final KLineChartDataSource<T> dataSource;
+  final List<T> dataSource;
   final KLineChartDelegate<T> delegate;
   final KLineController? controller;
   final KLineTheme theme;
@@ -39,8 +39,6 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   double _baseScale = 1;
   double _scaleStartLocalFocalX = 0;
   double _scaleStartContentFocalX = 0;
-  late double _lastReportedScale;
-  KLineDataRequestReason _requestReason = KLineDataRequestReason.initial;
   KLineChartContext<T>? _latestContext;
   bool _isUserScrollInProgress = false;
 
@@ -49,7 +47,6 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     super.initState();
     _ownedController = KLineController();
     _controller = widget.controller ?? _ownedController;
-    _lastReportedScale = _controller.scale;
     _scrollController.addListener(_handleScroll);
     _controller.addListener(_handleControllerChange);
   }
@@ -61,11 +58,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     if (nextController != _controller) {
       _controller.removeListener(_handleControllerChange);
       _controller = nextController;
-      _lastReportedScale = _controller.scale;
       _controller.addListener(_handleControllerChange);
-    }
-    if (oldWidget.dataSource != widget.dataSource) {
-      _requestReason = KLineDataRequestReason.reload;
     }
   }
 
@@ -89,67 +82,35 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final viewportSize = _resolveViewportSize(context, constraints);
-        final seedContext = _createContext(
-          viewportSize: viewportSize,
-          itemCount: 0,
-          itemExtent: widget.layout.candleWidth + widget.layout.candleSpacing,
-          visibleRange: const KLineVisibleRange(start: 0, end: 0),
-          visibleItems: const [],
-          layoutNodes: const [],
-        );
-        final itemCount = widget.dataSource.numberOfItems(seedContext);
+        final itemCount = widget.dataSource.length;
         if (itemCount == 0) {
           return widget.emptyBuilder?.call(context) ??
               const Center(child: Text('暂无数据'));
         }
 
-        final itemExtent = widget.delegate.itemExtent(
-          _createContext(
-            viewportSize: viewportSize,
-            itemCount: itemCount,
-            itemExtent: widget.layout.candleWidth + widget.layout.candleSpacing,
-            visibleRange: const KLineVisibleRange(start: 0, end: 0),
-            visibleItems: const [],
-            layoutNodes: const [],
-          ),
-        );
-        final layoutContext = _createContext(
-          viewportSize: viewportSize,
+        final itemExtent = _resolveItemExtent();
+        final visibleRange = KLineChartLayoutUtils.computeVisibleRange(
           itemCount: itemCount,
           itemExtent: itemExtent,
-          visibleRange: const KLineVisibleRange(start: 0, end: 0),
-          visibleItems: const [],
-          layoutNodes: const [],
-        );
-        final visibleRange = widget.delegate.getVisibleRange(layoutContext);
-        final visibleItemsContext = _createContext(
-          viewportSize: viewportSize,
-          itemCount: itemCount,
-          itemExtent: itemExtent,
-          visibleRange: visibleRange,
-          visibleItems: const [],
-          layoutNodes: const [],
-        );
-        final visibleItems = widget.delegate.getVisibleItems(
-          visibleItemsContext,
-          widget.dataSource,
-          visibleRange,
+          viewportWidth: viewportSize.width,
+          scrollOffset: _controller.scrollOffset,
         );
         final layoutNodesContext = _createContext(
           viewportSize: viewportSize,
           itemCount: itemCount,
           itemExtent: itemExtent,
           visibleRange: visibleRange,
-          visibleItems: visibleItems,
           layoutNodes: const [],
         );
-        final layoutNodes = widget.delegate.getLayoutNodes(layoutNodesContext);
+        final layoutNodes = widget.delegate.getLayoutNodes(
+          layoutNodesContext,
+          widget.dataSource,
+        );
         final chartContext = _createContext(
           viewportSize: viewportSize,
           itemCount: itemCount,
           itemExtent: itemExtent,
           visibleRange: visibleRange,
-          visibleItems: visibleItems,
           layoutNodes: layoutNodes,
         );
         _latestContext = chartContext;
@@ -160,18 +121,18 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
           viewportSize.width,
           double.infinity,
         );
-        final selectedItem = chartContext.selectedItem;
+        final selectedNode = chartContext.selectedNode;
         final overlayView = widget.delegate.buildOverlayView(
           context,
           chartContext,
         );
         final selectionView =
-            selectedItem == null
+            selectedNode == null
                 ? null
                 : widget.delegate.buildSelectionView(
                   context,
                   chartContext,
-                  selectedItem,
+                  selectedNode,
                 );
 
         return SizedBox(
@@ -268,12 +229,16 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     return Size(width, height);
   }
 
+  double _resolveItemExtent() {
+    return (widget.layout.candleWidth + widget.layout.candleSpacing) *
+        _controller.scale;
+  }
+
   KLineChartContext<T> _createContext({
     required Size viewportSize,
     required int itemCount,
     required double itemExtent,
     required KLineVisibleRange visibleRange,
-    required List<KLineVisibleItem<T>> visibleItems,
     required List<KLineLayoutNode<T>> layoutNodes,
   }) {
     return KLineChartContext<T>(
@@ -285,28 +250,19 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
       itemExtent: itemExtent,
       contentWidth: itemCount * itemExtent,
       visibleRange: visibleRange,
-      visibleItems: visibleItems,
       layoutNodes: layoutNodes,
     );
   }
 
   void _syncVisibleRange(KLineChartContext<T> context) {
     if (_controller.visibleRange == context.visibleRange) return;
-    final reason = _requestReason;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _controller.setVisibleRange(context.visibleRange);
-      widget.delegate.didUpdateVisibleRange(context, context.visibleRange);
-      widget.dataSource.chartDidRequestData(
-        context,
-        KLineDataRequest(visibleRange: context.visibleRange, reason: reason),
-      );
-      _requestReason = KLineDataRequestReason.scroll;
     });
   }
 
   void _handleScroll() {
-    _requestReason = KLineDataRequestReason.scroll;
     _controller.setScrollOffset(_scrollController.offset);
     if (widget.behavior.clearSelectionOnScroll) {
       _controller.clearSelection();
@@ -367,7 +323,6 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     _scaleStartLocalFocalX = details.localFocalPoint.dx;
     _scaleStartContentFocalX =
         _controller.scrollOffset + _scaleStartLocalFocalX;
-    widget.delegate.didStartScale(context, _controller.scale);
   }
 
   void _handleScaleUpdate(
@@ -375,7 +330,6 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     ScaleUpdateDetails details,
   ) {
     if (details.scale == 1) return;
-    _requestReason = KLineDataRequestReason.scale;
     final nextScale = (_baseScale * details.scale).clamp(
       widget.layout.minScale,
       widget.layout.maxScale,
@@ -388,20 +342,10 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     );
   }
 
-  void _handleScaleEnd(KLineChartContext<T> context) {
-    widget.delegate.didEndScale(_latestContext ?? context, _controller.scale);
-  }
+  void _handleScaleEnd(KLineChartContext<T> context) {}
 
   void _handleControllerChange() {
     _syncScrollPositionFromController();
-    if (_lastReportedScale != _controller.scale) {
-      _requestReason = KLineDataRequestReason.scale;
-      _lastReportedScale = _controller.scale;
-      final context = _latestContext;
-      if (context != null) {
-        widget.delegate.didUpdateScale(context, _controller.scale);
-      }
-    }
     if (mounted) setState(() {});
   }
 
@@ -410,14 +354,14 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     Offset localPosition, {
     required bool isMove,
   }) {
-    if (context.visibleItems.isEmpty) return;
+    if (context.layoutNodes.isEmpty) return;
     final x = localPosition.dx + _controller.scrollOffset;
-    KLineVisibleItem<T>? nearest;
+    KLineLayoutNode<T>? nearest;
     var nearestDistance = double.infinity;
-    for (final item in context.visibleItems) {
-      final distance = (item.centerX - x).abs();
+    for (final node in context.layoutNodes) {
+      final distance = (node.centerX - x).abs();
       if (distance < nearestDistance) {
-        nearest = item;
+        nearest = node;
         nearestDistance = distance;
       }
     }
@@ -435,7 +379,6 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   }
 
   void _endInteraction(KLineChartContext<T> context) {
-    widget.delegate.didEndInteraction(_latestContext ?? context);
     if (!widget.behavior.keepCrosshairOnLongPressEnd) {
       _controller.clearSelection();
     }
@@ -454,7 +397,6 @@ class _KLineChartFixedPainter<T> extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     delegate.drawGrid(canvas, size, context);
-    delegate.drawOverlay(canvas, size, context);
   }
 
   @override
@@ -474,7 +416,7 @@ class _KLineChartContentPainter<T> extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    delegate.drawLayoutNodes(canvas, size, context, context.layoutNodes);
+    delegate.drawChart(canvas, size, context);
   }
 
   @override

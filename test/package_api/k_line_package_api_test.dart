@@ -20,70 +20,28 @@ class _ExternalCandle {
   final int time;
 }
 
-class _RecordingDataSource extends KLineChartDataSource<_ExternalCandle> {
-  _RecordingDataSource(this.items);
-
-  final List<_ExternalCandle> items;
-  final requestedRanges = <KLineVisibleRange>[];
-
-  @override
-  int numberOfItems(KLineChartContext<_ExternalCandle> context) => items.length;
-
-  @override
-  _ExternalCandle itemAt(
-    KLineChartContext<_ExternalCandle> context,
-    int index,
-  ) {
-    return items[index];
-  }
-
-  @override
-  void chartDidRequestData(
-    KLineChartContext<_ExternalCandle> context,
-    KLineDataRequest request,
-  ) {
-    requestedRanges.add(request.visibleRange);
-  }
-}
-
 class _RecordingDelegate extends KLineChartDelegate<_ExternalCandle> {
   int drawGridCount = 0;
-  int drawItemCount = 0;
-  int drawLayoutNodesCount = 0;
-  int drawLayoutNodeCount = 0;
-  int drawOverlayCount = 0;
+  int drawMainChartCount = 0;
+  int drawSecondaryChartsCount = 0;
   int selectionCount = 0;
   int moveCount = 0;
-  int scaleUpdateCount = 0;
   int scrollCount = 0;
-  int visibleItemsRequestCount = 0;
   int layoutNodesRequestCount = 0;
   Size? gridSize;
-  final drawnIndices = <int>[];
-  final drawnLayoutNodeIndices = <int>[];
-  KLineVisibleItem<_ExternalCandle>? selectedItem;
+  final drawnMainIndices = <int>[];
+  final drawnSecondaryIndices = <int>[];
+  KLineLayoutNode<_ExternalCandle>? selectedNode;
   KLineChartContext<_ExternalCandle>? lastContext;
   KLineScrollMetrics? lastScrollMetrics;
 
   @override
-  double itemExtent(KLineChartContext<_ExternalCandle> context) => 10;
-
-  @override
-  List<KLineVisibleItem<_ExternalCandle>> getVisibleItems(
-    KLineChartContext<_ExternalCandle> context,
-    KLineChartDataSource<_ExternalCandle> dataSource,
-    KLineVisibleRange visibleRange,
-  ) {
-    visibleItemsRequestCount += 1;
-    return super.getVisibleItems(context, dataSource, visibleRange);
-  }
-
-  @override
   List<KLineLayoutNode<_ExternalCandle>> getLayoutNodes(
     KLineChartContext<_ExternalCandle> context,
+    List<_ExternalCandle> dataSource,
   ) {
     layoutNodesRequestCount += 1;
-    return super.getLayoutNodes(context);
+    return super.getLayoutNodes(context, dataSource);
   }
 
   @override
@@ -98,80 +56,49 @@ class _RecordingDelegate extends KLineChartDelegate<_ExternalCandle> {
   }
 
   @override
-  void drawLayoutNodes(
+  void drawMainChart(
     Canvas canvas,
     Size size,
     KLineChartContext<_ExternalCandle> context,
-    List<KLineLayoutNode<_ExternalCandle>> nodes,
   ) {
-    drawLayoutNodesCount += 1;
-    super.drawLayoutNodes(canvas, size, context, nodes);
+    drawMainChartCount += 1;
+    drawnMainIndices.addAll(context.layoutNodes.map((node) => node.index));
   }
 
   @override
-  void drawLayoutNode(
+  void drawSecondaryCharts(
     Canvas canvas,
     Size size,
+    KLineChartContext<_ExternalCandle> context,
+  ) {
+    drawSecondaryChartsCount += 1;
+    drawnSecondaryIndices.addAll(context.layoutNodes.map((node) => node.index));
+  }
+
+  @override
+  void didSelectItem(
     KLineChartContext<_ExternalCandle> context,
     KLineLayoutNode<_ExternalCandle> node,
   ) {
-    drawLayoutNodeCount += 1;
-    drawnLayoutNodeIndices.add(node.visibleItem.index);
-    super.drawLayoutNode(canvas, size, context, node);
+    selectionCount += 1;
+    selectedNode = node;
   }
 
   @override
-  void drawItem(
-    Canvas canvas,
-    Size size,
+  void didMoveSelection(
     KLineChartContext<_ExternalCandle> context,
-    KLineVisibleItem<_ExternalCandle> item,
+    KLineLayoutNode<_ExternalCandle> node,
   ) {
-    drawItemCount += 1;
-    drawnIndices.add(item.index);
-  }
-
-  @override
-  void drawOverlay(
-    Canvas canvas,
-    Size size,
-    KLineChartContext<_ExternalCandle> context,
-  ) {
-    drawOverlayCount += 1;
+    moveCount += 1;
   }
 
   @override
   Widget? buildSelectionView(
     BuildContext context,
     KLineChartContext<_ExternalCandle> chartContext,
-    KLineVisibleItem<_ExternalCandle> selectedItem,
+    KLineLayoutNode<_ExternalCandle> selectedNode,
   ) {
-    return Text('selected:${selectedItem.item.close}');
-  }
-
-  @override
-  void didSelectItem(
-    KLineChartContext<_ExternalCandle> context,
-    KLineVisibleItem<_ExternalCandle> item,
-  ) {
-    selectionCount += 1;
-    selectedItem = item;
-  }
-
-  @override
-  void didMoveSelection(
-    KLineChartContext<_ExternalCandle> context,
-    KLineVisibleItem<_ExternalCandle> item,
-  ) {
-    moveCount += 1;
-  }
-
-  @override
-  void didUpdateScale(
-    KLineChartContext<_ExternalCandle> context,
-    double scale,
-  ) {
-    scaleUpdateCount += 1;
+    return Text('selected:${selectedNode.item.close}');
   }
 
   @override
@@ -243,7 +170,6 @@ void main() {
   testWidgets(
     'chart delegates data, drawing, selection UI, and interaction callbacks',
     (tester) async {
-      final dataSource = _RecordingDataSource(candles);
       final delegate = _RecordingDelegate();
 
       await tester.pumpWidget(
@@ -253,7 +179,7 @@ void main() {
               width: 320,
               height: 260,
               child: KLineChart<_ExternalCandle>(
-                dataSource: dataSource,
+                dataSource: candles,
                 delegate: delegate,
               ),
             ),
@@ -262,25 +188,23 @@ void main() {
       );
 
       expect(delegate.drawGridCount, greaterThan(0));
-      expect(delegate.drawItemCount, 3);
-      expect(delegate.drawOverlayCount, greaterThan(0));
+      expect(delegate.drawMainChartCount, greaterThan(0));
+      expect(delegate.drawSecondaryChartsCount, greaterThan(0));
       expect(delegate.gridSize?.width, 320);
-      expect(delegate.lastContext?.visibleItems, hasLength(3));
       expect(delegate.lastContext?.layoutNodes, hasLength(3));
-      expect(delegate.visibleItemsRequestCount, greaterThan(0));
       expect(delegate.layoutNodesRequestCount, greaterThan(0));
-      expect(delegate.drawLayoutNodesCount, greaterThan(0));
-      expect(delegate.drawLayoutNodeCount, 3);
+      expect(delegate.drawnMainIndices, [0, 1, 2]);
+      expect(delegate.drawnSecondaryIndices, [0, 1, 2]);
       expect(
-        dataSource.requestedRanges,
-        contains(const KLineVisibleRange(start: 0, end: 2)),
+        delegate.lastContext?.visibleRange,
+        const KLineVisibleRange(start: 0, end: 2),
       );
 
       await tester.longPressAt(const Offset(25, 80));
       await tester.pump();
 
       expect(delegate.selectionCount, 1);
-      expect(delegate.selectedItem?.index, 2);
+      expect(delegate.selectedNode?.index, 2);
       expect(
         delegate.lastContext?.controller.selectionLocalPosition,
         isNotNull,
@@ -315,7 +239,6 @@ void main() {
           time: index,
         ),
       );
-      final dataSource = _RecordingDataSource(candles);
       final delegate = _RecordingDelegate();
       final controller = KLineController();
 
@@ -327,7 +250,7 @@ void main() {
               height: 180,
               child: KLineChart<_ExternalCandle>(
                 controller: controller,
-                dataSource: dataSource,
+                dataSource: candles,
                 delegate: delegate,
               ),
             ),
@@ -336,16 +259,16 @@ void main() {
       );
 
       expect(delegate.gridSize?.width, 120);
-      expect(delegate.drawnIndices.first, 0);
-      expect(delegate.drawnLayoutNodeIndices.first, 0);
-      expect(delegate.drawnIndices.length, lessThan(candles.length));
+      expect(delegate.drawnMainIndices.first, 0);
+      expect(delegate.drawnSecondaryIndices.first, 0);
+      expect(delegate.drawnMainIndices.length, lessThan(candles.length));
 
       controller.selectIndex(0);
       await tester.pump();
       expect(controller.selectedIndex, isNotNull);
 
-      delegate.drawnIndices.clear();
-      delegate.drawnLayoutNodeIndices.clear();
+      delegate.drawnMainIndices.clear();
+      delegate.drawnSecondaryIndices.clear();
       await tester.dragFrom(const Offset(100, 120), const Offset(-80, 0));
       await tester.pumpAndSettle();
 
@@ -354,16 +277,15 @@ void main() {
       expect(delegate.lastScrollMetrics?.pixels, controller.scrollOffset);
       expect(delegate.lastScrollMetrics?.maxScrollExtent, greaterThan(0));
       expect(controller.selectedIndex, isNull);
-      expect(delegate.drawnIndices.first, greaterThan(0));
-      expect(delegate.drawnLayoutNodeIndices.first, greaterThan(0));
-      expect(dataSource.requestedRanges.last.start, greaterThan(0));
+      expect(delegate.drawnMainIndices.first, greaterThan(0));
+      expect(delegate.drawnSecondaryIndices.first, greaterThan(0));
+      expect(controller.visibleRange?.start, greaterThan(0));
 
       controller.setScale(2);
       await tester.pumpAndSettle();
 
       expect(controller.scale, 2);
-      expect(delegate.scaleUpdateCount, greaterThan(0));
-      expect(dataSource.requestedRanges.last, controller.visibleRange);
+      expect(controller.visibleRange, isNotNull);
 
       controller.setScrollOffset(30);
       await tester.pumpAndSettle();
@@ -402,7 +324,6 @@ void main() {
         time: index,
       ),
     );
-    final dataSource = _RecordingDataSource(candles);
     final delegate = _RecordingDelegate();
 
     await tester.pumpWidget(
@@ -412,7 +333,7 @@ void main() {
             width: 120,
             height: 180,
             child: KLineChart<_ExternalCandle>(
-              dataSource: dataSource,
+              dataSource: candles,
               delegate: delegate,
             ),
           ),
