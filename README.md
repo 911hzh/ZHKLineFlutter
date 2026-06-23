@@ -78,10 +78,11 @@ flutter run -d macos  # 或 ios / android
 
 ### Package 基础用法
 
-新的 package API 推荐只导入一个公共入口。核心思想是：package 内部只负责滚动、手势、视口状态和回调调度；数据直接传入数组，网格、蜡烛、指标、覆盖层和选中 UI 都由外部 delegate 实现。
+新的 package API 推荐只导入一个公共入口。简单场景直接使用 `KLineWidget<T>`，通过 `KLineDataAdapter<T>` 把业务模型映射为 OHLCV、日期和指标值；深度自定义场景可以直接使用 `KLineChart<T>` 和 `KLineChartDelegate<T>`。
 
 ```dart
 import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:intl/intl.dart';
 
 class MyCandle {
   final double open;
@@ -90,6 +91,8 @@ class MyCandle {
   final double close;
   final double volume;
   final DateTime time;
+  final double? ma7;
+  final double? ma25;
 
   MyCandle({
     required this.open,
@@ -98,79 +101,66 @@ class MyCandle {
     required this.close,
     required this.volume,
     required this.time,
+    this.ma7,
+    this.ma25,
   });
 }
 
-class MyDelegate extends KLineChartDelegate<MyCandle> {
-  const MyDelegate();
+class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
+  const MyCandleAdapter();
 
   @override
-  List<KLineLayoutNode<MyCandle>> getLayoutNodes(
-    KLineChartContext<MyCandle> context,
-    List<MyCandle> dataSource,
+  double open(MyCandle item) => item.open;
+
+  @override
+  double high(MyCandle item) => item.high;
+
+  @override
+  double low(MyCandle item) => item.low;
+
+  @override
+  double close(MyCandle item) => item.close;
+
+  @override
+  double volume(MyCandle item) => item.volume;
+
+  @override
+  String dateLabel(MyCandle item) {
+    return DateFormat('MM-dd HH:mm').format(item.time);
+  }
+
+  @override
+  double? indicatorValue(
+    MyCandle item,
+    KLineDefaultIndicatorValue value,
   ) {
-    // 可以复用默认工具，也可以返回业务自己的 KLineLayoutNode 子类。
-    return super.getLayoutNodes(context, dataSource);
+    return switch (value) {
+      KLineDefaultIndicatorValue.ma5 => item.close,
+      _ => null,
+    };
   }
 
   @override
-  void drawGrid(Canvas canvas, Size size, KLineChartContext<MyCandle> context) {
-    // 外部决定网格如何绘制。
-  }
-
-  @override
-  void drawMainChart(
-    Canvas canvas,
-    Size size,
-    KLineChartContext<MyCandle> context,
+  List<KLineIndicatorEntry> mainIndicatorEntries(
+    MyCandle item,
+    KLineDefaultIndicatorType type,
   ) {
-    // 外部决定主图蜡烛、折线、MA/BOLL 等如何绘制。
-  }
-
-  @override
-  void drawSecondaryCharts(
-    Canvas canvas,
-    Size size,
-    KLineChartContext<MyCandle> context,
-  ) {
-    // 外部决定 VOL、MACD、KDJ 等副图如何绘制。
-  }
-
-  @override
-  Widget? buildSelectionView(
-    BuildContext context,
-    KLineChartContext<MyCandle> chartContext,
-    KLineLayoutNode<MyCandle> selectedNode,
-  ) {
-    return Text('Close: ${selectedNode.item.close}');
-  }
-
-  @override
-  void didSelectItem(
-    KLineChartContext<MyCandle> context,
-    KLineLayoutNode<MyCandle> node,
-  ) {
-    // 外部处理长按/点击选中。
-  }
-
-  @override
-  void didMoveSelection(
-    KLineChartContext<MyCandle> context,
-    KLineLayoutNode<MyCandle> node,
-  ) {
-    // 外部处理长按后移动到另一个数据点。
-  }
-
-  @override
-  void didScroll(KLineChartContext<MyCandle> context, KLineScrollMetrics metrics) {
-    // 根据 metrics.extentBefore / extentAfter 判断是否加载更多数据。
+    if (type == KLineDefaultIndicatorType.ma) {
+      return [
+        KLineIndicatorEntry(label: 'MA7', value: item.ma7, colorIndex: 0),
+        KLineIndicatorEntry(label: 'MA25', value: item.ma25, colorIndex: 1),
+      ];
+    }
+    return super.mainIndicatorEntries(item, type);
   }
 }
 
-KLineChart<MyCandle>(
+KLineWidget<MyCandle>(
   dataSource: candles,
-  delegate: const MyDelegate(),
-  controller: KLineController(),
+  adapter: const MyCandleAdapter(),
+  onScroll: (context, metrics) {
+    // 根据 metrics.extentBefore / extentAfter 判断是否加载更多数据。
+  },
   theme: const KLineTheme(),
 )
 ```
@@ -178,6 +168,8 @@ KLineChart<MyCandle>(
 这套 API 的核心是：
 
 - `dataSource: List<T>`：外部直接提供需要绘制的数据数组。
+- `KLineDataAdapter<T>`：把任意业务模型映射成默认绘制需要的字段，不要求业务模型继承 package model。
+- `KLineWidget<T>`：内置默认网格、蜡烛、指标、副图、选中详情和 loading/error/empty UI。
 - `KLineChartDelegate<T>`：外部决定图表高度、布局节点、网格层、主图、副图、选中 UI 和交互回调。
 - `KLineChartContext<T>`：package 在每次绘制和交互时传入的上下文，包含 controller、可见区、布局节点、视口尺寸、主题和布局配置。
 - `KLineController`：对外暴露缩放、滚动、选中项、可见区间等状态。
@@ -205,9 +197,9 @@ class OrderLineDelegate extends KLineChartDelegate<MyCandle> {
 ### 自定义配置
 
 ```dart
-KLineChart<MyCandle>(
+KLineWidget<MyCandle>(
   dataSource: candles,
-  delegate: const MyDelegate(),
+  adapter: const MyCandleAdapter(),
   theme: const KLineTheme(
     candleUpColor: Color(0xFFF14965),
     candleDownColor: Color(0xFF00B066),
@@ -241,6 +233,39 @@ KLineChart<T>(
   layout: KLineLayoutConfig,           // 布局配置
   behavior: KLineBehaviorConfig,       // 交互配置
 )
+```
+
+### KLineWidget
+
+默认 UI 组件，内部使用 `KLineDefaultDelegate<T>`，适合快速接入一套完整 K 线图。
+
+```dart
+KLineWidget<T>(
+  dataSource: List<T>,              // 数据数组
+  adapter: KLineDataAdapter<T>,     // 数据适配器
+  controller: KLineController?,     // 状态控制器
+  onScroll: (context, metrics) {},  // 用户滚动回调，可用于加载更多
+  isLoading: bool,                  // 后台刷新或首次加载状态
+  error: Object?,                   // 错误覆盖层
+)
+```
+
+### KLineDataAdapter
+
+默认绘制实现通过 adapter 读取业务模型字段，避免要求业务模型继承 package 的固定 model。
+
+```dart
+abstract class KLineDataAdapter<T> {
+  double open(T item);
+  double high(T item);
+  double low(T item);
+  double close(T item);
+  double volume(T item);
+  String dateLabel(T item);
+  double? indicatorValue(T item, KLineDefaultIndicatorValue value);
+  List<KLineIndicatorEntry> mainIndicatorEntries(T item, KLineDefaultIndicatorType type);
+  List<KLineIndicatorEntry> secondaryIndicatorEntries(T item, KLineDefaultIndicatorType type);
+}
 ```
 
 ### KLineChartDelegate
@@ -293,6 +318,9 @@ KLineData  →  Indicators  →  DrawPoints  →  Canvas.draw  →  GestureDetec
 | 组件                     | 职责                                   |
 | ------------------------ | -------------------------------------- |
 | **KLineChart**           | 滚动、手势、视口上下文和代理调度       |
+| **KLineWidget**          | 基于 adapter 的默认 K 线 UI 组件       |
+| **KLineDataAdapter**     | 将业务模型映射为默认绘制字段           |
+| **KLineDefaultDelegateImplUtil** | 默认 delegate 的可复用绘制/布局工具 |
 | **List<T> dataSource**   | 当前图表需要绘制的数据数组             |
 | **KLineChartDelegate**   | 布局节点、网格、主图、副图、选中 UI 绘制 |
 | **KLineChartContext**    | 每次绘制和交互时传给外部的上下文       |
@@ -302,7 +330,7 @@ KLineData  →  Indicators  →  DrawPoints  →  Canvas.draw  →  GestureDetec
 
 ## 📊 技术指标
 
-核心 package 不内置 MA、EMA、BOLL、MACD 等业务指标计算和绘制。外部可以在 `KLineChartDelegate.getLayoutNodes` / `drawMainChart` / `drawSecondaryCharts` 中自行计算并绘制，也可以在业务层预先计算好指标数据后放入 `dataSource` 数组。
+核心 package 不强制接管 MA、EMA、BOLL、MACD 等业务指标计算。使用默认 UI 时，业务层可以预先计算好指标数据，并通过 `KLineDataAdapter.indicatorValue` 返回数值；如果指标参数、标题或展示顺序不同，可以覆盖 `mainIndicatorEntries` / `secondaryIndicatorEntries` 返回自己的 label 配置。深度自定义时，也可以在 `KLineChartDelegate.getLayoutNodes` / `drawMainChart` / `drawSecondaryCharts` 中自行计算并绘制。
 
 ---
 
@@ -313,6 +341,7 @@ lib/
 ├── k_line_flutter.dart              # package 公共入口
 └── src/kline/
     ├── controller/                  # KLineController
+    ├── default_impl/                # Adapter / 默认 Delegate / KLineWidget
     ├── delegate/                    # Delegate / Context
     ├── theme/                       # Theme / Layout / Behavior 配置
     └── widgets/                     # KLineChart 核心组件
@@ -333,7 +362,7 @@ example/
 | **缩放**   | UIPinchGesture     | onScaleUpdate         |
 | **长按**   | UILongPressGesture | onLongPress           |
 | **配置**   | 配置对象           | KLineTheme/Layout     |
-| **数据**   | DataSource         | List<T> dataSource    |
+| **数据**   | DataSource         | List<T> + Adapter     |
 | **代理**   | Delegate           | KLineChartDelegate    |
 
 ---

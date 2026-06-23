@@ -73,6 +73,7 @@ class KLineLayoutConfig {
     this.mainChartHeight = 340,
     this.secondaryPaneHeight = 70,
     this.indicatorSelectorHeight = 40,
+    this.secondaryContentVerticalPadding = 8,
     this.gridHorizontalCount = 5,
     this.gridVerticalCount = 6,
     this.contentPadding = const EdgeInsets.fromLTRB(2, 30, 2, 30),
@@ -86,6 +87,7 @@ class KLineLayoutConfig {
   final double mainChartHeight;
   final double secondaryPaneHeight;
   final double indicatorSelectorHeight;
+  final double secondaryContentVerticalPadding;
   final int gridHorizontalCount;
   final int gridVerticalCount;
   final EdgeInsets contentPadding;

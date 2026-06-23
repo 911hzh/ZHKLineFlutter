@@ -1,7 +1,5 @@
 // ignore_for_file: file_names
 
-import 'dart:math' as math;
-
 import 'package:example/base/store/kline/KlineStore.dart';
 import 'package:example/module/getIt/Injection.dart';
 import 'package:example/module/usecase/pages/kline/KLineDemoCubit.dart';
@@ -10,20 +8,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:k_line_flutter/k_line_flutter.dart';
 import 'package:k_line_flutter/kline/models/KLineModel.dart';
 import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
-import 'package:k_line_flutter/kline/models/KLineTechnicalIndicatorType.dart';
-import 'package:k_line_flutter/kline/models/KLineTechnicalIndicatorsModel.dart';
 
-part 'kline_demo_geometry.dart';
+part 'kline_model_adapter.dart';
 part 'kline_demo_widgets.dart';
-part 'kline_demo_delegate.dart';
-part 'kline_demo_delegate_default_impl_util.dart';
-part 'kline_demo_labels.dart';
-part 'kline_demo_extractors.dart';
 
 /// K 线 Demo 页面入口，只负责装配 Bloc、图表控制器和页面布局。
 ///
 /// 数据加载、缓存和错误状态由 [KLineDemoCubit] / [KlineStore] 负责，
-/// 具体绘制逻辑拆分到 `kline_demo_delegate.dart`。
+/// 默认绘制和交互 UI 由 package 的 [KLineWidget] 负责。
 class KLineDemoPage extends StatefulWidget {
   const KLineDemoPage({super.key});
 
@@ -171,42 +163,17 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
 
     return Stack(
       children: [
-        KLineChart<KLineModel>(
+        KLineWidget<KLineModel>(
           controller: _controller,
           dataSource: state.data,
-          delegate: _KLineDemoDelegate(
-            onScroll: (chartContext, metrics) {
-              _handleUserScroll(context, chartContext, metrics);
-            },
-          ),
+          adapter: const _KLineModelAdapter(),
+          onScroll: (chartContext, metrics) {
+            _handleUserScroll(context, chartContext, metrics);
+          },
           layout: _chartLayout,
+          isLoading: state.isLoading,
+          error: state.error,
         ),
-        if (state.isLoading)
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: LinearProgressIndicator(minHeight: 2),
-          ),
-        if (state.error != null)
-          Positioned(
-            left: 12,
-            right: 12,
-            top: 8,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                border: Border.all(color: Colors.black12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: Text(
-                  '刷新失败: ${state.error}',
-                  style: const TextStyle(fontSize: 11),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

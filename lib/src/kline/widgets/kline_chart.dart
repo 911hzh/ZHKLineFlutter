@@ -75,8 +75,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   @override
   Widget build(BuildContext context) {
     if (widget.isLoading) {
-      return widget.loadingBuilder?.call(context) ??
-          const Center(child: CircularProgressIndicator());
+      return widget.loadingBuilder?.call(context) ?? const Center(child: CircularProgressIndicator());
     }
 
     return LayoutBuilder(
@@ -84,8 +83,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
         final viewportSize = _resolveViewportSize(context, constraints);
         final itemCount = widget.dataSource.length;
         if (itemCount == 0) {
-          return widget.emptyBuilder?.call(context) ??
-              const Center(child: Text('暂无数据'));
+          return widget.emptyBuilder?.call(context) ?? const Center(child: Text('暂无数据'));
         }
 
         final itemExtent = _resolveItemExtent();
@@ -102,10 +100,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
           visibleRange: visibleRange,
           layoutNodes: const [],
         );
-        final layoutNodes = widget.delegate.getLayoutNodes(
-          layoutNodesContext,
-          widget.dataSource,
-        );
+        final layoutNodes = widget.delegate.getLayoutNodes(layoutNodesContext, widget.dataSource);
         final chartContext = _createContext(
           viewportSize: viewportSize,
           itemCount: itemCount,
@@ -117,62 +112,29 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
         _syncVisibleRange(chartContext);
 
         final chartHeight = widget.delegate.chartHeight(chartContext);
-        final contentWidth = (itemCount * itemExtent).clamp(
-          viewportSize.width,
-          double.infinity,
-        );
+        final contentWidth = (itemCount * itemExtent).clamp(viewportSize.width, double.infinity);
         final selectedNode = chartContext.selectedNode;
-        final overlayView = widget.delegate.buildOverlayView(
-          context,
-          chartContext,
-        );
+        final overlayView = widget.delegate.buildOverlayView(context, chartContext);
         final selectionView =
-            selectedNode == null
-                ? null
-                : widget.delegate.buildSelectionView(
-                  context,
-                  chartContext,
-                  selectedNode,
-                );
+            selectedNode == null ? null : widget.delegate.buildSelectionView(context, chartContext, selectedNode);
 
         return SizedBox(
           height: chartHeight,
           child: GestureDetector(
-            onScaleStart:
-                widget.behavior.enableScale
-                    ? (details) => _handleScaleStart(chartContext, details)
-                    : null,
-            onScaleUpdate:
-                widget.behavior.enableScale
-                    ? (details) => _handleScaleUpdate(chartContext, details)
-                    : null,
-            onScaleEnd:
-                widget.behavior.enableScale
-                    ? (_) => _handleScaleEnd(chartContext)
-                    : null,
+            onScaleStart: widget.behavior.enableScale ? (details) => _handleScaleStart(chartContext, details) : null,
+            onScaleUpdate: widget.behavior.enableScale ? (details) => _handleScaleUpdate(chartContext, details) : null,
+            onScaleEnd: widget.behavior.enableScale ? (_) => _handleScaleEnd(chartContext) : null,
             onTapUp:
                 widget.behavior.enableCrosshair
-                    ? (details) => _selectNearest(
-                      chartContext,
-                      details.localPosition,
-                      isMove: false,
-                    )
+                    ? (details) => _selectNearest(chartContext, details.localPosition, isMove: false)
                     : null,
             onLongPressStart:
                 widget.behavior.enableCrosshair
-                    ? (details) => _selectNearest(
-                      chartContext,
-                      details.localPosition,
-                      isMove: false,
-                    )
+                    ? (details) => _selectNearest(chartContext, details.localPosition, isMove: false)
                     : null,
             onLongPressMoveUpdate:
                 widget.behavior.enableCrosshair
-                    ? (details) => _selectNearest(
-                      chartContext,
-                      details.localPosition,
-                      isMove: true,
-                    )
+                    ? (details) => _selectNearest(chartContext, details.localPosition, isMove: true)
                     : null,
             onLongPressEnd: (_) => _endInteraction(chartContext),
             child: Stack(
@@ -180,19 +142,12 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(
-                      painter: _KLineChartFixedPainter<T>(
-                        context: chartContext,
-                        delegate: widget.delegate,
-                      ),
+                      painter: _KLineChartFixedPainter<T>(context: chartContext, delegate: widget.delegate),
                     ),
                   ),
                 ),
                 NotificationListener<ScrollNotification>(
-                  onNotification:
-                      (notification) => _handleUserScrollNotification(
-                        chartContext,
-                        notification,
-                      ),
+                  onNotification: (notification) => _handleUserScrollNotification(chartContext, notification),
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     scrollDirection: Axis.horizontal,
@@ -200,10 +155,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
                       width: contentWidth,
                       height: chartHeight,
                       child: CustomPaint(
-                        painter: _KLineChartContentPainter<T>(
-                          context: chartContext,
-                          delegate: widget.delegate,
-                        ),
+                        painter: _KLineChartContentPainter<T>(context: chartContext, delegate: widget.delegate),
                       ),
                     ),
                   ),
@@ -220,18 +172,13 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
 
   Size _resolveViewportSize(BuildContext context, BoxConstraints constraints) {
     final mediaSize = MediaQuery.sizeOf(context);
-    final width =
-        constraints.maxWidth.isFinite ? constraints.maxWidth : mediaSize.width;
-    final height =
-        constraints.maxHeight.isFinite
-            ? constraints.maxHeight
-            : widget.layout.mainChartHeight;
+    final width = constraints.maxWidth.isFinite ? constraints.maxWidth : mediaSize.width;
+    final height = constraints.maxHeight.isFinite ? constraints.maxHeight : widget.layout.mainChartHeight;
     return Size(width, height);
   }
 
   double _resolveItemExtent() {
-    return (widget.layout.candleWidth + widget.layout.candleSpacing) *
-        _controller.scale;
+    return (widget.layout.candleWidth + widget.layout.candleSpacing) * _controller.scale;
   }
 
   KLineChartContext<T> _createContext({
@@ -269,10 +216,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     }
   }
 
-  bool _handleUserScrollNotification(
-    KLineChartContext<T> context,
-    ScrollNotification notification,
-  ) {
+  bool _handleUserScrollNotification(KLineChartContext<T> context, ScrollNotification notification) {
     final metrics = notification.metrics;
     if (metrics.axis != Axis.horizontal) {
       return false;
@@ -307,33 +251,20 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   void _syncScrollPositionFromController() {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
-    final target =
-        _controller.scrollOffset
-            .clamp(position.minScrollExtent, position.maxScrollExtent)
-            .toDouble();
+    final target = _controller.scrollOffset.clamp(position.minScrollExtent, position.maxScrollExtent).toDouble();
     if ((position.pixels - target).abs() < 0.5) return;
     _scrollController.jumpTo(target);
   }
 
-  void _handleScaleStart(
-    KLineChartContext<T> context,
-    ScaleStartDetails details,
-  ) {
+  void _handleScaleStart(KLineChartContext<T> context, ScaleStartDetails details) {
     _baseScale = _controller.scale;
     _scaleStartLocalFocalX = details.localFocalPoint.dx;
-    _scaleStartContentFocalX =
-        _controller.scrollOffset + _scaleStartLocalFocalX;
+    _scaleStartContentFocalX = _controller.scrollOffset + _scaleStartLocalFocalX;
   }
 
-  void _handleScaleUpdate(
-    KLineChartContext<T> context,
-    ScaleUpdateDetails details,
-  ) {
+  void _handleScaleUpdate(KLineChartContext<T> context, ScaleUpdateDetails details) {
     if (details.scale == 1) return;
-    final nextScale = (_baseScale * details.scale).clamp(
-      widget.layout.minScale,
-      widget.layout.maxScale,
-    );
+    final nextScale = (_baseScale * details.scale).clamp(widget.layout.minScale, widget.layout.maxScale);
     _controller.setScaleAroundFocalPoint(
       scale: nextScale,
       baseScale: _baseScale,
@@ -349,11 +280,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     if (mounted) setState(() {});
   }
 
-  void _selectNearest(
-    KLineChartContext<T> context,
-    Offset localPosition, {
-    required bool isMove,
-  }) {
+  void _selectNearest(KLineChartContext<T> context, Offset localPosition, {required bool isMove}) {
     if (context.layoutNodes.isEmpty) return;
     final x = localPosition.dx + _controller.scrollOffset;
     KLineLayoutNode<T>? nearest;
@@ -366,11 +293,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
       }
     }
     if (nearest == null) return;
-    _controller.selectIndex(
-      nearest.index,
-      localPosition: localPosition,
-      contentPosition: Offset(x, localPosition.dy),
-    );
+    _controller.selectIndex(nearest.index, localPosition: localPosition, contentPosition: Offset(x, localPosition.dy));
     if (isMove) {
       widget.delegate.didMoveSelection(context, nearest);
     } else {
@@ -386,10 +309,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
 }
 
 class _KLineChartFixedPainter<T> extends CustomPainter {
-  const _KLineChartFixedPainter({
-    required this.context,
-    required this.delegate,
-  });
+  const _KLineChartFixedPainter({required this.context, required this.delegate});
 
   final KLineChartContext<T> context;
   final KLineChartDelegate<T> delegate;
@@ -406,10 +326,7 @@ class _KLineChartFixedPainter<T> extends CustomPainter {
 }
 
 class _KLineChartContentPainter<T> extends CustomPainter {
-  const _KLineChartContentPainter({
-    required this.context,
-    required this.delegate,
-  });
+  const _KLineChartContentPainter({required this.context, required this.delegate});
 
   final KLineChartContext<T> context;
   final KLineChartDelegate<T> delegate;
