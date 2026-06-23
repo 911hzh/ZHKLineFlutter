@@ -240,7 +240,7 @@ abstract class KLineDataAdapter<T> {
       ],
       KLineDefaultIndicatorType.boll => [
         KLineIndicatorEntry(
-          label: 'UPPER',
+          label: 'UB',
           value: indicatorValue(item, KLineDefaultIndicatorValue.bollUpper),
           colorIndex: 0,
         ),
@@ -250,7 +250,7 @@ abstract class KLineDataAdapter<T> {
           colorIndex: 1,
         ),
         KLineIndicatorEntry(
-          label: 'LOWER',
+          label: 'LB',
           value: indicatorValue(item, KLineDefaultIndicatorValue.bollLower),
           colorIndex: 2,
         ),

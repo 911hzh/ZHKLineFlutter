@@ -9,7 +9,7 @@
 ```text
 KLineWidget<T>
   -> KLineDefaultDelegateImpl<T>
-    -> KLineDefaultDelegateImplUtil<T>
+    -> KLineDefaultDelegateImplUtil
       -> KLineDataAdapter<T>
       -> KLineDefaultIndicatorSelector / MainIndicatorLabels / SecondaryIndicatorLabels
 ```
@@ -85,7 +85,7 @@ KLineWidget<MyCandle>(
 
 默认实现的核心工具类。
 
-`KLineDefaultDelegateImplUtil<T>` 承载默认 K 线的具体实现，包括：
+`KLineDefaultDelegateImplUtil` 承载默认 K 线的具体静态实现，包括：
 
 - 计算默认图表高度。
 - 计算默认 layout nodes。
@@ -98,14 +98,14 @@ KLineWidget<MyCandle>(
 - 计算价格和指标范围。
 - 批量绘制蜡烛、柱状图和指标线。
 
-如果用户想复用默认布局或默认绘制中的一部分，可以直接创建 util：
+如果用户想复用默认布局或默认绘制中的一部分，可以直接调用 util 静态方法：
 
 ```dart
-final util = KLineDefaultDelegateImplUtil<MyCandle>(
+final nodes = KLineDefaultDelegateImplUtil.getLayoutNodes(
+  context,
+  candles,
   adapter: const MyCandleAdapter(),
 );
-
-final nodes = util.getLayoutNodes(context, candles);
 ```
 
 ### `kline_views.dart`
@@ -170,8 +170,11 @@ class MyDelegate extends KLineChartDelegate<MyCandle> {
     KLineChartContext<MyCandle> context,
     List<MyCandle> dataSource,
   ) {
-    return KLineDefaultDelegateImplUtil(adapter: adapter)
-        .getLayoutNodes(context, dataSource);
+    return KLineDefaultDelegateImplUtil.getLayoutNodes(
+      context,
+      dataSource,
+      adapter: adapter,
+    );
   }
 }
 ```
