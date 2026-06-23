@@ -8,7 +8,7 @@ void main() {
   test('readCached restores period data from user preferences', () async {
     final repository = _MemoryRepository();
     await repository.setValue<String, Map<String, dynamic>>(
-      'kline.demo.15min',
+      'kline.demo.15min.50',
       {
         'data': [_sampleData(id: 1, close: 11).toJson()],
       },
@@ -30,7 +30,7 @@ void main() {
     () async {
       final repository = _MemoryRepository();
       await repository.setValue<String, Map<String, dynamic>>(
-        'kline.demo.15min',
+        'kline.demo.15min.50',
         {
           'data': [
             _sampleData(id: 3, close: 13).toJson(),
@@ -61,7 +61,7 @@ void main() {
 
       final state = await store.refresh(KLinePeriod.min15);
       final cached = await repository.getValue<String, Map<String, dynamic>>(
-        'kline.demo.15min',
+        'kline.demo.15min.50',
       );
 
       expect(state.models, hasLength(1));
@@ -83,7 +83,7 @@ void main() {
 
     final state = await store.refresh(KLinePeriod.min15);
     final cached = await repository.getValue<String, Map<String, dynamic>>(
-      'kline.demo.15min',
+      'kline.demo.15min.50',
     );
     final cachedIds = (cached?['data'] as List)
         .whereType<Map<String, dynamic>>()
@@ -94,10 +94,40 @@ void main() {
     expect(cachedIds, [1, 2, 3]);
   });
 
-  test('refresh merges fetched page with current cache by kline id', () async {
+  test('refresh ignores stale persistent cache when memory is empty', () async {
     final repository = _MemoryRepository();
     await repository.setValue<String, Map<String, dynamic>>(
-      'kline.demo.15min',
+      'kline.demo.15min.50',
+      {
+        'data': [
+          _sampleData(id: 1, close: 11).toJson(),
+        ],
+      },
+    );
+    final store = KlineStore.withLoader(
+      preferenceRepositoryPort: repository,
+      dataLoader: (_, _) async => [
+        _sampleData(id: 2, close: 12),
+      ],
+    );
+
+    final state = await store.refresh(KLinePeriod.min15);
+    final cached = await repository.getValue<String, Map<String, dynamic>>(
+      'kline.demo.15min.50',
+    );
+    final cachedIds = (cached?['data'] as List)
+        .whereType<Map<String, dynamic>>()
+        .map((json) => json['id'])
+        .toList();
+
+    expect(state.models.map((model) => model.timestamp), [2]);
+    expect(cachedIds, [2]);
+  });
+
+  test('refresh merges fetched page with current memory by kline id', () async {
+    final repository = _MemoryRepository();
+    await repository.setValue<String, Map<String, dynamic>>(
+      'kline.demo.15min.50',
       {
         'data': [
           _sampleData(id: 1, close: 11).toJson(),
@@ -113,9 +143,10 @@ void main() {
       ],
     );
 
+    await store.readCached(KLinePeriod.min15);
     final state = await store.refresh(KLinePeriod.min15);
     final cached = await repository.getValue<String, Map<String, dynamic>>(
-      'kline.demo.15min',
+      'kline.demo.15min.50',
     );
     final cachedIds = (cached?['data'] as List)
         .whereType<Map<String, dynamic>>()
@@ -148,6 +179,12 @@ void main() {
     expect(state.models, hasLength(100));
     expect(state.models.first.timestamp, 100);
     expect(state.models.last.timestamp, 1);
+    expect(
+      await repository.getValue<String, Map<String, dynamic>>(
+        'kline.demo.15min.100',
+      ),
+      isNotNull,
+    );
   });
 }
 

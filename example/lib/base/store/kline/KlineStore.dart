@@ -10,19 +10,14 @@ import 'package:k_line_flutter/kline/models/KLinePeriod.dart';
 import 'package:k_line_flutter/kline/models/KLineResponse.dart';
 import 'package:k_line_flutter/kline/utils/DataUtil.dart';
 
-typedef KlineDataLoader =
-    Future<List<KLineData>> Function(KLinePeriod period, int size);
+typedef KlineDataLoader = Future<List<KLineData>> Function(KLinePeriod period, int size);
 
 const _klineCachePrefix = 'kline.demo';
 const _klineSymbol = 'btcusdt';
 const _klineFetchSize = 50;
 
 class KlineStoreState {
-  const KlineStoreState({
-    required this.period,
-    required this.models,
-    this.fromCache = false,
-  });
+  const KlineStoreState({required this.period, required this.models, this.fromCache = false});
 
   factory KlineStoreState.empty({KLinePeriod period = KLinePeriod.min15}) {
     return KlineStoreState(period: period, models: const []);
@@ -36,44 +31,34 @@ class KlineStoreState {
 @lazySingleton
 class KlineStore extends StoreBase<KlineStoreState> {
   KlineStore({
-    @Named(RepositoryGetItInstanceName.userPreference)
-    required Repository preferenceRepositoryPort,
+    @Named(RepositoryGetItInstanceName.userPreference) required Repository preferenceRepositoryPort,
     required AppApiClient apiClient,
   }) : this.withLoader(
          preferenceRepositoryPort: preferenceRepositoryPort,
          dataLoader: (period, size) {
-           return apiClient.klineApi.fetchKLineData(
-             symbol: _klineSymbol,
-             period: period,
-             size: size,
-           );
+           return apiClient.klineApi.fetchKLineData(symbol: _klineSymbol, period: period, size: size);
          },
        );
 
-  KlineStore.withLoader({
-    required Repository preferenceRepositoryPort,
-    required KlineDataLoader dataLoader,
-  }) : _preferenceRepositoryPort = preferenceRepositoryPort,
-       _dataLoader = dataLoader,
-       super(KlineStoreState.empty());
+  KlineStore.withLoader({required Repository preferenceRepositoryPort, required KlineDataLoader dataLoader})
+    : _preferenceRepositoryPort = preferenceRepositoryPort,
+      _dataLoader = dataLoader,
+      super(KlineStoreState.empty());
 
   final Repository _preferenceRepositoryPort;
   final KlineDataLoader _dataLoader;
   final _pages = <KLinePeriod, int>{};
 
   Future<KlineStoreState> readCached(KLinePeriod period) async {
-    final cachedJson = await _preferenceRepositoryPort
-        .getValue<String, Map<String, dynamic>>(_cacheKey(period));
+    final cachedJson = await _preferenceRepositoryPort.getValue<String, Map<String, dynamic>>(
+      _cacheKey(period, _klineFetchSize),
+    );
     if (cachedJson == null) {
       return KlineStoreState.empty(period: period);
     }
 
     final rawData = _sortRawData(_rawDataFromJson(cachedJson));
-    final state = KlineStoreState(
-      period: period,
-      models: _modelsForDisplay(rawData, period),
-      fromCache: true,
-    );
+    final state = KlineStoreState(period: period, models: _modelsForDisplay(rawData, period), fromCache: true);
     setState(state);
     return state;
   }
@@ -85,36 +70,24 @@ class KlineStore extends StoreBase<KlineStoreState> {
 
   Future<KlineStoreState> loadMore(KLinePeriod period) async {
     final nextPage = (_pages[period] ?? 1) + 1;
-    final state = await _fetchAndCache(
-      period: period,
-      size: _klineFetchSize * nextPage,
-    );
+    final state = await _fetchAndCache(period: period, size: _klineFetchSize * nextPage);
     _pages[period] = nextPage;
     return state;
   }
 
-  Future<KlineStoreState> _fetchAndCache({
-    required KLinePeriod period,
-    required int size,
-  }) async {
-    final cachedJson = await _preferenceRepositoryPort
-        .getValue<String, Map<String, dynamic>>(_cacheKey(period));
-    final cachedData = cachedJson == null
-        ? const <KLineData>[]
-        : _rawDataFromJson(cachedJson);
+  Future<KlineStoreState> _fetchAndCache({required KLinePeriod period, required int size}) async {
+    final currentData = state.period == period
+        ? state.models.map((model) => model.klineData).toList()
+        : const <KLineData>[];
     final fetchedData = await _dataLoader(period, size);
-    final rawData = _mergeRawData(cachedData, fetchedData);
-    await _preferenceRepositoryPort.setValue<String, Map<String, dynamic>>(
-      _cacheKey(period),
-      {'data': rawData.map((item) => item.toJson()).toList()},
-    );
+    final rawData = _mergeRawData(currentData, fetchedData);
+    await _preferenceRepositoryPort.setValue<String, Map<String, dynamic>>(_cacheKey(period, size), {
+      'data': rawData.map((item) => item.toJson()).toList(),
+    });
 
-    final state = KlineStoreState(
-      period: period,
-      models: _modelsForDisplay(rawData, period),
-    );
-    setState(state);
-    return state;
+    final nextState = KlineStoreState(period: period, models: _modelsForDisplay(rawData, period));
+    setState(nextState);
+    return nextState;
   }
 
   @override
@@ -134,15 +107,14 @@ class KlineStore extends StoreBase<KlineStoreState> {
     refresh(state.period);
   }
 
-  String _cacheKey(KLinePeriod period) => '$_klineCachePrefix.${period.value}';
+  String _cacheKey(KLinePeriod period, int size) {
+    return '$_klineCachePrefix.${period.value}.$size';
+  }
 
   List<KLineData> _rawDataFromJson(Map<String, dynamic> json) {
     final data = json['data'];
     if (data is! List) return const [];
-    return data
-        .whereType<Map<String, dynamic>>()
-        .map(KLineData.fromJson)
-        .toList();
+    return data.whereType<Map<String, dynamic>>().map(KLineData.fromJson).toList();
   }
 
   List<KLineData> _sortRawData(List<KLineData> data) {
@@ -160,14 +132,8 @@ class KlineStore extends StoreBase<KlineStoreState> {
     return _sortRawData(merged.values.toList());
   }
 
-  List<KLineModel> _modelsForDisplay(
-    List<KLineData> rawData,
-    KLinePeriod period,
-  ) {
-    final chronologicalModels = DataUtil.toKLineModelsWithIndicators(
-      rawData,
-      period,
-    );
+  List<KLineModel> _modelsForDisplay(List<KLineData> rawData, KLinePeriod period) {
+    final chronologicalModels = DataUtil.toKLineModelsWithIndicators(rawData, period);
     return chronologicalModels.reversed.toList();
   }
 }
