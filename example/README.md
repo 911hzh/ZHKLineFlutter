@@ -25,6 +25,8 @@ make create helloworldProject BUNDLE_ID=com.company.helloworld OUTPUT=../apps
 - AI 开发规则：`AI_DEV.md`
 - 功能记录：`FEATURE_LOG.md`
 - `lib` 目录总览：`lib/README.md`
+- K 线示例：`lib/module/usecase/pages/kline/KLineDemoPage.dart`
+- 深度图示例：`lib/module/usecase/pages/deep_chart/DeepChartDemoPage.dart`
 
 ## 核心目录
 
@@ -36,6 +38,12 @@ make create helloworldProject BUNDLE_ID=com.company.helloworld OUTPUT=../apps
 - `lib/e_uikit`：多个模块共享的 UI 组件。
 - `lib/base/api`：示例网络 API 封装。
 - `lib/base/store`：共享状态、本地持久化和 Store 示例。
+
+## 行情示例
+
+- K 线图使用火币 `/market/history/kline`，通过 `KlineStore` 缓存并转换为 package 的 adapter 数据。
+- 深度图使用火币 `/market/depth` REST 快照，参数为 `symbol=btcusdt`、`depth=20`、`type=step0`。响应中的 `tick.bids` / `tick.asks` 是 `[price, size]`，页面通过 `DeepChartDataAdapter` 映射到 package 的 `DeepChart`。
+- REST 深度快照适合 demo 和低频刷新；如果需要实时盘口，后续可接入火币 WebSocket `market.$symbol.depth.$type` 或 MBP 主题。
 
 ## 最小规则
 

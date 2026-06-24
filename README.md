@@ -183,6 +183,44 @@ KLineWidget<MyCandle>(
 - `KLineChartDelegate<T>`：外部决定图表高度、布局节点、网格层、主图、副图、选中 UI 和交互回调。
 - `KLineChartContext<T>`：package 在每次绘制和交互时传入的上下文，包含 controller、可见区、布局节点、视口尺寸、主题和布局配置。
 - `KLineController`：对外暴露缩放、滚动、选中项、可见区间等状态。
+- `DeepChart<T>`：深度图组件，用左右面积图展示买盘/卖盘累计深度。
+- `DeepChartDelegate<T>`：深度图绘制协议，可替换网格、累计深度曲线、覆盖层和布局节点。
+- `DeepChartDataAdapter<T>`：把业务盘口档位映射为 `price` / `size`，不绑定固定 API model。
+
+### 深度图基础用法
+
+深度图展示盘口买盘和卖盘在价格档位上的累计数量。example 使用火币 REST 深度快照接口 `GET /market/depth`，请求参数来自官方文档：`symbol`、`depth=5/10/20`、`type=step0..step5`，响应中的 `tick.bids` / `tick.asks` 均为 `[price, size]`。
+
+```dart
+class MyDepthLevel {
+  const MyDepthLevel({required this.price, required this.size});
+
+  final double price;
+  final double size;
+}
+
+class MyDepthAdapter extends DeepChartDataAdapter<MyDepthLevel> {
+  const MyDepthAdapter();
+
+  @override
+  double price(MyDepthLevel item) => item.price;
+
+  @override
+  double size(MyDepthLevel item) => item.size;
+}
+
+DeepChart<MyDepthLevel>(
+  bids: bids,
+  asks: asks,
+  adapter: const MyDepthAdapter(),
+  theme: const DeepChartTheme(
+    bidColor: Color(0xFF18B77A),
+    askColor: Color(0xFFF0526B),
+  ),
+)
+```
+
+深度图默认实现会分别累计买盘和卖盘数量，买盘从中间向左展开，卖盘从中间向右展开。需要自定义样式时，可以传入自己的 `DeepChartDelegate<T>` 覆盖 `getLayoutNodes`、`drawGrid`、`drawChart` 或 `buildOverlayView`。
 
 ### Example 自定义 Demo 结构
 
@@ -392,12 +430,9 @@ List<T>  →  KLineDataAdapter  →  KLineLayoutNode  →  Canvas.draw  →  KLi
 ```
 lib/
 ├── k_line_flutter.dart              # package 公共入口
-└── src/kline/
-    ├── controller/                  # KLineController
-    ├── delegate/                    # Delegate / Context
-    ├── theme/                       # Theme / Layout / Behavior 配置
-    ├── u_default_impl/              # Adapter / 默认 Delegate / KLineWidget / 默认绘制工具
-    └── widgets/                     # KLineChart 核心组件
+└── src/
+    ├── kline/                       # KLineChart / KLineWidget / K 线默认实现
+    └── deepchart/                   # DeepChart / 深度图 delegate / 默认绘制
 
 example/
 ├── lib/base/
@@ -410,6 +445,9 @@ example/
     │   ├── KLineDemoPage.dart       # KLineWidget 装配和交互入口
     │   ├── kline_model_adapter.dart # example 模型到 package adapter 的映射
     │   └── kline_demo_widgets.dart  # 顶部栏、周期选择等页面组件
+    ├── deep_chart/
+    │   ├── DeepChartDemoCubit.dart  # 深度快照加载和错误状态
+    │   └── DeepChartDemoPage.dart   # DeepChart 装配入口
     └── custom_page/
         ├── custom_kline_demo_shell.dart # 自定义 demo 共享数据、controller 和 actions
         ├── custom_*_page.dart           # 各扩展点示例页面

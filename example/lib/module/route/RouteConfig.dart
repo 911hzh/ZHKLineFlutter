@@ -8,6 +8,7 @@ import 'package:example/module/usecase/pages/custom_page/custom_secondary_chart_
 import 'package:example/module/usecase/pages/custom_page/custom_selection_view_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_state_builder_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_theme_layout_page.dart';
+import 'package:example/module/usecase/pages/deep_chart/DeepChartDemoPage.dart';
 import 'package:example/module/usecase/pages/home/HomePage.dart';
 import 'package:example/module/usecase/pages/kline/KLineDemoPage.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ class RouteConfig {
   static Map<String, WidgetBuilder> routes = {
     '/home': (context) => const HomePage(),
     KLineDemoPage.routeName: (context) => const KLineDemoPage(),
+    DeepChartDemoPage.routeName: (context) => const DeepChartDemoPage(),
     CustomThemeLayoutPage.routeName: (context) => const CustomThemeLayoutPage(),
     CustomIndicatorEntriesPage.routeName: (context) =>
         const CustomIndicatorEntriesPage(),

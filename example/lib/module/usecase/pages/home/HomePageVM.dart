@@ -8,6 +8,7 @@ import 'package:example/module/usecase/pages/custom_page/custom_secondary_chart_
 import 'package:example/module/usecase/pages/custom_page/custom_selection_view_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_state_builder_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_theme_layout_page.dart';
+import 'package:example/module/usecase/pages/deep_chart/DeepChartDemoPage.dart';
 import 'package:example/module/usecase/pages/kline/KLineDemoPage.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -26,6 +27,7 @@ class HomePageState {
         title: 'KLine Delegate Demo',
         routeName: KLineDemoPage.routeName,
       ),
+      HomePageEntry(title: '深度图 Demo', routeName: DeepChartDemoPage.routeName),
       HomePageEntry(
         title: '自定义主题与布局',
         routeName: CustomThemeLayoutPage.routeName,

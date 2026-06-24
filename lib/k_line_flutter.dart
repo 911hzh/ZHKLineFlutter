@@ -1,3 +1,9 @@
+export 'src/deepchart/adapter/deep_chart_data_adapter.dart';
+export 'src/deepchart/delegate/deep_chart_delegate.dart';
+export 'src/deepchart/model/deep_depth_entry.dart';
+export 'src/deepchart/theme/deep_chart_theme.dart';
+export 'src/deepchart/u_default_impl/deep_chart_default_delegate.dart';
+export 'src/deepchart/widgets/deep_chart.dart';
 export 'src/kline/controller/kline_controller.dart';
 export 'src/kline/u_default_impl/kline_data_adapter.dart';
 export 'src/kline/u_default_impl/kline_default_delegate.dart';
