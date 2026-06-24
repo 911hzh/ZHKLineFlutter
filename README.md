@@ -12,45 +12,76 @@
 
 ### 指标切换
 
-![技术指标切换演示](lib/assets/show/flutter_indicator.gif)
+![技术指标切换演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_indicator.gif)
 
 ### 滚动与缩放
 
-![滚动与缩放演示](lib/assets/show/flutter_scrolling.gif)
+![滚动与缩放演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_scrolling.gif)
 
 ### 长按详情
 
-![长按十字线演示](lib/assets/show/flutter_tap_longpress_dataDetail.gif)
+![长按十字线演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_tap_longpress_dataDetail.gif)
 
 ### 自定义背景
 
-![自定义背景演示](lib/assets/show/flutter_custom_background.png)
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_background.png"
+  alt="自定义背景演示"
+  width="360"
+/>
 
 ### 自定义指标文案
 
-![自定义指标文案演示](lib/assets/show/flutter_custom_indicator_text.png)
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_indicator_text.png"
+  alt="自定义指标文案演示"
+  width="360"
+/>
 
 ### 自定义主图绘制
 
-![自定义主图绘制演示](lib/assets/show/flutter_custom_main_draw.png)
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_main_draw.png"
+  alt="自定义主图绘制演示"
+  width="360"
+/>
 
 ## 为什么选择它
 
-- **快速接入**：简单场景直接使用 `KLineWidget<T>` 和 `KLineDataAdapter<T>`，不需要改造业务模型。
-- **高扩展性**：核心绘制通过 `KLineChartDelegate<T>` / `DeepChartDelegate<T>` 暴露，想修改布局或 UI 绘制时，只需要替换对应模块；每个绘制能力都有独立的 default util 抽离，方便复用和二次开发。
-- **高性能绘制**：基于 `CustomPainter`，提前计算坐标、可见区节点和绘制数据，避免绘制阶段重复计算。
-- **业务模型无侵入**：K 线和深度图都通过 adapter 读取字段，支持任意后端模型。
-- **可维护架构**：核心图表、默认实现、主题布局、example 数据层相互隔离，方便测试和逐步替换。
-- **可控交互**：`KLineController` 支持外部读取和控制缩放、滚动、选中项、可见区和指标状态。
-- **图表能力完整**：内置 MA、EMA、BOLL、MACD、KDJ、RSI、WR、VOL 等常见指标展示，也支持深度图累计盘口展示。
+- **几分钟完成接入**：业务页面只需要准备 `List<T>` 和 `KLineDataAdapter<T>`，默认 UI 已包含蜡烛图、指标、副图、长按详情和基础状态展示，不需要为了图表改造已有数据模型。
+- **扩展点清晰可控**：通过 `KLineChartDelegate<T>` / `DeepChartDelegate<T>` 暴露绘制流程。想改背景、网格、指标文案、主图绘制、选中浮层或深度图，只替换对应模块即可。
+- **默认能力可复用**：每个默认绘制能力都拆到了独立的 KLineDefaultDelegateImplUtil 中。你可以复用坐标计算、文本绘制、指标布局等基础能力，只专注改业务真正关心的那一层 UI。
+- **为高频行情优化**：基于 `CustomPainter` 分层绘制，并提前计算坐标、可见区节点和绘制数据，减少绘制阶段重复计算，适合滚动、缩放、长按等高频交互场景。
+- **业务模型零侵入**：K 线和深度图都通过 adapter 读取字段，后端模型、缓存模型、计算后的指标模型都可以直接接入。
+- **架构长期可维护**：核心图表、默认实现、主题布局、controller、example 数据层边界清晰，后续新增指标、替换 UI、接入不同交易所数据时不会牵一发动全身。
+- **金融图表能力完整**：内置 MA、EMA、BOLL、MACD、KDJ、RSI、WR、VOL 等常见指标，支持外部控制缩放、滚动、选中状态，也提供盘口累计深度图 `DeepChart`。
 
 ## 快速开始
+
+在你的 Flutter 项目中添加依赖：
+
+```bash
+flutter pub add kline_flutter
+```
+
+或者手动写入 `pubspec.yaml`：
+
+```yaml
+dependencies:
+  kline_flutter: ^0.1.0
+```
+
+然后在业务代码中导入：
+
+```dart
+import 'package:kline_flutter/kline_flutter.dart';
+```
+
+如果想运行本仓库的示例工程：
 
 ```bash
 git clone https://github.com/911hzh/ZHKLineFlutter.git
 cd ZHKLineFlutter
-flutter pub get
-
 cd example
 flutter pub get
 flutter run -d macos
