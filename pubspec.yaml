@@ -1,5 +1,5 @@
-name: k_line_flutter
-description: "A delegate-driven Flutter K-line/candlestick chart package with external data, drawing, and interaction hooks."
+name: kline_flutter
+description: "一个面向金融行情场景的 Flutter 图表库，提供 K 线图、技术指标、交互控制和深度图能力。它以 `CustomPainter` 和 delegate 架构为核心，让你既可以快速接入一套默认 UI，也可以在真实业务中按需替换绘制、布局、覆盖层和数据适配。"
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -13,8 +13,8 @@ description: "A delegate-driven Flutter K-line/candlestick chart package with ex
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
-
+version: 0.1.0
+repository: https://github.com/911hzh/ZHKLineFlutter.git
 environment:
   sdk: ^3.7.0
 
@@ -31,16 +31,9 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  dio: ^5.9.0
-  injectable: ">=2.5.1 <4.0.0"
-  get_it: ">=8.2.0 <10.0.0"
-  intl: ^0.19.0
 
 dev_dependencies:
   # add the generator to your dev_dependencies
-  injectable_generator: ^2.8.1
-  # add build runner if not already added
-  build_runner: ^2.8.0
   flutter_test:
     sdk: flutter
 

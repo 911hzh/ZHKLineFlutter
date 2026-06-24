@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:k_line_flutter/k_line_flutter.dart';
-import 'package:k_line_flutter/src/kline/u_default_impl/kline_views.dart';
+import 'package:kline_flutter/kline_flutter.dart';
+import 'package:kline_flutter/src/kline/u_default_impl/kline_views.dart';
 
 /// 默认 delegate 的可复用静态实现工具。
 ///

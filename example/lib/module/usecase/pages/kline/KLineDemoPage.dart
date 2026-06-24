@@ -7,7 +7,7 @@ import 'package:example/module/getIt/Injection.dart';
 import 'package:example/module/usecase/pages/kline/KLineDemoCubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:kline_flutter/kline_flutter.dart';
 
 part 'kline_model_adapter.dart';
 part 'kline_demo_widgets.dart';

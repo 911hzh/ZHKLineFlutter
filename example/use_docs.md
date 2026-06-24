@@ -26,7 +26,7 @@ example 中的行情数据来自火币 REST API：
 推荐导入公共入口：
 
 ```dart
-import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:kline_flutter/kline_flutter.dart';
 ```
 
 业务模型不需要继承 package 类型，只需要提供 adapter：

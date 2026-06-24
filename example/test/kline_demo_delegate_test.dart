@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:kline_flutter/kline_flutter.dart';
 
 void main() {
   testWidgets('content width includes the trailing candle body', (

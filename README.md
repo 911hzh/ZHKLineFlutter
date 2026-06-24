@@ -64,7 +64,7 @@ flutter run -d macos
 - `MyCandleAdapter`：把业务数据转换成图表 UI 能识别的 open、high、low、close、volume 和时间文案。
 
 ```dart
-import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:kline_flutter/kline_flutter.dart';
 
 class MyCandle {
   const MyCandle({
@@ -157,7 +157,7 @@ DeepChart<DeepDepthEntry>(
 
 ```text
 lib/
-├── k_line_flutter.dart
+├── kline_flutter.dart
 └── src/
     ├── kline/
     └── deepchart/

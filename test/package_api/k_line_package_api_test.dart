@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:k_line_flutter/k_line_flutter.dart';
-import 'package:k_line_flutter/src/kline/u_default_impl/kline_default_delegate_util.dart';
+import 'package:kline_flutter/kline_flutter.dart';
+import 'package:kline_flutter/src/kline/u_default_impl/kline_default_delegate_util.dart';
 
 class _ExternalCandle {
   const _ExternalCandle({

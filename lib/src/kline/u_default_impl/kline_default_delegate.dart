@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:k_line_flutter/src/kline/u_default_impl/kline_default_delegate_util.dart';
+import 'package:kline_flutter/src/kline/u_default_impl/kline_default_delegate_util.dart';
 
 import '../delegate/kline_chart_delegate.dart';
 import '../theme/kline_theme.dart';

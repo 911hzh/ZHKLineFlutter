@@ -1,5 +1,5 @@
 import 'package:example/base/api/models/KLineModel.dart';
-import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:kline_flutter/kline_flutter.dart';
 
 class CustomKLineModelAdapter extends KLineDataAdapter<KLineModel> {
   const CustomKLineModelAdapter();

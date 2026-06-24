@@ -39,7 +39,6 @@ help:
 # 运行代码生成器
 gen:
 	@echo "🚀 运行代码生成器..."
-	$(FLUTTER) pub run build_runner build --delete-conflicting-outputs --build-filter="lib/**"
 
 # 监听文件变化并自动生成代码
 watch:

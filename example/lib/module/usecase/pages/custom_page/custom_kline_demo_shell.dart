@@ -6,7 +6,7 @@ import 'package:example/module/usecase/pages/custom_page/custom_kline_model_adap
 import 'package:example/module/usecase/pages/kline/KLineDemoCubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:kline_flutter/kline_flutter.dart';
 
 typedef CustomKLineDelegateBuilder =
     KLineChartDelegate<KLineModel> Function(

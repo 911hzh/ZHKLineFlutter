@@ -4,7 +4,7 @@ import 'package:example/module/getIt/Injection.dart';
 import 'package:example/module/usecase/pages/deep_chart/DeepChartDemoCubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:kline_flutter/kline_flutter.dart';
 
 /// 深度图示例页面。
 ///

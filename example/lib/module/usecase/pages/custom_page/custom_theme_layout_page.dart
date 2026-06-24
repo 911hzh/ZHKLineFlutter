@@ -1,7 +1,7 @@
 import 'package:example/module/usecase/pages/custom_page/custom_demo_copy.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_kline_demo_shell.dart';
 import 'package:flutter/material.dart';
-import 'package:k_line_flutter/k_line_flutter.dart';
+import 'package:kline_flutter/kline_flutter.dart';
 
 class CustomThemeLayoutPage extends StatelessWidget {
   const CustomThemeLayoutPage({super.key});

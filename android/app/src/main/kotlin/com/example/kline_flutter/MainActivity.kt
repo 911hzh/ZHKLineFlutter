@@ -1,4 +1,4 @@
-package com.example.k_line_flutter
+package com.example.kline_flutter
 
 import io.flutter.embedding.android.FlutterActivity
 
