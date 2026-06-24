@@ -29,6 +29,11 @@ class CustomOverlayPage extends StatelessWidget {
 
 class _CustomOverlayDelegate extends KLineDefaultDelegateImpl<KLineModel> {
   const _CustomOverlayDelegate({required super.adapter, super.onScroll});
+  @override
+  double chartHeight(KLineChartContext<KLineModel> context) {
+    final height = super.chartHeight(context);
+    return height + 50;
+  }
 
   @override
   Widget? buildOverlayView(

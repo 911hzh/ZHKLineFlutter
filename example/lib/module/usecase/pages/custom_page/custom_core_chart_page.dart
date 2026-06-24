@@ -21,7 +21,7 @@ class CustomCoreChartPage extends StatelessWidget {
         extensionPoint: 'KLineChart<T> / KLineChartDelegate<T>',
         scenario: '适合分时图、极简走势图、特殊金融图表，或需要完全自定义绘制协议的业务。',
       ),
-      chartBuilder: (context, state, controller, adapter, onScroll) {
+      chartBuilder: (context, state, controller, adapter, actions, onScroll) {
         if (state.isLoading && state.data.isEmpty) {
           return const SizedBox(
             height: 360,

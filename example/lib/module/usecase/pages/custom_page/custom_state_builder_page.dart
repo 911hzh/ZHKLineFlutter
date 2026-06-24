@@ -1,9 +1,7 @@
 import 'package:example/base/api/models/KLineModel.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_demo_copy.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_kline_demo_shell.dart';
-import 'package:example/module/usecase/pages/kline/KLineDemoCubit.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:k_line_flutter/k_line_flutter.dart';
 
 enum _StateDemoMode { normal, loading, empty, error }
@@ -32,7 +30,7 @@ class _CustomStateBuilderPageState extends State<CustomStateBuilderPage> {
         scenario: '适合接入统一 Design System、骨架屏、空态插画、错误重试按钮和弱网提示。',
       ),
       passPlaceholderStateToWidget: true,
-      controlsBuilder: (context, controller, state) {
+      controlsBuilder: (context, controller, state, actions) {
         return Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -44,7 +42,7 @@ class _CustomStateBuilderPageState extends State<CustomStateBuilderPage> {
           ],
         );
       },
-      chartBuilder: (context, state, controller, adapter, onScroll) {
+      chartBuilder: (context, state, controller, adapter, actions, onScroll) {
         final dataSource = _dataSourceForMode(state.data);
         return KLineWidget<KLineModel>(
           controller: controller,
@@ -59,7 +57,7 @@ class _CustomStateBuilderPageState extends State<CustomStateBuilderPage> {
               : state.error,
           onRetry: () {
             setState(() => _mode = _StateDemoMode.normal);
-            context.read<KLineDemoCubit>().retry();
+            actions.retry();
           },
           onScroll: onScroll,
           loadingBuilder: (_) => const _StateCard(

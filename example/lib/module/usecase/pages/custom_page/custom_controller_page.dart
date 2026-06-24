@@ -18,7 +18,7 @@ class CustomControllerPage extends StatelessWidget {
         scenario: '适合做工具栏按钮、同步多个图表、快捷切换指标、跳转到指定 K 线或外部联动选中。',
       ),
       initialIndicators: const ['volume'],
-      controlsBuilder: (context, controller, state) {
+      controlsBuilder: (context, controller, state, actions) {
         return _ControllerPanel(controller: controller);
       },
     );

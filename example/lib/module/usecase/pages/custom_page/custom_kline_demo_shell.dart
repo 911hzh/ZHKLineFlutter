@@ -23,6 +23,7 @@ typedef CustomKLineControlsBuilder =
       BuildContext context,
       KLineController controller,
       KLineDemoState state,
+      CustomKLineDemoActions actions,
     );
 
 typedef CustomKLineChartBuilder =
@@ -31,12 +32,20 @@ typedef CustomKLineChartBuilder =
       KLineDemoState state,
       KLineController controller,
       KLineDataAdapter<KLineModel> adapter,
+      CustomKLineDemoActions actions,
       void Function(
         KLineChartContext<KLineModel> context,
         KLineScrollMetrics metrics,
       )
       onScroll,
     );
+
+class CustomKLineDemoActions {
+  const CustomKLineDemoActions({required this.retry, required this.loadMore});
+
+  final VoidCallback retry;
+  final VoidCallback loadMore;
+}
 
 class CustomKLineDemoShell extends StatefulWidget {
   const CustomKLineDemoShell({
@@ -74,45 +83,60 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
   static const _edgeLoadThreshold = 20.0;
 
   late final KLineController _controller;
+  late final KLineDemoCubit _cubit;
+  late final CustomKLineDemoActions _actions;
   var _shouldScrollToInitialLatest = true;
 
   @override
   void initState() {
     super.initState();
     _controller = KLineController(initialIndicators: widget.initialIndicators);
+    _cubit = KLineDemoCubit(klineStore: getIt<KlineStore>())..start();
+    _actions = CustomKLineDemoActions(
+      retry: () {
+        _cubit.retry();
+      },
+      loadMore: () {
+        _cubit.loadMore();
+      },
+    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _cubit.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => KLineDemoCubit(klineStore: getIt<KlineStore>())..start(),
-      child: Scaffold(
-        backgroundColor: widget.backgroundColor,
-        appBar: AppBar(title: Text(widget.copy.title)),
-        body: SafeArea(
-          child: BlocConsumer<KLineDemoCubit, KLineDemoState>(
-            listener: (context, state) => _handleStateChange(state),
-            builder: (context, state) {
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-                children: [
-                  _CustomDemoHeader(copy: widget.copy),
+    return Scaffold(
+      backgroundColor: widget.backgroundColor,
+      appBar: AppBar(title: Text(widget.copy.title)),
+      body: SafeArea(
+        child: BlocConsumer<KLineDemoCubit, KLineDemoState>(
+          bloc: _cubit,
+          listener: (context, state) => _handleStateChange(state),
+          builder: (context, state) {
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              children: [
+                _CustomDemoHeader(copy: widget.copy),
+                const SizedBox(height: 12),
+                if (widget.controlsBuilder != null) ...[
+                  widget.controlsBuilder!(
+                    context,
+                    _controller,
+                    state,
+                    _actions,
+                  ),
                   const SizedBox(height: 12),
-                  if (widget.controlsBuilder != null) ...[
-                    widget.controlsBuilder!(context, _controller, state),
-                    const SizedBox(height: 12),
-                  ],
-                  _buildChart(context, state),
                 ],
-              );
-            },
-          ),
+                _buildChart(context, state),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -136,6 +160,7 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
         state,
         _controller,
         widget.adapter,
+        _actions,
         _handleUserScroll,
       );
     }
@@ -152,7 +177,7 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
           height: 220,
           message: '加载失败: ${state.error}',
           actionText: '重试',
-          onAction: () => context.read<KLineDemoCubit>().retry(),
+          onAction: _actions.retry,
         );
       }
       if (state.data.isEmpty) {
@@ -174,7 +199,7 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
       behavior: widget.behavior,
       isLoading: state.isLoading,
       error: state.error,
-      onRetry: () => context.read<KLineDemoCubit>().retry(),
+      onRetry: _actions.retry,
       onScroll: delegate == null ? _handleUserScroll : null,
     );
   }
@@ -185,7 +210,7 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
   ) {
     final reachedOlder = metrics.extentAfter <= _edgeLoadThreshold;
     if (reachedOlder && metrics.scrollDelta > 0) {
-      context.read<KLineDemoCubit>().loadMore();
+      _actions.loadMore();
     }
   }
 }

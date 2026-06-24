@@ -184,6 +184,38 @@ KLineWidget<MyCandle>(
 - `KLineChartContext<T>`：package 在每次绘制和交互时传入的上下文，包含 controller、可见区、布局节点、视口尺寸、主题和布局配置。
 - `KLineController`：对外暴露缩放、滚动、选中项、可见区间等状态。
 
+### Example 自定义 Demo 结构
+
+example 中的自定义页面统一复用 `CustomKLineDemoShell`，每个页面只关注一个扩展点：
+
+- `delegateBuilder`：复用默认数据加载和页面状态，只替换 `KLineChartDelegate` 的绘制、覆盖层或选中 UI。
+- `controlsBuilder`：拿到同一个 `KLineController`，用于演示缩放、滚动、指标切换和选中项控制。
+- `chartBuilder`：直接装配 `KLineWidget` 或 `KLineChart`，适合完全自定义图表区域、loading/error/empty UI。
+- `CustomKLineDemoActions`：由 shell 显式传入 `retry` / `loadMore`，自定义页面不需要通过 `BuildContext` 读取 demo 的状态对象。
+
+```dart
+CustomKLineDemoShell(
+  copy: const CustomDemoCopy(
+    title: '自定义加载与错误状态',
+    description: '替换 loading/error/empty UI',
+    extensionPoint: 'KLineWidget.loadingBuilder / errorBuilder / onRetry',
+    scenario: '接入统一 Design System 或弱网重试提示',
+  ),
+  passPlaceholderStateToWidget: true,
+  chartBuilder: (context, state, controller, adapter, actions, onScroll) {
+    return KLineWidget<KLineModel>(
+      controller: controller,
+      dataSource: state.data,
+      adapter: adapter,
+      isLoading: state.isLoading,
+      error: state.error,
+      onRetry: actions.retry,
+      onScroll: onScroll,
+    );
+  },
+)
+```
+
 ### 自定义绘制示例
 
 ```dart
@@ -372,11 +404,16 @@ example/
 │   ├── api/                         # RestClient、火币 K 线 API 和返回模型
 │   ├── store/                       # KlineStore、认证、设置等状态与持久化示例
 │   └── util/                        # K 线指标计算和通用工具
-└── lib/module/usecase/pages/kline/
-    ├── KLineDemoCubit.dart          # 页面状态、周期切换、刷新和加载更多
-    ├── KLineDemoPage.dart           # KLineWidget 装配和交互入口
-    ├── kline_model_adapter.dart     # example 模型到 package adapter 的映射
-    └── kline_demo_widgets.dart      # 顶部栏、周期选择等页面组件
+└── lib/module/usecase/pages/
+    ├── kline/
+    │   ├── KLineDemoCubit.dart      # 页面状态、周期切换、刷新和加载更多
+    │   ├── KLineDemoPage.dart       # KLineWidget 装配和交互入口
+    │   ├── kline_model_adapter.dart # example 模型到 package adapter 的映射
+    │   └── kline_demo_widgets.dart  # 顶部栏、周期选择等页面组件
+    └── custom_page/
+        ├── custom_kline_demo_shell.dart # 自定义 demo 共享数据、controller 和 actions
+        ├── custom_*_page.dart           # 各扩展点示例页面
+        └── custom_kline_model_adapter.dart
 ```
 
 ---
