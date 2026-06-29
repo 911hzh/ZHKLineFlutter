@@ -12,6 +12,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FLUTTER_VERSION: "3.41.9"
+  DART_VERSION: "3.11.5"
+
 jobs:
   package-check:
     name: package check
@@ -25,8 +29,8 @@ jobs:
       - name: 🐦 setup flutter environment
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.29.1"
-          dart-version: "3.7.0"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          dart-version: ${{ env.DART_VERSION }}
           channel: "stable"
           cache: true
 
@@ -51,8 +55,8 @@ jobs:
       - name: 🐦 setup flutter environment
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.29.1"
-          dart-version: "3.7.0"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          dart-version: ${{ env.DART_VERSION }}
           channel: "stable"
           cache: true
 
