@@ -14,7 +14,7 @@ description: "一个面向金融行情场景的 Flutter 图表库，提供 K 线
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 version: 0.1.1
-repository: https://github.com/911hzh/ZHKLineFlutter.git
+repository: https://github.com/911hzh/ZHKLineFlutter
 environment:
   sdk: ^3.7.0
 
