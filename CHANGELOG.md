@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- 将项目 `.fvmrc` 调整为当前 FVM 兼容的 JSON 格式，修复 `fvm flutter` 和 `example` 下 `make gen` 无法执行的问题。
+- 同步 `example/pubspec.lock` 中的本地 path 依赖版本到 `0.1.1`。
+
 ## 0.1.1
 
 - 更新 package 名称为 `kline_flutter`，同步公共入口和示例导入路径。
