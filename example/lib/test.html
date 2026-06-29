@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AIOS Drug Discovery Motion Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 40px;
+        }
+        #wrapper {
+            display: flex;
+            gap: 60px;
+            align-items: center;
+        }
+        #phone {
+            width: 360px;
+            height: 797px;
+            background: #FFFFFF;
+            border-radius: 40px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        #timeline {
+            color: white;
+            width: 320px;
+        }
+        #timeline h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+        .phase {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            opacity: 0.3;
+            transition: all 0.5s ease;
+        }
+        .phase.active {
+            opacity: 1;
+        }
+        .phase.completed {
+            opacity: 0.5;
+        }
+        .phase-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.5s ease;
+        }
+        .phase.active .phase-number {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+            color: #000;
+        }
+        .phase.completed .phase-number {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.3);
+        }
+        .phase-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .phase-content p {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.4;
+        }
+        .phase.active .phase-content p {
+            color: rgba(255,255,255,0.9);
+        }
+        #statusBar {
+            height: 44px;
+            background: rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 12px;
+            color: #000;
+        }
+        #container {
+            position: relative;
+            width: 360px;
+            height: 753px;
+            background: #FAFAFA;
+        }
+        canvas {
+            display: block;
+        }
+        #status {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #212121;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            pointer-events: none;
+            max-width: 300px;
+        }
+        #counter {
+            position: absolute;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 12px;
+            font-family: "SF Mono", monospace;
+            pointer-events: none;
+        }
+        #restart {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #212121;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        #restart:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <div id="phone">
+            <div id="statusBar">
+                <span>9:41</span>
+                <span>⚡︎ 100%</span>
+            </div>
+            <div id="container">
+                <canvas id="canvas"></canvas>
+                <div id="status"></div>
+                <div id="counter"></div>
+                <button id="restart">↻</button>
+            </div>
+        </div>
+
+        <div id="timeline">
+            <h2>AI 制药流程</h2>
+            <div class="phase" data-phase="0">
+                <div class="phase-number">1</div>
+                <div class="phase-content">
+                    <h3>分析蛋白结构</h3>
+                    <p>识别HER2蛋白的3D结构和潜在结合位点</p>
+                </div>
+            </div>
+            <div class="phase" data-phase="1">
+                <div class="phase-number">2</div>
+                <div class="phase-content">
+                    <h3>检测结合口袋</h3>
+                    <p>找到4个药物可以结合的活性位点</p>
+                </div>
+            </div>
+            <div class="phase" data-phase="2">
+                <div class="phase-number">3</div>
+                <div class="phase-content">
+                    <h3>生成候选分子</h3>
+                    <p>AI生成15万个候选分子，筛选出符合成药性的化合物</p>
+                </div>
+            </div>
+            <div class="phase" data-phase="3">
+                <div class="phase-number">4</div>
+                <div class="phase-content">
+                    <h3>排序与打分</h3>
+                    <p>根据预测结合能对872个候选药物排序</p>
+                </div>
+            </div>
+            <div class="phase" data-phase="4">
+                <div class="phase-number">✓</div>
+                <div class="phase-content">
+                    <h3>结果就绪</h3>
+                    <p>Top 100候选药物以轨道视图呈现</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const counter = document.getElementById('counter');
+
+        canvas.width = 360;
+        canvas.height = 753;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        let startTime = Date.now();
+        let particles = [];
+        let molecules = [];
+        let bindingSites = [];
+
+        // Easing function for smooth animations
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        // Protein sphere
+        const protein = {
+            x: centerX,
+            y: centerY - 50,
+            radius: 60,
+            scale: 1
+        };
+
+        class Particle {
+            constructor(x, y, angle) {
+                this.x = x;
+                this.y = y;
+                this.vx = Math.cos(angle) * (2 + Math.random() * 3);
+                this.vy = Math.sin(angle) * (2 + Math.random() * 3) - 4;
+                this.life = Math.random() > 0.05 ? 0.5 + Math.random() * 1.5 : 10; // 5% survive
+                this.maxLife = this.life;
+                this.radius = 3 + Math.random() * 2;
+                this.survive = this.maxLife > 5;
+                this.hue = Math.random() * 360;
+            }
+
+            update() {
+                this.vy += 0.2; // gravity
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= 0.016;
+
+                if (this.survive && this.y > canvas.height - 80) {
+                    this.vy *= -0.6;
+                    this.vx *= 0.9;
+                    if (Math.abs(this.vy) < 0.5) this.vy = 0;
+                }
+            }
+
+            draw() {
+                const alpha = this.survive ? 1 : this.life / this.maxLife;
+
+                // Add glow effect
+                if (this.survive || alpha > 0.3) {
+                    ctx.shadowBlur = this.survive ? 15 : 8;
+                    ctx.shadowColor = this.survive ? 'rgba(120, 180, 255, 0.6)' : `hsla(${this.hue}, 70%, 70%, ${alpha})`;
+                }
+
+                if (this.survive) {
+                    // Gradient for surviving particles (soft blue/purple)
+                    const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                    grad.addColorStop(0, `rgba(200, 220, 255, ${alpha})`);
+                    grad.addColorStop(0.5, `rgba(120, 180, 255, ${alpha})`);
+                    grad.addColorStop(1, `rgba(80, 140, 255, ${alpha * 0.5})`);
+                    ctx.fillStyle = grad;
+                } else {
+                    ctx.fillStyle = `hsla(${this.hue}, 80%, 65%, ${alpha * 0.7})`;
+                }
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class Molecule {
+            constructor(x, y, rank) {
+                this.x = x;
+                this.y = y;
+                this.targetAngle = (rank / 872) * Math.PI * 2;
+                this.targetRadius = rank < 10 ? 110 : rank < 50 ? 150 : 200;
+                this.angle = Math.random() * Math.PI * 2;
+                this.radius = 50;
+                this.size = rank < 10 ? 6 : rank < 50 ? 4 : 2.5;
+                this.opacity = rank < 100 ? (rank < 10 ? 1 : rank < 50 ? 0.7 : 0.4) : 0;
+                this.rotSpeed = rank < 10 ? 0.02 : rank < 50 ? 0.012 : 0.008;
+            }
+
+            update(time, phase) {
+                // Move to orbit position
+                this.angle += (this.targetAngle - this.angle) * 0.05;
+                this.radius += (this.targetRadius - this.radius) * 0.05;
+
+                // Rotate in orbit (only in phase 4)
+                if (phase === 4) {
+                    this.angle += this.rotSpeed;
+                }
+
+                // Sorting animation in phase 3
+                if (phase === 3) {
+                    this.flickerPhase = ((time % 300) / 300);
+                }
+
+                this.x = protein.x + Math.cos(this.angle) * this.radius;
+                this.y = protein.y + Math.sin(this.angle) * this.radius * 0.6; // 30° tilt
+            }
+
+            draw(phase) {
+                // Flickering effect during sorting (phase 3)
+                let currentOpacity = this.opacity;
+                if (phase === 3 && this.flickerPhase !== undefined) {
+                    const flicker = Math.sin(this.flickerPhase * Math.PI * 4) * 0.3 + 0.7;
+                    currentOpacity *= flicker;
+                }
+
+                // Glow effect for bright molecules
+                if (this.size > 4) {
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = `rgba(120, 180, 255, ${currentOpacity * 0.6})`;
+                } else if (this.size > 3) {
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = `rgba(150, 200, 255, ${currentOpacity * 0.4})`;
+                }
+
+                // Core - soft color scheme
+                const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+                if (this.size > 4) {
+                    // Top 10: bright blue/white
+                    grad.addColorStop(0, `rgba(240, 245, 255, ${currentOpacity})`);
+                    grad.addColorStop(0.4, `rgba(160, 200, 255, ${currentOpacity})`);
+                    grad.addColorStop(1, `rgba(100, 160, 255, ${currentOpacity * 0.3})`);
+                } else if (this.size > 3) {
+                    // Top 11-50: soft purple/blue
+                    grad.addColorStop(0, `rgba(230, 235, 255, ${currentOpacity * 0.8})`);
+                    grad.addColorStop(0.5, `rgba(180, 190, 255, ${currentOpacity})`);
+                    grad.addColorStop(1, `rgba(140, 160, 255, ${currentOpacity * 0.3})`);
+                } else {
+                    // Top 51-100: light lavender
+                    grad.addColorStop(0, `rgba(240, 240, 255, ${currentOpacity * 0.5})`);
+                    grad.addColorStop(0.6, `rgba(200, 200, 235, ${currentOpacity})`);
+                    grad.addColorStop(1, `rgba(180, 180, 220, ${currentOpacity * 0.2})`);
+                }
+                ctx.fillStyle = grad;
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+                // Outer ring for top 10
+                if (this.size > 5) {
+                    ctx.strokeStyle = `rgba(120, 180, 255, ${currentOpacity * 0.4})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size + 2, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function drawProtein(time) {
+            const phase = getPhase(time);
+
+            // Soft glow during generation phase
+            if (phase === 2) {
+                const pulse = Math.sin(time / 200) * 0.3 + 0.7;
+                ctx.shadowBlur = 30 * pulse;
+                ctx.shadowColor = 'rgba(100, 150, 255, 0.4)';
+            }
+
+            // Completion flash at phase 3->4 transition
+            if (phase === 4) {
+                const transitionTime = time - 22000;
+                if (transitionTime < 500) {
+                    const flash = 1 - (transitionTime / 500);
+                    ctx.shadowBlur = 50 * flash;
+                    ctx.shadowColor = `rgba(120, 180, 255, ${flash * 0.8})`;
+                }
+            }
+
+            // Soft gradient (frosted glass / matte look)
+            const gradient = ctx.createRadialGradient(
+                protein.x - 10, protein.y - 10, 0,
+                protein.x, protein.y, protein.radius * protein.scale
+            );
+            gradient.addColorStop(0, '#E8F0FF');
+            gradient.addColorStop(0.4, '#C8DCFF');
+            gradient.addColorStop(0.7, '#A8C8FF');
+            gradient.addColorStop(1, '#88B0E8');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(protein.x, protein.y, protein.radius * protein.scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+
+            // Soft highlight (frosted glass)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(protein.x - 10, protein.y - 10, 15, 22, -0.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.beginPath();
+            ctx.ellipse(protein.x - 18, protein.y - 6, 6, 9, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Subtle edge
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(protein.x, protein.y, protein.radius * protein.scale - 1, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Scan line (phase 1)
+            if (phase === 1) {
+                const progress = ((time - 2000) % 2000) / 2000;
+                const scanY = protein.y - protein.radius * protein.scale + progress * protein.radius * protein.scale * 2;
+
+                const scanGrad = ctx.createLinearGradient(0, scanY - 8, 0, scanY + 8);
+                scanGrad.addColorStop(0, 'rgba(100, 200, 255, 0)');
+                scanGrad.addColorStop(0.5, 'rgba(100, 200, 255, 0.6)');
+                scanGrad.addColorStop(1, 'rgba(100, 200, 255, 0)');
+
+                ctx.strokeStyle = scanGrad;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = 'rgba(100, 200, 255, 0.6)';
+                ctx.beginPath();
+                ctx.arc(protein.x, scanY, protein.radius * protein.scale * 0.95, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function drawBindingSites(time) {
+            const phase = getPhase(time);
+            if (phase < 1) return;
+
+            bindingSites.forEach((site, i) => {
+                const delay = i * 200;
+                const siteTime = time - 2000 - delay;
+                if (siteTime < 0) return;
+
+                const pulse = Math.sin(time / 400 + i * Math.PI / 2) * 0.4 + 0.6;
+                const appear = Math.min(siteTime / 300, 1);
+                const size = appear * 10 * pulse;
+
+                // Outer glow
+                const outerGrad = ctx.createRadialGradient(site.x, site.y, 0, site.x, site.y, size * 2);
+                outerGrad.addColorStop(0, `rgba(255, 107, 53, ${0.3 * appear})`);
+                outerGrad.addColorStop(1, 'rgba(255, 107, 53, 0)');
+                ctx.fillStyle = outerGrad;
+                ctx.beginPath();
+                ctx.arc(site.x, site.y, size * 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core with shadow
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = `rgba(255, 107, 53, ${0.8 * appear})`;
+
+                const coreGrad = ctx.createRadialGradient(site.x, site.y, 0, site.x, site.y, size);
+                coreGrad.addColorStop(0, `rgba(255, 200, 100, ${appear})`);
+                coreGrad.addColorStop(0.6, `rgba(255, 107, 53, ${0.9 * appear})`);
+                coreGrad.addColorStop(1, `rgba(255, 80, 30, ${0.3 * appear})`);
+                ctx.fillStyle = coreGrad;
+                ctx.beginPath();
+                ctx.arc(site.x, site.y, size, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+                // Ring animation during generation phase
+                if (phase === 2) {
+                    const ringPulse = ((time + i * 500) % 2000) / 2000;
+                    const ringRadius = size + ringPulse * 20;
+                    const ringAlpha = (1 - ringPulse) * 0.5;
+
+                    ctx.strokeStyle = `rgba(255, 107, 53, ${ringAlpha})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(site.x, site.y, ringRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function getPhase(time) {
+            if (time < 2000) return 0;      // 0-2s: Focusing
+            if (time < 5000) return 1;      // 2-5s: Binding sites
+            if (time < 18000) return 2;     // 5-18s: Generation
+            if (time < 22000) return 3;     // 18-22s: Sorting
+            return 4;                        // 22s+: Result
+        }
+
+        function updateStatus(time) {
+            const phase = getPhase(time);
+
+            // Update timeline
+            document.querySelectorAll('.phase').forEach((el, i) => {
+                el.classList.remove('active', 'completed');
+                if (i < phase) el.classList.add('completed');
+                if (i === phase) el.classList.add('active');
+            });
+
+            switch(phase) {
+                case 0:
+                    status.textContent = '正在分析结合位点...';
+                    counter.textContent = '';
+                    break;
+                case 1:
+                    status.textContent = `发现 ${bindingSites.length} 个结合口袋`;
+                    counter.textContent = '';
+                    break;
+                case 2:
+                    const count = Math.floor((time - 5000) / 13000 * 156209);
+                    status.textContent = '正在生成分子...';
+                    counter.textContent = count.toLocaleString() + ' 个候选';
+                    break;
+                case 3:
+                    status.textContent = '按结合能排序中...';
+                    counter.textContent = '872 个候选通过筛选';
+                    break;
+                case 4:
+                    status.textContent = '✓ 872 个候选就绪';
+                    counter.textContent = '显示 Top 100';
+                    break;
+            }
+        }
+
+        function animate() {
+            const time = Date.now() - startTime;
+            const phase = getPhase(time);
+
+            // Clear
+            ctx.fillStyle = '#FAFAFA';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Phase 0: Shrink protein with easing
+            if (phase === 0) {
+                const progress = time / 2000;
+                protein.scale = 1 - easeInOutCubic(progress) * 0.4;
+            }
+
+            // Phase 3-4: Restore scale
+            if (phase >= 3 && protein.scale < 1) {
+                protein.scale += (1 - protein.scale) * 0.08;
+            }
+
+            // Phase 1: Show binding sites
+            if (phase === 1 && bindingSites.length === 0) {
+                const angles = [0, Math.PI/2, Math.PI, -Math.PI/2];
+                angles.forEach(angle => {
+                    bindingSites.push({
+                        x: protein.x + Math.cos(angle) * protein.radius * 0.7,
+                        y: protein.y + Math.sin(angle) * protein.radius * 0.7
+                    });
+                });
+            }
+
+            // Phase 2: Generate particles
+            if (phase === 2) {
+                if (time % 20 < 16) { // Faster spawn rate
+                    bindingSites.forEach(site => {
+                        const angle = Math.random() * Math.PI * 2;
+                        particles.push(new Particle(site.x, site.y, angle));
+                    });
+                }
+
+                particles = particles.filter(p => {
+                    p.update();
+                    if (p.life <= 0 && !p.survive) return false;
+                    if (p.survive && p.y > canvas.height) return false;
+                    return true;
+                });
+
+                particles.forEach(p => p.draw());
+            }
+
+            // Phase 3: Create molecules from surviving particles
+            if (phase === 3 && molecules.length === 0) {
+                const survivors = particles.filter(p => p.survive);
+                for (let i = 0; i < Math.min(100, survivors.length); i++) {
+                    const p = survivors[i];
+                    molecules.push(new Molecule(p.x, p.y, i));
+                }
+                particles = [];
+            }
+
+            // Phase 3-4: Animate molecules to orbit
+            if (phase >= 3) {
+                molecules.forEach(m => {
+                    m.update(time, phase);
+                    m.draw(phase);
+                });
+            }
+
+            drawProtein(time);
+            drawBindingSites(time);
+            updateStatus(time);
+
+            requestAnimationFrame(animate);
+        }
+
+        function restart() {
+            startTime = Date.now();
+            particles = [];
+            molecules = [];
+            bindingSites = [];
+            protein.scale = 1;
+        }
+
+        document.getElementById('restart').addEventListener('click', restart);
+
+        animate();
+    </script>
+</body>
+</html>

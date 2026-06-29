@@ -12,10 +12,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FLUTTER_VERSION: "3.41.9"
+  DART_VERSION: "3.11.5"
+
 jobs:
-  # 构建Web
-  build-web:
-    name: build web
+  package-check:
+    name: package check
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -26,10 +29,45 @@ jobs:
       - name: 🐦 setup flutter environment
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.29.1"
-          dart-version: "3.7.0"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          dart-version: ${{ env.DART_VERSION }}
           channel: "stable"
           cache: true
 
-      - name: 🌐 build web
+      - name: 📦 get package dependencies
+        run: make get
+
+      - name: 🔍 analyze package
+        run: make analyze
+
+      - name: 🧪 test package
+        run: make test
+
+  example-build-web:
+    name: example build web
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 check out code
+        uses: actions/checkout@v4
+
+      - name: 🐦 setup flutter environment
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          dart-version: ${{ env.DART_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: 📦 get example dependencies
+        working-directory: example
+        run: flutter pub get
+
+      - name: 🚀 generate example code
+        working-directory: example
+        run: make gen
+
+      - name: 🌐 build example web
+        working-directory: example
         run: make build-web

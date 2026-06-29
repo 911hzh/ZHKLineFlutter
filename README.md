@@ -1,375 +1,224 @@
-# ZHKLine Flutter 📈
+# ZHKLine Flutter
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.7.0+-blue.svg)](https://flutter.dev/)
 [![Dart](https://img.shields.io/badge/Dart-3.7.0+-blue.svg)](https://dart.dev/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-一个高性能、功能完整的 Flutter K 线图表库，专为金融应用设计。本项目是 [ZHKLine Swift 版本](https://github.com/911hzh/ZHKLineFlutter/tree/develop)的 Flutter 跨平台实现，采用先进的绘制架构，支持多种技术指标，提供流畅的用户交互体验。
+一个面向金融行情场景的 Flutter 图表库，提供 K 线图、技术指标、交互控制和深度图能力。它以 `CustomPainter` 和 delegate 架构为核心，让你既可以快速接入一套默认 UI，也可以在真实业务中按需替换绘制、布局、覆盖层和数据适配。
 
-**参考火币的 UI 设计实现，数据来源于火币 API**
+详细使用方式、自定义 UI、深度图接入和 example 说明请参考 [`example/use_docs.md`](example/use_docs.md)。
 
----
+## 效果预览
 
-## ✨ 特性
+### 指标切换
 
-### 🚀 高性能绘制
+![技术指标切换演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_indicator.gif)
 
-- ⚡️ **CustomPainter 自定义绘制** - 60 FPS 流畅渲染 2000+ K 线数据
-- 📊 **分层架构** - 网格线、蜡烛图、指标线、十字线分层管理，避免重复绘制
-- 🎯 **智能渲染** - 只绘制可见区域，大幅降低 CPU/GPU 负载
-- 💾 **预计算缓存** - 所有技术指标和位置信息预先计算，避免实时运算
+### 滚动与缩放
 
-### 📈 完整的技术指标
+![滚动与缩放演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_scrolling.gif)
 
-- **主图指标**: MA (5/10/30)、EMA (5/10/30)、BOLL (20, 2)
-- **副图指标**: MACD (12/26/9)、KDJ (9/3/3)、RSI (6/12/24)、WR (6/10/14)、VOL (5/10)
-- **自动计算**: 所有技术指标由库自动计算，无需手动处理
+### 长按详情
 
-### 🎮 流畅的手势交互
+![长按十字线演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_tap_longpress_dataDetail.gif)
 
-- 🔍 **双指缩放** - 0.5x-3.0x 缩放蜡烛宽度
-- 📱 **平滑滚动** - 单指拖动浏览历史数据
-- ➕ **长按十字线** - 查看特定 K 线详细信息
-- 🎨 **专业 UI** - 参考火币设计，涨红跌绿配色方案
+### 自定义背景
 
-### 🌍 跨平台支持
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_background.png"
+  alt="自定义背景演示"
+  width="360"
+/>
 
-完全匹配 Swift 版本实现，一套代码支持 iOS、Android、Web、Desktop
+### 自定义指标文案
 
----
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_indicator_text.png"
+  alt="自定义指标文案演示"
+  width="360"
+/>
 
-## 📸 效果展示
+### 自定义主图绘制
 
-### 📊 技术指标切换
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_main_draw.png"
+  alt="自定义主图绘制演示"
+  width="360"
+/>
 
-展示如何在主图和副图之间切换不同的技术指标（MA、BOLL、MACD、KDJ 等），所有指标数据实时渲染，流畅无卡顿。
+## 为什么选择它
 
-![技术指标切换演示](lib/assets/show/flutter_indicator.gif)
+- **几分钟完成接入**：业务页面只需要准备 `List<T>` 和 `KLineDataAdapter<T>`，默认 UI 已包含蜡烛图、指标、副图、长按详情和基础状态展示，不需要为了图表改造已有数据模型。
+- **扩展点清晰可控**：通过 `KLineChartDelegate<T>` / `DeepChartDelegate<T>` 暴露绘制流程。想改背景、网格、指标文案、主图绘制、选中浮层或深度图，只替换对应模块即可。
+- **默认能力可复用**：每个默认绘制能力都拆到了独立的 KLineDefaultDelegateImplUtil 中。你可以复用坐标计算、文本绘制、指标布局等基础能力，只专注改业务真正关心的那一层 UI。
+- **为高频行情优化**：基于 `CustomPainter` 分层绘制，并提前计算坐标、可见区节点和绘制数据，减少绘制阶段重复计算，适合滚动、缩放、长按等高频交互场景。
+- **业务模型零侵入**：K 线和深度图都通过 adapter 读取字段，后端模型、缓存模型、计算后的指标模型都可以直接接入。
+- **架构长期可维护**：核心图表、默认实现、主题布局、controller、example 数据层边界清晰，后续新增指标、替换 UI、接入不同交易所数据时不会牵一发动全身。
+- **金融图表能力完整**：内置 MA、EMA、BOLL、MACD、KDJ、RSI、WR、VOL 等常见指标，支持外部控制缩放、滚动、选中状态，也提供盘口累计深度图 `DeepChart`。
 
-### 🔄 流畅滚动与缩放
+## 快速开始
 
-展示单指拖动浏览历史数据和双指缩放功能，支持 0.5x-3.0x 缩放范围，60 FPS 流畅渲染 2000+ K 线数据。
-
-![滚动与缩放演示](lib/assets/show/flutter_scrolling.gif)
-
-### 📍 长按十字线详情
-
-展示长按图表时显示十字线和数据详情面板，包括当前 K 线的 OHLCV 数据和所有技术指标数值，精准对齐。
-
-![长按十字线演示](lib/assets/show/flutter_tap_longpress_dataDetail.gif)
-
----
-
-## 🚀 快速开始
-
-### 安装
+在你的 Flutter 项目中添加依赖：
 
 ```bash
-# 克隆项目
-git clone https://github.com/911hzh/ZHKLineFlutter.git
-cd k_line_flutter
-
-# 安装依赖
-flutter pub get
-
-# 运行项目
-flutter run -d macos  # 或 ios / android
+flutter pub add kline_flutter
 ```
 
-### 基础用法
+或者手动写入 `pubspec.yaml`：
+
+```yaml
+dependencies:
+  kline_flutter: ^0.1.0
+```
+
+然后在业务代码中导入：
 
 ```dart
-import 'package:k_line_flutter/kline/widgets/KLineView.dart';
+import 'package:kline_flutter/kline_flutter.dart';
+```
 
-class MyKLinePage extends StatefulWidget {
-  @override
-  _MyKLinePageState createState() => _MyKLinePageState();
+如果想运行本仓库的示例工程：
+
+```bash
+git clone https://github.com/911hzh/ZHKLineFlutter.git
+cd ZHKLineFlutter
+cd example
+flutter pub get
+flutter run -d macos
+```
+
+## 最小接入
+
+接入时通常只需要准备两部分：
+
+- `MyCandle`：你的业务 K 线数据类，可以来自接口、数据库或本地计算结果。
+- `MyCandleAdapter`：把业务数据转换成图表 UI 能识别的 open、high、low、close、volume 和时间文案。
+
+```dart
+import 'package:kline_flutter/kline_flutter.dart';
+
+class MyCandle {
+  const MyCandle({
+    required this.open,
+    required this.high,
+    required this.low,
+    required this.close,
+    required this.volume,
+    required this.timeLabel,
+  });
+
+  final double open;
+  final double high;
+  final double low;
+  final double close;
+  final double volume;
+  final String timeLabel;
 }
 
-class _MyKLinePageState extends State<MyKLinePage> {
-  List<KLineModel> _datas = [];
+class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
+  const MyCandleAdapter();
 
   @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
+  double open(MyCandle item) => item.open;
 
-  Future<void> _loadData() async {
-    // 1. 获取 K 线数据
-    final klineApi = KlineApi.shared;
-    final rawData = await klineApi.getKLineModels(
-      symbol: 'btcusdt',
-      period: KLinePeriod.day1,
-      size: 200,
-    );
+  @override
+  double high(MyCandle item) => item.high;
 
-    // 2. 计算技术指标（自动完成）
-    final modelsWithIndicators = DataUtil.toKLineModelsWithIndicators(
-      rawData,
-      KLinePeriod.day1,
-    );
+  @override
+  double low(MyCandle item) => item.low;
 
-    setState(() {
-      _datas = modelsWithIndicators;
-    });
-  }
+  @override
+  double close(MyCandle item) => item.close;
+
+  @override
+  double volume(MyCandle item) => item.volume;
+
+  @override
+  String dateLabel(MyCandle item) => item.timeLabel;
+}
+```
+
+UI 层在你的某个页面里，直接把数据数组和 adapter 传给 `KLineWidget` 即可：
+
+```dart
+class MarketPage extends StatelessWidget {
+  const MarketPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('K 线图')),
-      body: _datas.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : KLineView(
-              datas: _datas,
-              mainChartIndicatorSelection: [
-                KLineTechnicalIndicatorType.ma,  // 显示 MA 指标
-              ],
-              secondChartIndicatorSelection: [
-                KLineTechnicalIndicatorType.volume,  // 显示成交量
-                KLineTechnicalIndicatorType.macd,    // 显示 MACD
-              ],
-              scale: KLineConfig.scale,
-            ),
+    return KLineWidget<MyCandle>(
+      dataSource: candles,
+      adapter: const MyCandleAdapter(),
+      initialIndicators: const ['volume'],
     );
   }
 }
 ```
 
-### 自定义配置
+深度图也保持同样的接入思路：
 
 ```dart
-// 全局配置（单例模式）
-final config = KLineConfig.shared;
-
-// 蜡烛图样式
-config.candleUpColor = Color(0xFFF14965);    // 涨势红色
-config.candleDownColor = Color(0xFF00B066);  // 跌势绿色
-
-// 技术指标颜色
-config.ma5Color = Color(0xFFFFD700);   // MA5 金色
-config.ma10Color = Color(0xFF00BFFF);  // MA10 蓝色
-config.ma30Color = Color(0xFFDA70D6);  // MA30 紫色
-
-// 缩放
-KLineConfig.scale = 1.5;  // 1.5 倍缩放
-```
-
----
-
-## 📖 核心组件
-
-### KLineView
-
-主视图组件，包含完整的 K 线图表功能
-
-```dart
-KLineView(
-  datas: List<KLineModel>,                              // K 线数据（必需）
-  mainChartIndicatorSelection: List<KLineTechnicalIndicatorType>,  // 主图指标
-  secondChartIndicatorSelection: List<KLineTechnicalIndicatorType>, // 副图指标
-  scale: double,                                        // 缩放比例
+DeepChart<DeepDepthEntry>(
+  bids: bids,
+  asks: asks,
+  adapter: const DeepDepthEntryAdapter(),
 )
 ```
 
-### KLineModel
+更多自定义绘制、主题、布局、错误态、加载态和 example 数据接入，请查看 [`example/use_docs.md`](example/use_docs.md)。
 
-K 线数据模型，包含 OHLCV 数据和技术指标
+## 核心能力
 
-```dart
-class KLineModel {
-  final double open;       // 开盘价
-  final double close;      // 收盘价
-  final double high;       // 最高价
-  final double low;        // 最低价
-  final double amount;     // 成交量
-  final int id;            // 时间戳
+### K 线图
 
-  // 技术指标（由库自动计算）
-  KLineTechnicalIndicatorsModel? kLineTechnicalIndicatorsModel;
-}
+- `KLineWidget<T>`：默认 K 线 UI，适合快速接入。
+- `KLineChart<T>`：核心图表组件，适合完全自定义绘制。
+- `KLineChartDelegate<T>`：绘制协议，可控制布局节点、网格、主图、副图、覆盖层和选中 UI。
+- `KLineDataAdapter<T>`：业务模型适配器。
+- `KLineController`：缩放、滚动、选中、可见区和指标状态控制。
+
+### 深度图
+
+- `DeepChart<T>`：默认深度图组件。
+- `DeepChartDataAdapter<T>`：盘口数据适配器。
+- `DeepChartDelegate<T>`：深度图绘制协议。
+- `DeepChartLayoutConfig`：中间图形区域和底部价格行的布局配置。
+
+## 简洁项目结构
+
+```text
+lib/
+├── kline_flutter.dart
+└── src/
+    ├── kline/
+    └── deepchart/
+
+example/
+├── lib/base/api/
+├── lib/base/store/
+└── lib/module/usecase/pages/
+    ├── kline/
+    ├── deep_chart/
+    └── custom_page/
 ```
 
-### KLineConfig
+## 适合场景
 
-配置类，控制图表外观和行为（单例模式）
+- 交易所行情页、合约行情页、股票/基金行情页。
+- 需要快速接入默认 K 线 UI 的业务。
+- 需要深度定制金融图表绘制协议的业务。
+- 需要统一维护 K 线、技术指标、盘口深度和图表交互的 Flutter 项目。
 
-```dart
-class KLineConfig {
-  static final KLineConfig shared = KLineConfig._internal();
-  static double scale = 1.0;  // 全局缩放因子
+## 参与维护
 
-  // 蜡烛图配置
-  double get candleWidth => 8.5 * scale;
-  double get candleSpace => 2.0 * scale;
-  Color candleUpColor = Color(0xFFF14965);
-  Color candleDownColor = Color(0xFF00B066);
+这个库还在持续完善中，欢迎大家一起参与维护：
 
-  // 网格配置
-  int crossHorCount = 5;      // 横向网格线数量
-  int crossVerticalCount = 6; // 纵向网格线数量
+- 提交 Issue 反馈 Bug、性能问题或 API 设计建议。
+- 提交 Pull Request 补充图表能力、example、测试和文档。
+- 分享真实业务中的自定义 delegate、主题和交互方案。
 
-  // ... 更多配置项
-}
-```
+如果这个项目对你有帮助，欢迎点一个 Star，也欢迎一起把它维护成更好用的 Flutter 金融图表库。
 
----
+## License
 
-## 🏗 架构设计
-
-### 核心设计原则
-
-1. **职责分离** - 数据计算、位置计算、视图渲染完全分离
-2. **预计算优化** - 所有位置信息预先计算，避免重复计算
-3. **分层绘制** - 网格、蜡烛、指标、十字线分层管理
-
-### 绘制流程
-
-```
-原始数据 → 技术指标计算 → 坐标位置计算 → CustomPainter 绘制 → 手势交互
-    ↓            ↓                ↓                  ↓              ↓
-KLineData  →  Indicators  →  DrawPoints  →  Canvas.draw  →  GestureDetector
-```
-
-### 关键组件
-
-| 组件                        | 职责                   |
-| --------------------------- | ---------------------- |
-| **DataUtil**                | 技术指标计算引擎       |
-| **KLineCrandleIndexUtil**   | 坐标位置计算工具       |
-| **KLineMainPainter**        | 主图 CustomPainter     |
-| **KLineSecondLayerPainter** | 副图 CustomPainter     |
-| **IndicatorRenderer**       | 指标渲染器（策略模式） |
-
----
-
-## 📊 技术指标
-
-| 指标 | 说明               | 参数                          | 用途             |
-| ---- | ------------------ | ----------------------------- | ---------------- |
-| MA   | 移动平均线         | 周期: 5, 10, 30               | 判断趋势方向     |
-| EMA  | 指数移动平均线     | 周期: 5, 10, 30               | 更敏感的趋势判断 |
-| BOLL | 布林带             | 周期: 20, 倍数: 2             | 判断价格波动范围 |
-| MACD | 指数平滑异同平均线 | 快线: 12, 慢线: 26, 信号线: 9 | 判断买卖时机     |
-| KDJ  | 随机指标           | 周期: 9, K: 3, D: 3           | 判断超买超卖     |
-| RSI  | 相对强弱指标       | 周期: 6, 12, 24               | 判断价格强弱     |
-| WR   | 威廉指标           | 周期: 6, 10, 14               | 判断超买超卖     |
-| VOL  | 成交量             | MA 周期: 5, 10                | 判断市场活跃度   |
-
----
-
-## 📁 项目结构
-
-```
-lib/kline/
-├── api/                      # 网络层
-│   ├── ApiClient.dart        # Dio 网络请求
-│   └── KlineApi.dart         # K 线 API（火币）
-├── config/                   # 配置层
-│   ├── ColorExtension.dart   # 颜色扩展
-│   └── KLineConfig.dart      # K 线配置（单例）
-├── models/                   # 数据模型
-│   ├── KLineModel.dart
-│   ├── KLinePositionModel.dart
-│   ├── KLineTechnicalIndicatorsModel.dart
-│   └── ...
-├── utils/                    # 工具类
-│   ├── DataUtil.dart         # 技术指标计算
-│   └── KLineCrandleIndexUtil.dart  # 位置计算
-└── widgets/                  # UI 组件
-    ├── chart/                # 图表组件
-    │   ├── KLineChartView.dart
-    │   ├── KLineMainPainter.dart
-    │   └── KLineSecondLayerPainter.dart
-    ├── renderers/            # 指标渲染器
-    │   ├── VolumeIndicatorRenderer.dart
-    │   ├── MacdIndicatorRenderer.dart
-    │   └── ...
-    ├── KLineView.dart        # 主视图
-    ├── ChartPage.dart        # K 线页面
-    └── ...
-```
-
----
-
-## 🎯 与 Swift 版本对应
-
-| 功能       | Swift              | Flutter               |
-| ---------- | ------------------ | --------------------- |
-| **绘制层** | CALayer            | CustomPainter         |
-| **视图层** | UIView             | StatefulWidget        |
-| **滚动**   | UIScrollView       | SingleChildScrollView |
-| **缩放**   | UIPinchGesture     | onScaleUpdate         |
-| **长按**   | UILongPressGesture | onLongPress           |
-| **配置**   | KLineConfig.shared | KLineConfig.shared    |
-| **计算**   | DataUtil           | DataUtil              |
-
----
-
-## 📊 性能数据
-
-| 测试场景   | 数据量  | 帧率   | 内存  |
-| ---------- | ------- | ------ | ----- |
-| 滚动浏览   | 2000 条 | 60 FPS | ~50MB |
-| 双指缩放   | 2000 条 | 60 FPS | ~50MB |
-| 长按十字线 | 2000 条 | 60 FPS | ~50MB |
-| 切换指标   | 2000 条 | 60 FPS | ~55MB |
-
----
-
-## 🛠 技术栈
-
-- **Flutter**: 3.7.0+
-- **Dart**: 3.7.0+
-- **dio**: ^5.9.0 - HTTP 网络请求
-- **get_it**: ^8.2.0 - 依赖注入
-- **injectable**: ^2.5.1 - 依赖注入代码生成
-- **intl**: ^0.19.0 - 日期格式化
-
----
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-### 提交规范
-
-- `feat`: 新功能
-- `fix`: Bug 修复
-- `docs`: 文档更新
-- `style`: 代码格式
-- `refactor`: 重构
-- `perf`: 性能优化
-
----
-
-## 📄 License
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
----
-
-## 🔗 相关链接
-
-- **Swift 版本**: [ZHKLine iOS](https://github.com/911hzh/ZHKLineFlutter/tree/develop)
-- **数据来源**: [火币 API](https://huobiapi.github.io/docs/spot/v1/cn/)
-- **Flutter 文档**: [flutter.dev](https://flutter.dev/)
-
----
-
-## 📮 联系方式
-
-- **作者**: 911hzh
-- **邮箱**: 911hzh@gmail.com
-- **Issues**: [GitHub Issues](https://github.com/911hzh/ZHKLineFlutter/issues)
-
----
-
-<div align="center">
-
-**使用 ❤️ 和 Flutter 构建**
-
-如果这个项目对你有帮助，请给一个 ⭐️ Star！
-
-</div>
+本项目采用 MIT License，详情见 [LICENSE](LICENSE)。

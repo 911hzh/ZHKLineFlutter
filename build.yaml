@@ -1,0 +1,19 @@
+targets:
+  $default:
+    sources:
+      include:
+        - lib/**
+        - test/**
+        - pubspec.yaml
+        - $package$
+      exclude:
+        - example/**
+    builders:
+      injectable_generator:injectable_builder:
+        generate_for:
+          include:
+            - lib/**
+      injectable_generator:injectable_config_builder:
+        generate_for:
+          include:
+            - lib/**
