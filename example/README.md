@@ -26,6 +26,7 @@ make create helloworldProject BUNDLE_ID=com.company.helloworld OUTPUT=../apps
 - 功能记录：`FEATURE_LOG.md`
 - `lib` 目录总览：`lib/README.md`
 - K 线示例：`lib/module/usecase/pages/kline/KLineDemoPage.dart`
+- 实时更新示例：`lib/module/usecase/pages/custom_page/custom_live_update_page.dart`
 - 深度图示例：`lib/module/usecase/pages/deep_chart/DeepChartDemoPage.dart`
 
 ## 核心目录

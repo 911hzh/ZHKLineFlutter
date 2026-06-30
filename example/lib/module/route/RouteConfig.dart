@@ -2,6 +2,7 @@ import 'package:example/module/usecase/pages/custom_page/custom_controller_page.
 import 'package:example/module/usecase/pages/custom_page/custom_core_chart_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_grid_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_indicator_entries_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_live_update_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_main_chart_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_overlay_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_secondary_chart_page.dart';
@@ -18,6 +19,7 @@ class RouteConfig {
     '/home': (context) => const HomePage(),
     KLineDemoPage.routeName: (context) => const KLineDemoPage(),
     DeepChartDemoPage.routeName: (context) => const DeepChartDemoPage(),
+    CustomLiveUpdatePage.routeName: (context) => const CustomLiveUpdatePage(),
     CustomThemeLayoutPage.routeName: (context) => const CustomThemeLayoutPage(),
     CustomIndicatorEntriesPage.routeName: (context) =>
         const CustomIndicatorEntriesPage(),

@@ -68,7 +68,7 @@ flutter pub add kline_flutter
 
 ```yaml
 dependencies:
-  kline_flutter: ^0.1.0
+  kline_flutter: ^0.2.0
 ```
 
 然后在业务代码中导入：
@@ -154,6 +154,54 @@ class MarketPage extends StatelessWidget {
   }
 }
 ```
+
+## 实时数据接入
+
+实时行情推荐保持一个简单边界：业务层先决定数据插到哪里，再按需要调用 controller 滚动到目标位置。package 不判断 socket 数据应该插到头部、尾部还是替换整窗。
+
+```dart
+class MarketPageState extends State<MarketPage> {
+  final controller = KLineController(initialFollowLatest: true);
+  List<MyCandle> candles = [];
+
+  void onSocketCandle(MyCandle candle) {
+    setState(() {
+      candles = [candle, ...candles];
+    });
+
+    if (controller.isFollowingLatest) {
+      controller.scrollToLatest();
+    }
+  }
+
+  void onLoadOlder(List<MyCandle> olderCandles) {
+    setState(() {
+      candles = [...candles, ...olderCandles];
+    });
+
+    controller.scrollToIndex(
+      candles.length - 1,
+      alignment: KLineScrollAlignment.right,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return KLineWidget<MyCandle>(
+      controller: controller,
+      dataSource: candles,
+      adapter: const MyCandleAdapter(),
+    );
+  }
+}
+```
+
+常用控制方法：
+
+- `controller.setFollowingLatest(true)`：保持最新一根可见，但不立刻滚动。
+- `controller.scrollToLatest()`：滚动到最新，并进入跟随最新模式。
+- `controller.scrollToIndex(index, alignment: KLineScrollAlignment.left)`：滚动到指定下标。
+- `controller.revealSelected()`：把当前选中项滚回可见区域。
 
 深度图也保持同样的接入思路：
 

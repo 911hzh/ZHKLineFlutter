@@ -204,6 +204,44 @@ controller.setScrollOffset(0);
 controller.toggleIndicator(KLineDefaultIndicatorType.ma.name);
 ```
 
+## 实时数据接入
+
+实时场景不要把插入位置判断放进 package。业务层收到 socket 或分页结果后，先更新 `dataSource`，再用 `KLineController` 发起一次滚动请求。
+
+```dart
+final controller = KLineController(initialFollowLatest: true);
+var candles = <MyCandle>[];
+
+void onSocketCandle(MyCandle latest) {
+  setState(() {
+    candles = [latest, ...candles];
+  });
+
+  if (controller.isFollowingLatest) {
+    controller.scrollToLatest();
+  }
+}
+
+void onLoadOlder(List<MyCandle> olderCandles) {
+  setState(() {
+    candles = [...candles, ...olderCandles];
+  });
+
+  controller.scrollToIndex(
+    candles.length - 1,
+    alignment: KLineScrollAlignment.right,
+  );
+}
+
+KLineWidget<MyCandle>(
+  controller: controller,
+  dataSource: candles,
+  adapter: const MyCandleAdapter(),
+)
+```
+
+如果只想切换“是否跟随最新”，调用 `controller.setFollowingLatest(true/false)`；如果需要立刻回到最新，调用 `controller.scrollToLatest()`。完整 demo 可看 `example/lib/module/usecase/pages/custom_page/custom_live_update_page.dart`。
+
 ## Loading / Empty / Error
 
 ```dart

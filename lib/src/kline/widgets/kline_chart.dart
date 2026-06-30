@@ -65,6 +65,8 @@ class KLineChart<T> extends StatefulWidget {
 }
 
 class _KLineChartState<T> extends State<KLineChart<T>> {
+  static const _scrollRequestAnimationDuration = Duration(milliseconds: 250);
+
   /// 当外部没有传入 controller 时，由组件自己持有并释放。
   late final KLineController _ownedController;
   late KLineController _controller;
@@ -78,6 +80,8 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   /// 最近一次完整图表上下文，用于滚动通知回调拿到最新布局信息。
   KLineChartContext<T>? _latestContext;
   bool _isUserScrollInProgress = false;
+  int _lastHandledScrollRequestRevision = 0;
+  bool _isSyncingScrollFromController = false;
 
   @override
   void initState() {
@@ -161,6 +165,9 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
         );
         _latestContext = chartContext;
         _syncVisibleRange(chartContext);
+        // 滚动目标依赖本轮布局尺寸，必须在 context 更新后再处理。
+        _consumeScrollRequest(chartContext);
+        _syncFollowingLatest();
 
         final chartHeight = widget.delegate.chartHeight(chartContext);
         final selectedNode = chartContext.selectedNode;
@@ -330,7 +337,9 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
 
   void _handleScroll() {
     _controller.setScrollOffset(_scrollController.offset);
-    if (widget.behavior.clearSelectionOnScroll) {
+    // 程序化滚动只是同步视口，不应该像用户拖动一样清掉十字线选中态。
+    if (widget.behavior.clearSelectionOnScroll &&
+        !_isSyncingScrollFromController) {
       _controller.clearSelection();
     }
   }
@@ -354,6 +363,8 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     if (notification is! ScrollUpdateNotification || !_isUserScrollInProgress) {
       return false;
     }
+    // 用户手动离开当前位置后，不再强行跟随 socket 推来的最新 K 线。
+    _controller.setFollowingLatest(false);
 
     // 只把用户主动拖动产生的滚动通知交给 delegate，避免外部 jumpTo 造成重复回调。
     widget.delegate.didScroll(
@@ -372,6 +383,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   }
 
   void _syncScrollPositionFromController() {
+    if (_isSyncingScrollFromController) return;
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     final target =
@@ -379,7 +391,12 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
             .clamp(position.minScrollExtent, position.maxScrollExtent)
             .toDouble();
     if ((position.pixels - target).abs() < 0.5) return;
-    _scrollController.jumpTo(target);
+    _isSyncingScrollFromController = true;
+    try {
+      _scrollController.jumpTo(target);
+    } finally {
+      _isSyncingScrollFromController = false;
+    }
   }
 
   void _handleScaleStart(
@@ -414,6 +431,79 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   void _handleControllerChange() {
     _syncScrollPositionFromController();
     if (mounted) setState(() {});
+  }
+
+  void _consumeScrollRequest(KLineChartContext<T> context) {
+    final request = _controller.scrollRequest;
+    if (request == null ||
+        request.revision == _lastHandledScrollRequestRevision) {
+      return;
+    }
+    // 滚动目标依赖最新布局和 ScrollPosition 边界，所以等本帧完成后再执行。
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !_scrollController.hasClients) return;
+      _lastHandledScrollRequestRevision = request.revision;
+      if (request.latest) {
+        await _scrollToOffset(0, animated: request.animated);
+        _controller.consumeScrollRequest(request.revision);
+        return;
+      }
+      final index = request.index;
+      if (index == null) {
+        _controller.consumeScrollRequest(request.revision);
+        return;
+      }
+      // contentWidth 可能大于 itemCount * itemExtent，尾部对齐时要把这段
+      // 额外宽度算进去，否则“滚到最旧”会差一点到不了右侧边界。
+      final target =
+          index * context.itemExtent -
+          (context.viewportSize.width - context.itemExtent) *
+              request.alignment.factor +
+          (context.contentWidth - context.itemCount * context.itemExtent) *
+              request.alignment.factor;
+      // controller 只表达目标，最终仍按 ScrollView 当前真实可滚动范围裁剪。
+      final maxScrollOffset = math.max(
+        0.0,
+        context.contentWidth - context.viewportSize.width,
+      );
+      await _scrollToOffset(
+        target.clamp(0, maxScrollOffset).toDouble(),
+        animated: request.animated,
+      );
+      _controller.consumeScrollRequest(request.revision);
+    });
+  }
+
+  Future<void> _scrollToOffset(double target, {required bool animated}) async {
+    _isSyncingScrollFromController = true;
+    try {
+      if (animated) {
+        await _scrollController.animateTo(
+          target,
+          duration: _scrollRequestAnimationDuration,
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _scrollController.jumpTo(target);
+      }
+    } finally {
+      _isSyncingScrollFromController = false;
+      if (mounted && _scrollController.hasClients) {
+        _controller.setScrollOffset(_scrollController.offset);
+      }
+    }
+  }
+
+  void _syncFollowingLatest() {
+    if (!_controller.isFollowingLatest || _controller.scrollOffset == 0) {
+      return;
+    }
+    // 数据或尺寸变化后，只要仍处于跟随最新，就保持最新一根可见。
+    // 这里不判断插入方向，插入位置由业务层决定。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _controller.setScrollOffset(0);
+    });
   }
 
   void _selectNearest(

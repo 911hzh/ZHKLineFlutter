@@ -237,6 +237,38 @@ void main() {
     expect(controller.scrollOffset, 120);
   });
 
+  test('controller exposes live viewport commands', () {
+    final controller = KLineController(initialFollowLatest: true);
+
+    expect(controller.isFollowingLatest, isTrue);
+
+    controller.scrollToIndex(8, alignment: KLineScrollAlignment.center);
+
+    expect(controller.isFollowingLatest, isFalse);
+    expect(controller.scrollRequest?.latest, isFalse);
+    expect(controller.scrollRequest?.index, 8);
+    expect(controller.scrollRequest?.alignment, KLineScrollAlignment.center);
+    expect(controller.scrollRequest?.animated, isTrue);
+
+    controller.selectIndex(3);
+    controller.revealSelected(
+      alignment: KLineScrollAlignment.left,
+      animated: false,
+    );
+
+    expect(controller.scrollRequest?.latest, isFalse);
+    expect(controller.scrollRequest?.index, 3);
+    expect(controller.scrollRequest?.alignment, KLineScrollAlignment.left);
+    expect(controller.scrollRequest?.animated, isFalse);
+
+    controller.scrollToLatest(animated: false);
+
+    expect(controller.isFollowingLatest, isTrue);
+    expect(controller.scrollRequest?.latest, isTrue);
+    expect(controller.scrollRequest?.index, isNull);
+    expect(controller.scrollRequest?.animated, isFalse);
+  });
+
   testWidgets(
     'chart delegates data, drawing, selection UI, and interaction callbacks',
     (tester) async {
@@ -467,6 +499,162 @@ void main() {
     await tester.longPressAt(const Offset(40, 80));
     await tester.pump();
     expect(find.textContaining('Close'), findsOneWidget);
+  });
+
+  testWidgets(
+    'default widget does not auto-adjust viewport after data update',
+    (tester) async {
+      final controller = KLineController();
+      var data = [
+        const _ExternalCandle(
+          open: 12,
+          high: 15,
+          low: 11,
+          close: 14,
+          volume: 120,
+          time: 2000,
+        ),
+        const _ExternalCandle(
+          open: 14,
+          high: 16,
+          low: 10,
+          close: 11,
+          volume: 140,
+          time: 3000,
+        ),
+      ];
+
+      Future<void> pumpChart() async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: 120,
+                height: 220,
+                child: KLineWidget<_ExternalCandle>(
+                  controller: controller,
+                  dataSource: data,
+                  adapter: const _ExternalCandleAdapter(),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      await pumpChart();
+      controller
+        ..setScrollOffset(21)
+        ..selectIndex(1);
+      await tester.pumpAndSettle();
+
+      data = [
+        const _ExternalCandle(
+          open: 10,
+          high: 14,
+          low: 9,
+          close: 13,
+          volume: 180,
+          time: 1000,
+        ),
+        ...data,
+      ];
+      await pumpChart();
+      await tester.pumpAndSettle();
+
+      expect(controller.selectedIndex, 1);
+      expect(controller.scrollOffset, 21);
+    },
+  );
+
+  testWidgets('business can request a scroll after data update', (
+    tester,
+  ) async {
+    final controller = KLineController();
+    var data = [
+      const _ExternalCandle(
+        open: 12,
+        high: 15,
+        low: 11,
+        close: 14,
+        volume: 120,
+        time: 2000,
+      ),
+      const _ExternalCandle(
+        open: 14,
+        high: 16,
+        low: 10,
+        close: 11,
+        volume: 140,
+        time: 3000,
+      ),
+    ];
+
+    Future<void> pumpChart() async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 120,
+              height: 220,
+              child: KLineWidget<_ExternalCandle>(
+                controller: controller,
+                dataSource: data,
+                adapter: const _ExternalCandleAdapter(),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await pumpChart();
+    data = [
+      const _ExternalCandle(
+        open: 10,
+        high: 14,
+        low: 9,
+        close: 13,
+        volume: 180,
+        time: 1000,
+      ),
+      ...data,
+    ];
+    await pumpChart();
+    controller.scrollToLatest();
+    await tester.pumpAndSettle();
+
+    expect(controller.scrollOffset, 0);
+
+    data = [
+      ...data,
+      ...List.generate(
+        12,
+        (index) => _ExternalCandle(
+          open: 13 + index,
+          high: 15 + index,
+          low: 12 + index,
+          close: 14 + index,
+          volume: 200 + index,
+          time: 4000 + index,
+        ),
+      ),
+    ];
+    await pumpChart();
+    controller.scrollToIndex(
+      data.length - 1,
+      alignment: KLineScrollAlignment.right,
+    );
+    await tester.pumpAndSettle();
+
+    expect(controller.scrollOffset, greaterThan(0));
+    final scrollableState = tester.state<ScrollableState>(
+      find.byType(Scrollable),
+    );
+    expect(
+      scrollableState.position.pixels,
+      closeTo(scrollableState.position.maxScrollExtent, 0.1),
+    );
   });
 
   testWidgets(

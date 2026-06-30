@@ -18,7 +18,7 @@ class KLineDefaultIndicatorSelector<T> extends StatelessWidget {
       animation: this.context.controller,
       builder: (context, _) {
         return SizedBox(
-          height: 30,
+          height: this.context.layout.indicatorSelectorHeight,
           child: ColoredBox(
             color: Colors.white,
             child: Row(
