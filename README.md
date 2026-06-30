@@ -203,6 +203,8 @@ class MarketPageState extends State<MarketPage> {
 - `controller.scrollToIndex(index, alignment: KLineScrollAlignment.left)`：滚动到指定下标。
 - `controller.revealSelected()`：把当前选中项滚回可见区域。
 
+如果需要加载更多旧数据，可以在自定义 delegate 的滚动回调里根据 `KLineScrollMetrics` 判断是否到达边界；数据回来后先更新 `dataSource`，再按业务需要调用 `scrollToIndex` 保持目标 K 线可见。
+
 深度图也保持同样的接入思路：
 
 ```dart

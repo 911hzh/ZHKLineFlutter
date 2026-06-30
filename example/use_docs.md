@@ -240,7 +240,7 @@ KLineWidget<MyCandle>(
 )
 ```
 
-如果只想切换“是否跟随最新”，调用 `controller.setFollowingLatest(true/false)`；如果需要立刻回到最新，调用 `controller.scrollToLatest()`。完整 demo 可看 `example/lib/module/usecase/pages/custom_page/custom_live_update_page.dart`。
+如果只想切换“是否跟随最新”，调用 `controller.setFollowingLatest(true/false)`；如果需要立刻回到最新，调用 `controller.scrollToLatest()`。完整 demo 可看 `example/lib/module/usecase/pages/custom_page/custom_live_update_page.dart`，其中 timer 只在开启跟随最新时模拟推送，加载更多和整窗替换都由页面先改数据再发滚动请求。
 
 ## Loading / Empty / Error
 
