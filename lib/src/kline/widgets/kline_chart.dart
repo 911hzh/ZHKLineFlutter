@@ -247,6 +247,7 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     scrollDirection: Axis.horizontal,
+                    physics: const ClampingScrollPhysics(),
                     child: SizedBox(
                       width: contentWidth,
                       height: chartHeight,
@@ -336,7 +337,12 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   }
 
   void _handleScroll() {
-    _controller.setScrollOffset(_scrollController.offset);
+    final position = _scrollController.position;
+    final offset =
+        _scrollController.offset
+            .clamp(position.minScrollExtent, position.maxScrollExtent)
+            .toDouble();
+    _controller.setScrollOffset(offset);
     // 程序化滚动只是同步视口，不应该像用户拖动一样清掉十字线选中态。
     if (widget.behavior.clearSelectionOnScroll &&
         !_isSyncingScrollFromController) {
@@ -382,6 +388,9 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     return false;
   }
 
+  // Controller 可能由缩放、跟随最新或外部调用主动改变 offset。
+  // 这里把 controller 的目标位置同步到真实 ScrollView；普通拖动时两边
+  // offset 通常已一致，会被下面的差值判断直接跳过。
   void _syncScrollPositionFromController() {
     if (_isSyncingScrollFromController) return;
     if (!_scrollController.hasClients) return;

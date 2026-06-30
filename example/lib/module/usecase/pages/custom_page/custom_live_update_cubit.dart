@@ -17,7 +17,7 @@ class CustomLiveUpdateState {
     this.sourceCandles = const [],
     this.isLoading = false,
     this.error,
-    this.isFollowingLatest = true,
+    this.isFollowingLatest = false,
     this.scrollAction = CustomLiveScrollAction.none,
     this.scrollRevision = 0,
     this.autoUpdateCount = 0,
@@ -80,7 +80,20 @@ class CustomLiveUpdateCubit extends Cubit<CustomLiveUpdateState> {
   }
 
   void setFollowingLatest(bool value) {
-    if (state.isFollowingLatest == value) return;
+    if (value) {
+      if (_timer == null && state.candles.isNotEmpty) {
+        _timer = Timer.periodic(
+          _autoUpdateInterval,
+          (_) => prependLatest(fromTimer: true),
+        );
+      }
+    } else {
+      _timer?.cancel();
+      _timer = null;
+    }
+    if (state.isFollowingLatest == value) {
+      return;
+    }
     emit(state.copyWith(isFollowingLatest: value));
   }
 
@@ -95,7 +108,6 @@ class CustomLiveUpdateCubit extends Cubit<CustomLiveUpdateState> {
           _mockNeighborData(state.candles.first, newer: true),
           ..._rawData,
         ]),
-        isFollowingLatest: shouldReveal ? true : state.isFollowingLatest,
         scrollAction: shouldReveal
             ? CustomLiveScrollAction.latest
             : CustomLiveScrollAction.none,
@@ -115,7 +127,6 @@ class CustomLiveUpdateCubit extends Cubit<CustomLiveUpdateState> {
       state.copyWith(
         // 业务层决定旧数据追加到尾部；package 只接收最终列表和滚动请求。
         candles: _modelsForDisplay([..._rawData, next]),
-        isFollowingLatest: false,
         scrollAction: CustomLiveScrollAction.oldest,
         bumpScrollRevision: true,
       ),
@@ -130,7 +141,6 @@ class CustomLiveUpdateCubit extends Cubit<CustomLiveUpdateState> {
     emit(
       state.copyWith(
         candles: source.isEmpty ? state.sourceCandles : source,
-        isFollowingLatest: false,
         scrollAction: CustomLiveScrollAction.home,
         bumpScrollRevision: true,
       ),
@@ -158,11 +168,7 @@ class CustomLiveUpdateCubit extends Cubit<CustomLiveUpdateState> {
   }
 
   void _applyRealData(KlineStoreState storeState, {bool isLoading = true}) {
-    // 初始数据来自真实 store；后续本地 mock 只模拟 socket 增量，不覆盖用户操作。
-    _timer ??= Timer.periodic(
-      _autoUpdateInterval,
-      (_) => prependLatest(fromTimer: true),
-    );
+    // 初始数据只来自真实 store；timer 是否启动只由“跟随最新数据”开关决定。
     emit(
       state.copyWith(
         period: storeState.period,

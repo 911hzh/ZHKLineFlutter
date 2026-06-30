@@ -27,7 +27,6 @@ class _CustomLiveUpdatePageState extends State<CustomLiveUpdatePage> {
   );
 
   final _controller = KLineController(
-    initialFollowLatest: true,
     initialIndicators: const ['volume', 'ma'],
   );
   late final CustomLiveUpdateCubit _cubit;
@@ -37,12 +36,10 @@ class _CustomLiveUpdatePageState extends State<CustomLiveUpdatePage> {
   void initState() {
     super.initState();
     _cubit = CustomLiveUpdateCubit(klineStore: getIt<KlineStore>())..start();
-    _controller.addListener(_syncFollowingLatestFromController);
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_syncFollowingLatestFromController);
     _controller.dispose();
     _cubit.close();
     super.dispose();
@@ -67,17 +64,20 @@ class _CustomLiveUpdatePageState extends State<CustomLiveUpdatePage> {
                   controller: _controller,
                   count: state.candles.length,
                   autoUpdateCount: state.autoUpdateCount,
+                  isFollowingLatest: state.isFollowingLatest,
                 ),
                 const SizedBox(height: 12),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('跟随最新数据'),
-                  subtitle: const Text('开启后，timer 推送新 K 线时自动保持最新一根可见。'),
+                  subtitle: const Text('开启后，每 3 秒模拟推送新 K 线，并自动回到最左侧最新数据。'),
                   value: state.isFollowingLatest,
-                  onChanged: (value) {
-                    _controller.setFollowingLatest(value);
-                    _cubit.setFollowingLatest(value);
-                  },
+                  onChanged: state.candles.isEmpty
+                      ? null
+                      : (value) {
+                          _controller.setFollowingLatest(value);
+                          _cubit.setFollowingLatest(value);
+                        },
                 ),
                 const SizedBox(height: 12),
                 Wrap(
@@ -110,7 +110,7 @@ class _CustomLiveUpdatePageState extends State<CustomLiveUpdatePage> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  '初始数据复用示例应用的真实 K 线数据；timer 每 3 秒模拟一次 socket 最新 K 线。页面自己更新数据，再主动调用一次滚动请求。',
+                  '初始数据复用示例应用的真实 K 线数据；打开“跟随最新数据”后，timer 每 3 秒模拟一次 socket 最新 K 线。页面自己更新数据，再主动调用一次滚动请求。',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF475569),
@@ -147,12 +147,6 @@ class _CustomLiveUpdatePageState extends State<CustomLiveUpdatePage> {
       case CustomLiveScrollAction.none:
         break;
     }
-  }
-
-  void _syncFollowingLatestFromController() {
-    // 用户手动拖动会让 controller 关闭跟随，这里把开关状态同步回 demo 业务层。
-    if (_cubit.state.isFollowingLatest == _controller.isFollowingLatest) return;
-    _cubit.setFollowingLatest(_controller.isFollowingLatest);
   }
 
   Widget _buildChart(CustomLiveUpdateState state) {
@@ -194,11 +188,13 @@ class _StatusCard extends StatelessWidget {
     required this.controller,
     required this.count,
     required this.autoUpdateCount,
+    required this.isFollowingLatest,
   });
 
   final KLineController controller;
   final int count;
   final int autoUpdateCount;
+  final bool isFollowingLatest;
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +210,7 @@ class _StatusCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Text(
-              'items $count | auto $autoUpdateCount | followLatest ${controller.isFollowingLatest} | offset ${controller.scrollOffset.toStringAsFixed(1)} | visible ${controller.visibleRange ?? '-'}',
+              'items $count | auto $autoUpdateCount | followLatest $isFollowingLatest | offset ${controller.scrollOffset.toStringAsFixed(1)} | visible ${controller.visibleRange ?? '-'}',
               style: const TextStyle(
                 fontSize: 12,
                 color: Color(0xFF334155),

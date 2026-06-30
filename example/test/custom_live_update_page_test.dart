@@ -17,33 +17,51 @@ void main() {
     await getIt.reset();
   });
 
-  testWidgets('live update demo loads data and applies timer updates', (
-    tester,
-  ) async {
-    final store = KlineStore.withLoader(
-      preferenceRepositoryPort: _MemoryRepository(),
-      dataLoader: (_, size) async {
-        return List.generate(
-          size,
-          (index) =>
-              _sampleData(id: 1000 + index, close: (100 + index).toDouble()),
-        );
-      },
-    );
-    getIt.registerSingleton<KlineStore>(store);
+  testWidgets(
+    'live update demo starts timer only when following latest is on',
+    (tester) async {
+      final store = KlineStore.withLoader(
+        preferenceRepositoryPort: _MemoryRepository(),
+        dataLoader: (_, size) async {
+          return List.generate(
+            size,
+            (index) =>
+                _sampleData(id: 1000 + index, close: (100 + index).toDouble()),
+          );
+        },
+      );
+      getIt.registerSingleton<KlineStore>(store);
 
-    await tester.pumpWidget(const MaterialApp(home: CustomLiveUpdatePage()));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(const MaterialApp(home: CustomLiveUpdatePage()));
+      await tester.pumpAndSettle();
 
-    expect(find.text('跟随最新数据'), findsOneWidget);
-    expect(find.textContaining('items 50'), findsOneWidget);
+      expect(find.text('跟随最新数据'), findsOneWidget);
+      expect(find.textContaining('items 50'), findsOneWidget);
+      expect(find.textContaining('followLatest false'), findsOneWidget);
 
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('auto 1'), findsOneWidget);
-    expect(find.textContaining('items 51'), findsOneWidget);
-  });
+      expect(find.textContaining('auto 0'), findsOneWidget);
+      expect(find.textContaining('items 50'), findsOneWidget);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('followLatest true'), findsOneWidget);
+
+      await tester.tap(find.text('尾部插入后看最旧'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('followLatest true'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('auto 1'), findsOneWidget);
+      expect(find.textContaining('items 52'), findsOneWidget);
+    },
+  );
 }
 
 KLineData _sampleData({required int id, required double close}) {
