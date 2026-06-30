@@ -41,6 +41,7 @@ class MarketPage extends StatelessWidget {
 /// 该类可以来自接口、数据库或本地计算结果，不需要继承 package 内部 model。
 class MyCandle {
   const MyCandle({
+    required this.timestampMs,
     required this.open,
     required this.high,
     required this.low,
@@ -49,6 +50,7 @@ class MyCandle {
     required this.timeLabel,
   });
 
+  final int timestampMs;
   final double open;
   final double high;
   final double low;
@@ -82,6 +84,7 @@ class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
 
 const _candles = [
   MyCandle(
+    timestampMs: 1719649800000,
     open: 100,
     high: 108,
     low: 98,
@@ -90,6 +93,7 @@ const _candles = [
     timeLabel: '09:30',
   ),
   MyCandle(
+    timestampMs: 1719651600000,
     open: 106,
     high: 112,
     low: 104,
@@ -98,6 +102,7 @@ const _candles = [
     timeLabel: '10:00',
   ),
   MyCandle(
+    timestampMs: 1719653400000,
     open: 110,
     high: 111,
     low: 101,
@@ -106,6 +111,7 @@ const _candles = [
     timeLabel: '10:30',
   ),
   MyCandle(
+    timestampMs: 1719655200000,
     open: 103,
     high: 109,
     low: 102,
@@ -114,6 +120,7 @@ const _candles = [
     timeLabel: '11:00',
   ),
   MyCandle(
+    timestampMs: 1719657000000,
     open: 108,
     high: 116,
     low: 107,
