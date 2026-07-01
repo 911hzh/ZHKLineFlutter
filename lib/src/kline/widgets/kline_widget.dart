@@ -66,8 +66,7 @@ class KLineWidget<T> extends StatefulWidget {
   final VoidCallback? onRetry;
 
   /// 用户滚动回调，可用于加载更多或刷新最新数据。
-  final void Function(KLineChartContext<T> context, KLineScrollMetrics metrics)?
-  onScroll;
+  final void Function(KLineChartContext<T> context, KLineScrollMetrics metrics)? onScroll;
 
   /// 首次加载时的自定义 loading UI。
   final WidgetBuilder? loadingBuilder;
@@ -76,12 +75,7 @@ class KLineWidget<T> extends StatefulWidget {
   final WidgetBuilder? emptyBuilder;
 
   /// 错误占位 UI。
-  final Widget Function(
-    BuildContext context,
-    Object error,
-    VoidCallback? retry,
-  )?
-  errorBuilder;
+  final Widget Function(BuildContext context, Object error, VoidCallback? retry)? errorBuilder;
 
   @override
   State<KLineWidget<T>> createState() => _KLineWidgetState<T>();
@@ -121,25 +115,18 @@ class _KLineWidgetState<T> extends State<KLineWidget<T>> {
     if (widget.isLoading && widget.dataSource.isEmpty) {
       return SizedBox(
         height: _estimatedHeight(),
-        child:
-            widget.loadingBuilder?.call(context) ??
-            const Center(child: CircularProgressIndicator()),
+        child: widget.loadingBuilder?.call(context) ?? const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (widget.error != null && widget.dataSource.isEmpty) {
-      return SizedBox(
-        height: _estimatedHeight(),
-        child: _buildError(context, widget.error!),
-      );
+      return SizedBox(height: _estimatedHeight(), child: _buildError(context, widget.error!));
     }
 
     if (widget.dataSource.isEmpty) {
       return SizedBox(
         height: _estimatedHeight(),
-        child:
-            widget.emptyBuilder?.call(context) ??
-            const Center(child: Text('暂无数据')),
+        child: widget.emptyBuilder?.call(context) ?? const Center(child: Text('暂无数据')),
       );
     }
 
@@ -148,23 +135,12 @@ class _KLineWidgetState<T> extends State<KLineWidget<T>> {
         KLineChart<T>(
           controller: _controller,
           dataSource: widget.dataSource,
-          delegate:
-              widget.delegate ??
-              KLineDefaultDelegateImpl<T>(
-                adapter: widget.adapter,
-                onScroll: widget.onScroll,
-              ),
+          delegate: widget.delegate ?? KLineDefaultDelegateImpl<T>(adapter: widget.adapter, onScroll: widget.onScroll),
           theme: widget.theme,
           layout: widget.layout,
           behavior: widget.behavior,
         ),
-        if (widget.isLoading)
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: LinearProgressIndicator(minHeight: 2),
-          ),
+        if (widget.isLoading) const Positioned(top: 0, left: 0, right: 0, child: LinearProgressIndicator(minHeight: 2)),
         if (widget.error != null)
           Positioned(
             left: 12,
@@ -177,10 +153,7 @@ class _KLineWidgetState<T> extends State<KLineWidget<T>> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(
-                  '刷新失败: ${widget.error}',
-                  style: const TextStyle(fontSize: 11),
-                ),
+                child: Text('刷新失败: ${widget.error}', style: const TextStyle(fontSize: 11)),
               ),
             ),
           ),
@@ -190,18 +163,12 @@ class _KLineWidgetState<T> extends State<KLineWidget<T>> {
 
   /// 创建内部控制器，并注入默认或外部指定的初始指标。
   KLineController _createOwnedController() {
-    return KLineController(
-      initialIndicators:
-          widget.initialIndicators ?? [KLineDefaultIndicatorType.volume.name],
-    );
+    return KLineController(initialIndicators: widget.initialIndicators ?? [KLineDefaultIndicatorType.volume.name]);
   }
 
   /// 估算占位状态下的组件高度。
   double _estimatedHeight() {
-    return widget.layout.chartHeight(
-      secondaryPaneCount: 1,
-      includeSelector: true,
-    );
+    return widget.layout.chartHeight(secondaryPaneCount: 1, includeSelector: true);
   }
 
   /// 构建默认错误占位。

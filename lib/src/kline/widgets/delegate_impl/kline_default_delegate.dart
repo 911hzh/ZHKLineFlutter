@@ -1,29 +1,18 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:kline_flutter/src/kline/u_default_impl/kline_default_delegate_util.dart';
+import 'package:kline_flutter/src/kline/widgets/delegate_impl/kline_default_delegate_util.dart';
 
-import '../delegate/kline_chart_delegate.dart';
-import '../theme/kline_theme.dart';
+import '../../delegate/kline_chart_delegate.dart';
+import '../../theme/kline_theme.dart';
 import 'kline_data_adapter.dart';
 
 /// 计算副图参与数值映射的内容区域。
 ///
 /// 默认上下保留一定 padding，避免柱状图或指标线贴住副图边框。
-Rect kLineDefaultSecondaryContentRect(
-  Rect rect, {
-  required KLineLayoutConfig layout,
-}) {
-  final inset = math.min(
-    layout.secondaryContentVerticalPadding,
-    rect.height / 2,
-  );
-  return Rect.fromLTRB(
-    rect.left,
-    rect.top + inset,
-    rect.right,
-    rect.bottom - inset,
-  );
+Rect kLineDefaultSecondaryContentRect(Rect rect, {required KLineLayoutConfig layout}) {
+  final inset = math.min(layout.secondaryContentVerticalPadding, rect.height / 2);
+  return Rect.fromLTRB(rect.left, rect.top + inset, rect.right, rect.bottom - inset);
 }
 
 /// 将固定视口坐标系中的裁剪区域转换为横向滚动内容坐标系。
@@ -90,8 +79,7 @@ class KLineDefaultDelegateImpl<T> extends KLineChartDelegate<T> {
   }
 
   /// 用户滚动回调，可用于触发分页加载。
-  final void Function(KLineChartContext<T> context, KLineScrollMetrics metrics)?
-  onScroll;
+  final void Function(KLineChartContext<T> context, KLineScrollMetrics metrics)? onScroll;
 
   /// 返回默认图表高度。
   ///
@@ -109,79 +97,37 @@ class KLineDefaultDelegateImpl<T> extends KLineChartDelegate<T> {
 
   /// 构建默认布局节点。
   @override
-  List<KLineLayoutNode<T>> getLayoutNodes(
-    KLineChartContext<T> context,
-    List<T> dataSource,
-  ) {
-    return KLineDefaultDelegateImplUtil.getLayoutNodes(
-      context,
-      dataSource,
-      adapter: adapter,
-    );
+  List<KLineLayoutNode<T>> getLayoutNodes(KLineChartContext<T> context, List<T> dataSource) {
+    return KLineDefaultDelegateImplUtil.getLayoutNodes(context, dataSource, adapter: adapter);
   }
 
   /// 绘制固定网格层。
   @override
   void drawGrid(Canvas canvas, Size size, KLineChartContext<T> context) {
-    KLineDefaultDelegateImplUtil.drawGrid(
-      canvas,
-      size,
-      context,
-      adapter: adapter,
-    );
+    KLineDefaultDelegateImplUtil.drawGrid(canvas, size, context, adapter: adapter);
   }
 
   /// 绘制主图滚动内容。
   @override
   void drawMainChart(Canvas canvas, Size size, KLineChartContext<T> context) {
-    KLineDefaultDelegateImplUtil.drawMainChart(
-      canvas,
-      size,
-      context,
-      adapter: adapter,
-    );
+    KLineDefaultDelegateImplUtil.drawMainChart(canvas, size, context, adapter: adapter);
   }
 
   /// 绘制副图滚动内容。
   @override
-  void drawSecondaryCharts(
-    Canvas canvas,
-    Size size,
-    KLineChartContext<T> context,
-  ) {
-    KLineDefaultDelegateImplUtil.drawSecondaryCharts(
-      canvas,
-      size,
-      context,
-      adapter: adapter,
-    );
+  void drawSecondaryCharts(Canvas canvas, Size size, KLineChartContext<T> context) {
+    KLineDefaultDelegateImplUtil.drawSecondaryCharts(canvas, size, context, adapter: adapter);
   }
 
   /// 构建默认 overlay，包括指标标签和底部指标选择器。
   @override
-  Widget? buildOverlayView(
-    BuildContext context,
-    KLineChartContext<T> chartContext,
-  ) {
-    return KLineDefaultDelegateImplUtil.buildOverlayView(
-      context,
-      chartContext,
-      adapter: adapter,
-    );
+  Widget? buildOverlayView(BuildContext context, KLineChartContext<T> chartContext) {
+    return KLineDefaultDelegateImplUtil.buildOverlayView(context, chartContext, adapter: adapter);
   }
 
   /// 构建默认选中详情浮层。
   @override
-  Widget? buildSelectionView(
-    BuildContext context,
-    KLineChartContext<T> chartContext,
-    KLineLayoutNode<T> selectedNode,
-  ) {
-    return KLineDefaultDelegateImplUtil.buildSelectionView(
-      context,
-      chartContext,
-      selectedNode,
-      adapter: adapter,
-    );
+  Widget? buildSelectionView(BuildContext context, KLineChartContext<T> chartContext, KLineLayoutNode<T> selectedNode) {
+    return KLineDefaultDelegateImplUtil.buildSelectionView(context, chartContext, selectedNode, adapter: adapter);
   }
 }
