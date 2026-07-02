@@ -38,7 +38,31 @@ class MarketPage extends StatelessWidget {
         child: KLineWidget<MyCandle>(
           dataSource: _candles,
           adapter: MyCandleAdapter(),
-          initialIndicators: ['volume'],
+          initialIndicators: [KLineDefaultIndicators.volumeId, 'cci'],
+          secondaryIndicators: [
+            KLineIndicatorSpec<MyCandle>(
+              id: KLineDefaultIndicators.volumeId,
+              label: 'VOL',
+              series: [
+                KLineIndicatorSeries<MyCandle>(
+                  id: KLineDefaultIndicators.volumeMA5,
+                  label: 'MA5',
+                  colorIndex: 1,
+                ),
+              ],
+            ),
+            KLineIndicatorSpec<MyCandle>(
+              id: 'cci',
+              label: 'CCI',
+              series: [
+                KLineIndicatorSeries<MyCandle>(
+                  id: 'cci14',
+                  label: 'CCI14',
+                  colorIndex: 2,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -56,6 +80,7 @@ class MyCandle {
     required this.low,
     required this.close,
     required this.volume,
+    required this.cci14,
     required this.timeLabel,
   });
 
@@ -65,6 +90,7 @@ class MyCandle {
   final double low;
   final double close;
   final double volume;
+  final double cci14;
   final String timeLabel;
 }
 
@@ -89,6 +115,14 @@ class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
 
   @override
   String dateLabel(MyCandle item) => item.timeLabel;
+
+  @override
+  double? indicatorValue(MyCandle item, String valueId) {
+    return switch (valueId) {
+      'cci14' => item.cci14,
+      _ => null,
+    };
+  }
 }
 
 const _candles = [
@@ -99,6 +133,7 @@ const _candles = [
     low: 98,
     close: 106,
     volume: 1200,
+    cci14: 82,
     timeLabel: '09:30',
   ),
   MyCandle(
@@ -108,6 +143,7 @@ const _candles = [
     low: 104,
     close: 110,
     volume: 1680,
+    cci14: 118,
     timeLabel: '10:00',
   ),
   MyCandle(
@@ -117,6 +153,7 @@ const _candles = [
     low: 101,
     close: 103,
     volume: 980,
+    cci14: -74,
     timeLabel: '10:30',
   ),
   MyCandle(
@@ -126,6 +163,7 @@ const _candles = [
     low: 102,
     close: 108,
     volume: 1320,
+    cci14: 36,
     timeLabel: '11:00',
   ),
   MyCandle(
@@ -135,6 +173,7 @@ const _candles = [
     low: 107,
     close: 114,
     volume: 1510,
+    cci14: 126,
     timeLabel: '11:30',
   ),
 ];
