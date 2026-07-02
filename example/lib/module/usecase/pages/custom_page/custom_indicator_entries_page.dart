@@ -32,45 +32,45 @@ class CustomIndicatorEntriesAdapter extends CustomKLineModelAdapter {
   @override
   List<KLineIndicatorEntry> mainIndicatorEntries(
     KLineModel item,
-    KLineDefaultIndicatorType type,
+    KLineIndicatorSpec<KLineModel> indicator,
   ) {
-    if (type == KLineDefaultIndicatorType.ma) {
+    if (indicator.id == KLineDefaultIndicators.maId) {
       return [
         KLineIndicatorEntry(
           label: '短线MA5',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.ma5),
+          value: indicatorValue(item, KLineDefaultIndicators.ma5),
           colorIndex: 0,
         ),
         KLineIndicatorEntry(
           label: '趋势MA30',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.ma30),
+          value: indicatorValue(item, KLineDefaultIndicators.ma30),
           colorIndex: 2,
         ),
       ];
     }
-    return super.mainIndicatorEntries(item, type);
+    return super.mainIndicatorEntries(item, indicator);
   }
 
   @override
   List<KLineIndicatorEntry> secondaryIndicatorEntries(
     KLineModel item,
-    KLineDefaultIndicatorType type,
+    KLineIndicatorSpec<KLineModel> indicator,
   ) {
-    if (type == KLineDefaultIndicatorType.rsi) {
+    if (indicator.id == KLineDefaultIndicators.rsiId) {
       return [
         KLineIndicatorEntry(
           label: '快RSI',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.rsi6),
+          value: indicatorValue(item, KLineDefaultIndicators.rsi6),
           colorIndex: 3,
         ),
         KLineIndicatorEntry(
           label: '慢RSI',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.rsi24),
+          value: indicatorValue(item, KLineDefaultIndicators.rsi24),
           colorIndex: 1,
         ),
       ];
     }
-    return super.secondaryIndicatorEntries(item, type);
+    return super.secondaryIndicatorEntries(item, indicator);
   }
 
   @override

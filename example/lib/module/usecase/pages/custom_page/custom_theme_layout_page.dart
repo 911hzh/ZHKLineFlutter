@@ -14,7 +14,8 @@ class CustomThemeLayoutPage extends StatelessWidget {
       copy: CustomDemoCopy(
         title: '自定义主题与布局',
         description:
-            '通过 KLineTheme、KLineLayoutConfig、KLineBehaviorConfig 快速改变图表外观、尺寸和交互能力。',
+            '通过 KLineTheme、KLineLayoutConfig、KLineBehaviorConfig '
+            '快速改变图表外观、尺寸和交互能力。',
         extensionPoint: 'KLineTheme / KLineLayoutConfig / KLineBehaviorConfig',
         scenario: '适合品牌换肤、暗色行情页、不同屏幕尺寸下的蜡烛宽度和副图高度调整。',
       ),

@@ -16,15 +16,25 @@ class _TopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('K线图表', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          const Text(
+            'K线图表',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
           GestureDetector(
             onTap: onClose,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: const Text(
                 '关闭',
-                style: TextStyle(fontSize: 16, color: Colors.blue, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -36,7 +46,11 @@ class _TopBar extends StatelessWidget {
 
 /// 周期选择栏，负责展示 15分/1时/4时/1日/1周 与右侧操作按钮。
 class _PeriodSelector extends StatelessWidget {
-  const _PeriodSelector({required this.selectedPeriod, required this.onSelected, required this.onZoom});
+  const _PeriodSelector({
+    required this.selectedPeriod,
+    required this.onSelected,
+    required this.onZoom,
+  });
 
   final KLinePeriod selectedPeriod;
   final ValueChanged<KLinePeriod> onSelected;
@@ -62,7 +76,9 @@ class _PeriodSelector extends StatelessWidget {
                         _periodText(period),
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                           color: selected ? Colors.black : Colors.grey[600],
                         ),
                       ),
@@ -81,15 +97,28 @@ class _PeriodSelector extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('更多', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                      Text(
+                        '更多',
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      ),
                       const SizedBox(width: 4),
-                      Icon(Icons.keyboard_arrow_down, size: 12, color: Colors.grey[600]),
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 12,
+                        color: Colors.grey[600],
+                      ),
                     ],
                   ),
                   () {},
                 ),
-                _controlButton(Icon(Icons.settings, size: 20, color: Colors.grey[600]), () {}),
-                _controlButton(Icon(Icons.search, size: 20, color: Colors.grey[600]), onZoom),
+                _controlButton(
+                  Icon(Icons.settings, size: 20, color: Colors.grey[600]),
+                  () {},
+                ),
+                _controlButton(
+                  Icon(Icons.search, size: 20, color: Colors.grey[600]),
+                  onZoom,
+                ),
               ],
             ),
           ),

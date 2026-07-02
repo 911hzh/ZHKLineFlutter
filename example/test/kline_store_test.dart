@@ -99,16 +99,12 @@ void main() {
     await repository.setValue<String, Map<String, dynamic>>(
       'kline.demo.15min.50',
       {
-        'data': [
-          _sampleData(id: 1, close: 11).toJson(),
-        ],
+        'data': [_sampleData(id: 1, close: 11).toJson()],
       },
     );
     final store = KlineStore.withLoader(
       preferenceRepositoryPort: repository,
-      dataLoader: (_, _) async => [
-        _sampleData(id: 2, close: 12),
-      ],
+      dataLoader: (_, _) async => [_sampleData(id: 2, close: 12)],
     );
 
     final state = await store.refresh(KLinePeriod.min15);
@@ -124,39 +120,45 @@ void main() {
     expect(cachedIds, [2]);
   });
 
-  test('refresh merges fetched page with current memory by kline id', () async {
-    final repository = _MemoryRepository();
-    await repository.setValue<String, Map<String, dynamic>>(
-      'kline.demo.15min.50',
-      {
-        'data': [
-          _sampleData(id: 1, close: 11).toJson(),
-          _sampleData(id: 2, close: 12).toJson(),
+  test(
+    'refresh replaces the cache window instead of merging current memory',
+    () async {
+      final repository = _MemoryRepository();
+      await repository.setValue<String, Map<String, dynamic>>(
+        'kline.demo.15min.50',
+        {
+          'data': [
+            _sampleData(id: 1, close: 11).toJson(),
+            _sampleData(id: 2, close: 12).toJson(),
+          ],
+        },
+      );
+      final store = KlineStore.withLoader(
+        preferenceRepositoryPort: repository,
+        dataLoader: (_, _) async => [
+          _sampleData(id: 2, close: 22),
+          _sampleData(id: 3, close: 13),
         ],
-      },
-    );
-    final store = KlineStore.withLoader(
-      preferenceRepositoryPort: repository,
-      dataLoader: (_, _) async => [
-        _sampleData(id: 2, close: 22),
-        _sampleData(id: 3, close: 13),
-      ],
-    );
+      );
 
-    await store.readCached(KLinePeriod.min15);
-    final state = await store.refresh(KLinePeriod.min15);
-    final cached = await repository.getValue<String, Map<String, dynamic>>(
-      'kline.demo.15min.50',
-    );
-    final cachedIds = (cached?['data'] as List)
-        .whereType<Map<String, dynamic>>()
-        .map((json) => json['id'])
-        .toList();
+      await store.readCached(KLinePeriod.min15);
+      final state = await store.refresh(KLinePeriod.min15);
+      final cached = await repository.getValue<String, Map<String, dynamic>>(
+        'kline.demo.15min.50',
+      );
+      final cachedIds = (cached?['data'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map((json) => json['id'])
+          .toList();
 
-    expect(state.models.map((model) => model.timestamp), [3, 2, 1]);
-    expect(state.models.firstWhere((model) => model.timestamp == 2).close, 22);
-    expect(cachedIds, [1, 2, 3]);
-  });
+      expect(state.models.map((model) => model.timestamp), [3, 2]);
+      expect(
+        state.models.firstWhere((model) => model.timestamp == 2).close,
+        22,
+      );
+      expect(cachedIds, [2, 3]);
+    },
+  );
 
   test('loadMore increments page and requests expanded size', () async {
     final requestedSizes = <int>[];

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-
-import '../controller/kline_controller.dart';
-import '../delegate/kline_chart_delegate.dart';
-import '../theme/kline_theme.dart';
-import '../widgets/kline_chart.dart';
-import 'kline_data_adapter.dart';
-import 'kline_default_delegate.dart';
+import 'package:kline_flutter/src/kline/controller/kline_controller.dart';
+import 'package:kline_flutter/src/kline/delegate/kline_chart_delegate.dart';
+import 'package:kline_flutter/src/kline/theme/kline_theme.dart';
+import 'package:kline_flutter/src/kline/widgets/delegate_impl/kline_data_adapter.dart';
+import 'package:kline_flutter/src/kline/widgets/delegate_impl/kline_default_delegate.dart';
+import 'package:kline_flutter/src/kline/widgets/kline_chart.dart';
 
 /// 默认 K 线 UI 组件。
 ///
@@ -23,6 +22,8 @@ class KLineWidget<T> extends StatefulWidget {
     this.layout = const KLineLayoutConfig(),
     this.behavior = const KLineBehaviorConfig(),
     this.initialIndicators,
+    this.mainIndicators,
+    this.secondaryIndicators,
     this.isLoading = false,
     this.error,
     this.onRetry,
@@ -55,6 +56,12 @@ class KLineWidget<T> extends StatefulWidget {
 
   /// 内部控制器创建时使用的初始指标集合。
   final Iterable<String>? initialIndicators;
+
+  /// 选择器中的主图指标；不传时使用默认 MA/EMA/BOLL。
+  final List<KLineIndicatorSpec<T>>? mainIndicators;
+
+  /// 选择器中的副图指标；不传时使用默认 VOL/MACD/KDJ/RSI/WR。
+  final List<KLineIndicatorSpec<T>>? secondaryIndicators;
 
   /// 是否正在加载。
   final bool isLoading;
@@ -118,9 +125,10 @@ class _KLineWidgetState<T> extends State<KLineWidget<T>> {
   /// 根据加载、错误、空数据和正常数据状态构建默认 UI。
   @override
   Widget build(BuildContext context) {
+    final delegate = _effectiveDelegate();
     if (widget.isLoading && widget.dataSource.isEmpty) {
       return SizedBox(
-        height: _estimatedHeight(),
+        height: _placeholderHeight(delegate),
         child:
             widget.loadingBuilder?.call(context) ??
             const Center(child: CircularProgressIndicator()),
@@ -129,14 +137,14 @@ class _KLineWidgetState<T> extends State<KLineWidget<T>> {
 
     if (widget.error != null && widget.dataSource.isEmpty) {
       return SizedBox(
-        height: _estimatedHeight(),
+        height: _placeholderHeight(delegate),
         child: _buildError(context, widget.error!),
       );
     }
 
     if (widget.dataSource.isEmpty) {
       return SizedBox(
-        height: _estimatedHeight(),
+        height: _placeholderHeight(delegate),
         child:
             widget.emptyBuilder?.call(context) ??
             const Center(child: Text('暂无数据')),
@@ -148,12 +156,7 @@ class _KLineWidgetState<T> extends State<KLineWidget<T>> {
         KLineChart<T>(
           controller: _controller,
           dataSource: widget.dataSource,
-          delegate:
-              widget.delegate ??
-              KLineDefaultDelegateImpl<T>(
-                adapter: widget.adapter,
-                onScroll: widget.onScroll,
-              ),
+          delegate: delegate,
           theme: widget.theme,
           layout: widget.layout,
           behavior: widget.behavior,
@@ -188,19 +191,38 @@ class _KLineWidgetState<T> extends State<KLineWidget<T>> {
     );
   }
 
+  KLineChartDelegate<T> _effectiveDelegate() {
+    return widget.delegate ??
+        KLineDefaultDelegateImpl<T>(
+          adapter: widget.adapter,
+          mainIndicators: widget.mainIndicators,
+          secondaryIndicators: widget.secondaryIndicators,
+          onScroll: widget.onScroll,
+        );
+  }
+
   /// 创建内部控制器，并注入默认或外部指定的初始指标。
   KLineController _createOwnedController() {
     return KLineController(
       initialIndicators:
-          widget.initialIndicators ?? [KLineDefaultIndicatorType.volume.name],
+          widget.initialIndicators ?? [KLineDefaultIndicators.volumeId],
     );
   }
 
-  /// 估算占位状态下的组件高度。
-  double _estimatedHeight() {
-    return widget.layout.chartHeight(
-      secondaryPaneCount: 1,
-      includeSelector: true,
+  /// 占位态高度也交给 delegate，避免自定义高度和真实图表不一致。
+  double _placeholderHeight(KLineChartDelegate<T> delegate) {
+    return delegate.chartHeight(
+      KLineChartContext<T>(
+        controller: _controller,
+        layout: widget.layout,
+        theme: widget.theme,
+        viewportSize: Size.zero,
+        itemCount: 0,
+        itemExtent: widget.layout.candleWidth + widget.layout.candleSpacing,
+        contentWidth: 0,
+        visibleRange: const KLineVisibleRange(start: 0, end: -1),
+        layoutNodes: const [],
+      ),
     );
   }
 

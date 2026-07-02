@@ -2,6 +2,8 @@ import 'package:example/module/usecase/pages/custom_page/custom_controller_page.
 import 'package:example/module/usecase/pages/custom_page/custom_core_chart_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_grid_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_indicator_entries_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_indicator_spec_page.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_live_update_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_main_chart_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_overlay_page.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_secondary_chart_page.dart';
@@ -29,12 +31,20 @@ class HomePageState {
       ),
       HomePageEntry(title: '深度图 Demo', routeName: DeepChartDemoPage.routeName),
       HomePageEntry(
+        title: '实时更新与自定义比较',
+        routeName: CustomLiveUpdatePage.routeName,
+      ),
+      HomePageEntry(
         title: '自定义主题与布局',
         routeName: CustomThemeLayoutPage.routeName,
       ),
       HomePageEntry(
         title: '自定义指标与详情字段',
         routeName: CustomIndicatorEntriesPage.routeName,
+      ),
+      HomePageEntry(
+        title: '动态指标定义',
+        routeName: CustomIndicatorSpecPage.routeName,
       ),
       HomePageEntry(title: '自定义覆盖层 UI', routeName: CustomOverlayPage.routeName),
       HomePageEntry(

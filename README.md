@@ -10,48 +10,77 @@
 
 ## 效果预览
 
-### 指标切换
+### 动态指标与指标文案
 
-![技术指标切换演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_indicator.gif)
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_custom_indicator_text.png"
+  alt="动态指标与指标文案演示"
+  width="360"
+/>
+
+[查看动态指标绘制视频](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_dynamic_indicator_draw.webm)
 
 ### 滚动与缩放
 
-![滚动与缩放演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_scrolling.gif)
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_scrolling.gif"
+  alt="滚动与缩放演示"
+  width="360"
+/>
 
 ### 长按详情
 
-![长按十字线演示](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_tap_longpress_dataDetail.gif)
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_tap_longpress_dataDetail.gif"
+  alt="长按十字线演示"
+  width="360"
+/>
 
 ### 自定义背景
 
 <img
-  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_background.png"
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_custom_background.png"
   alt="自定义背景演示"
   width="360"
 />
 
-### 自定义指标文案
+### 自定义覆盖层
 
 <img
-  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_indicator_text.png"
-  alt="自定义指标文案演示"
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_custom_overlay_ui.png"
+  alt="自定义覆盖层演示"
+  width="360"
+/>
+
+### 自定义详情面板
+
+<img
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_custom_detail_ui.png"
+  alt="自定义详情面板演示"
   width="360"
 />
 
 ### 自定义主图绘制
 
 <img
-  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.1.0/lib/assets/show/flutter_custom_main_draw.png"
+  src="https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_custom_main_draw.png"
   alt="自定义主图绘制演示"
   width="360"
 />
+
+### 实时数据插入
+
+[查看实时数据插入视频](https://raw.githubusercontent.com/911hzh/ZHKLineFlutter/develop-0.3.0/lib/assets/show/flutter_custom_real_time_data_insert_append_end.webm)
 
 ## 为什么选择它
 
 - **几分钟完成接入**：业务页面只需要准备 `List<T>` 和 `KLineDataAdapter<T>`，默认 UI 已包含蜡烛图、指标、副图、长按详情和基础状态展示，不需要为了图表改造已有数据模型。
 - **扩展点清晰可控**：通过 `KLineChartDelegate<T>` / `DeepChartDelegate<T>` 暴露绘制流程。想改背景、网格、指标文案、主图绘制、选中浮层或深度图，只替换对应模块即可。
-- **默认能力可复用**：每个默认绘制能力都拆到了独立的 KLineDefaultDelegateImplUtil 中。你可以复用坐标计算、文本绘制、指标布局等基础能力，只专注改业务真正关心的那一层 UI。
-- **为高频行情优化**：基于 `CustomPainter` 分层绘制，并提前计算坐标、可见区节点和绘制数据，减少绘制阶段重复计算，适合滚动、缩放、长按等高频交互场景。
+- **指标定义可扩展**：通过 `KLineIndicatorSpec<T>` / `KLineIndicatorSeries<T>` 定义主图和副图指标，不需要改 enum 或 switch；普通折线指标自动绘制，特殊指标可传入 renderer 自定义绘制。
+- **默认能力可复用**：自定义 delegate 可以继承 `KLineDefaultDelegateImpl<T>` 并调用 `super` 保留默认蜡烛、指标、网格、覆盖层和选中详情，只在对应方法里追加业务真正关心的那一层 UI。
+- **为高频行情优化**：K 线、指标和副图使用 `CustomPainter` 直接绘制，减少大量蜡烛和指标点带来的 Widget rebuild 压力；固定网格层和横向滚动内容层拆开绘制，网格、坐标轴和覆盖层不会跟着内容重复滚动。
+- **滑动更贴近原生手感**：横向内容层基于 `SingleChildScrollView`、`ScrollController` 和 Flutter 滚动物理实现，手指松开后的惯性滚动由框架接管；业务分页回调只响应用户主动拖动，避免 `jumpTo` / `animateTo` 这类程序化滚动重复触发加载逻辑。
+- **按 120fps 交互目标设计**：滚动、缩放、长按等高频交互会提前计算可见区节点和绘制坐标，减少 paint 阶段重复计算；默认实现交互顺滑、响应稳定，适合承载行情页里连续滑动、缩放和长按查看这类高频操作。
 - **业务模型零侵入**：K 线和深度图都通过 adapter 读取字段，后端模型、缓存模型、计算后的指标模型都可以直接接入。
 - **架构长期可维护**：核心图表、默认实现、主题布局、controller、example 数据层边界清晰，后续新增指标、替换 UI、接入不同交易所数据时不会牵一发动全身。
 - **金融图表能力完整**：内置 MA、EMA、BOLL、MACD、KDJ、RSI、WR、VOL 等常见指标，支持外部控制缩放、滚动、选中状态，也提供盘口累计深度图 `DeepChart`。
@@ -68,7 +97,7 @@ flutter pub add kline_flutter
 
 ```yaml
 dependencies:
-  kline_flutter: ^0.1.0
+  kline_flutter: ^0.3.0
 ```
 
 然后在业务代码中导入：
@@ -149,23 +178,16 @@ class MarketPage extends StatelessWidget {
     return KLineWidget<MyCandle>(
       dataSource: candles,
       adapter: const MyCandleAdapter(),
-      initialIndicators: const ['volume'],
+      initialIndicators: const [KLineDefaultIndicators.volumeId],
     );
   }
 }
 ```
 
-深度图也保持同样的接入思路：
+## 更多用法
 
-```dart
-DeepChart<DeepDepthEntry>(
-  bids: bids,
-  asks: asks,
-  adapter: const DeepDepthEntryAdapter(),
-)
-```
-
-更多自定义绘制、主题、布局、错误态、加载态和 example 数据接入，请查看 [`example/use_docs.md`](example/use_docs.md)。
+README 只保留最小接入。动态指标、实时数据、外部控制、自定义绘制、自定义 UI、
+Loading / Empty / Error 和深度图接入，请查看 [`example/use_docs.md`](example/use_docs.md)。
 
 ## 核心能力
 
@@ -176,6 +198,7 @@ DeepChart<DeepDepthEntry>(
 - `KLineChartDelegate<T>`：绘制协议，可控制布局节点、网格、主图、副图、覆盖层和选中 UI。
 - `KLineDataAdapter<T>`：业务模型适配器。
 - `KLineController`：缩放、滚动、选中、可见区和指标状态控制。
+- `KLineIndicatorSpec<T>`：动态指标定义，可用于主图、副图和自定义 renderer。
 
 ### 深度图
 
@@ -201,6 +224,12 @@ example/
     ├── deep_chart/
     └── custom_page/
 ```
+
+## 架构一览
+
+架构图单独放在文档页，方便通过网页方式查看：
+
+[查看完整架构图](doc/architecture.md)
 
 ## 适合场景
 

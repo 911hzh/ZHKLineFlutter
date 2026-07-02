@@ -24,33 +24,34 @@ class _KLineModelAdapter extends KLineDataAdapter<KLineModel> {
   String dateLabel(KLineModel item) => item.dateString;
 
   @override
-  double? indicatorValue(KLineModel item, KLineDefaultIndicatorValue value) {
+  double? indicatorValue(KLineModel item, String valueId) {
     final indicators = item.kLineTechnicalIndicatorsModel;
     if (indicators == null) return null;
-    return switch (value) {
-      KLineDefaultIndicatorValue.ma5 => indicators.ma5,
-      KLineDefaultIndicatorValue.ma10 => indicators.ma10,
-      KLineDefaultIndicatorValue.ma30 => indicators.ma30,
-      KLineDefaultIndicatorValue.ema5 => indicators.ema5,
-      KLineDefaultIndicatorValue.ema10 => indicators.ema10,
-      KLineDefaultIndicatorValue.ema30 => indicators.ema30,
-      KLineDefaultIndicatorValue.bollUpper => indicators.bollUpper,
-      KLineDefaultIndicatorValue.bollMiddle => indicators.bollMiddle,
-      KLineDefaultIndicatorValue.bollLower => indicators.bollLower,
-      KLineDefaultIndicatorValue.macd => indicators.macd,
-      KLineDefaultIndicatorValue.dif => indicators.dif,
-      KLineDefaultIndicatorValue.dea => indicators.dea,
-      KLineDefaultIndicatorValue.k => indicators.k,
-      KLineDefaultIndicatorValue.d => indicators.d,
-      KLineDefaultIndicatorValue.j => indicators.j,
-      KLineDefaultIndicatorValue.rsi6 => indicators.rsi6,
-      KLineDefaultIndicatorValue.rsi12 => indicators.rsi12,
-      KLineDefaultIndicatorValue.rsi24 => indicators.rsi24,
-      KLineDefaultIndicatorValue.wr6 => indicators.wr6,
-      KLineDefaultIndicatorValue.wr10 => indicators.wr10,
-      KLineDefaultIndicatorValue.wr14 => indicators.wr14,
-      KLineDefaultIndicatorValue.volumeMA5 => indicators.volumeMA5,
-      KLineDefaultIndicatorValue.volumeMA10 => indicators.volumeMA10,
+    return switch (valueId) {
+      KLineDefaultIndicators.ma5 => indicators.ma5,
+      KLineDefaultIndicators.ma10 => indicators.ma10,
+      KLineDefaultIndicators.ma30 => indicators.ma30,
+      KLineDefaultIndicators.ema5 => indicators.ema5,
+      KLineDefaultIndicators.ema10 => indicators.ema10,
+      KLineDefaultIndicators.ema30 => indicators.ema30,
+      KLineDefaultIndicators.bollUpper => indicators.bollUpper,
+      KLineDefaultIndicators.bollMiddle => indicators.bollMiddle,
+      KLineDefaultIndicators.bollLower => indicators.bollLower,
+      KLineDefaultIndicators.macdValue => indicators.macd,
+      KLineDefaultIndicators.dif => indicators.dif,
+      KLineDefaultIndicators.dea => indicators.dea,
+      KLineDefaultIndicators.k => indicators.k,
+      KLineDefaultIndicators.d => indicators.d,
+      KLineDefaultIndicators.j => indicators.j,
+      KLineDefaultIndicators.rsi6 => indicators.rsi6,
+      KLineDefaultIndicators.rsi12 => indicators.rsi12,
+      KLineDefaultIndicators.rsi24 => indicators.rsi24,
+      KLineDefaultIndicators.wr6 => indicators.wr6,
+      KLineDefaultIndicators.wr10 => indicators.wr10,
+      KLineDefaultIndicators.wr14 => indicators.wr14,
+      KLineDefaultIndicators.volumeMA5 => indicators.volumeMA5,
+      KLineDefaultIndicators.volumeMA10 => indicators.volumeMA10,
+      _ => null,
     };
   }
 
@@ -69,11 +70,15 @@ class _KLineModelAdapter extends KLineDataAdapter<KLineModel> {
   }
 
   String _signedNumber(double value) {
-    return value >= 0 ? '+${value.toStringAsFixed(2)}' : value.toStringAsFixed(2);
+    return value >= 0
+        ? '+${value.toStringAsFixed(2)}'
+        : value.toStringAsFixed(2);
   }
 
   String _signedPercent(double value) {
     final percent = value * 100;
-    return percent >= 0 ? '+${percent.toStringAsFixed(2)}%' : '${percent.toStringAsFixed(2)}%';
+    return percent >= 0
+        ? '+${percent.toStringAsFixed(2)}%'
+        : '${percent.toStringAsFixed(2)}%';
   }
 }

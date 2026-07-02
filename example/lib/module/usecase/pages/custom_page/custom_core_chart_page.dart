@@ -17,7 +17,8 @@ class CustomCoreChartPage extends StatelessWidget {
       copy: const CustomDemoCopy(
         title: '完全自定义核心图表',
         description:
-            '直接使用 KLineChart 和 KLineChartDelegate，可以完全跳过默认 UI，自己定义图表高度、布局节点、绘制和选中浮层。',
+            '直接使用 KLineChart 和 KLineChartDelegate，可以完全跳过默认 UI，'
+            '自己定义图表高度、布局节点、绘制和选中浮层。',
         extensionPoint: 'KLineChart<T> / KLineChartDelegate<T>',
         scenario: '适合分时图、极简走势图、特殊金融图表，或需要完全自定义绘制协议的业务。',
       ),
@@ -161,7 +162,8 @@ class _CoreLineChartDelegate extends KLineChartDelegate<KLineModel> {
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Text(
-            '自定义 selection: ${adapter.dateLabel(selectedNode.item)} close=${adapter.close(selectedNode.item).toStringAsFixed(2)}',
+            '自定义 selection: ${adapter.dateLabel(selectedNode.item)} '
+            'close=${adapter.close(selectedNode.item).toStringAsFixed(2)}',
             style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
         ),

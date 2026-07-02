@@ -24,10 +24,9 @@ class KLineResponse {
       ch: json['ch'] as String,
       status: json['status'] as String,
       ts: json['ts'] as int,
-      data:
-          (json['data'] as List<dynamic>)
-              .map((item) => KLineData.fromJson(item as Map<String, dynamic>))
-              .toList(),
+      data: (json['data'] as List<dynamic>)
+          .map((item) => KLineData.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 

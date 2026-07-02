@@ -7,23 +7,43 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:example/base/api/model/kline/KLinePeriod.dart';
 
 void main() {
-  test('fetchKLineData requests Huobi kline history through RestClient', () async {
-    final client = _FakeRestClient({
-      'ch': 'market.btcusdt.kline.15min',
-      'status': 'ok',
-      'ts': 100,
-      'data': [
-        {'id': 2, 'open': 10, 'close': 12, 'low': 9, 'high': 13, 'amount': 1000, 'vol': 100, 'count': 10},
-      ],
-    });
-    final api = KlineApi(client: client);
+  test(
+    'fetchKLineData requests Huobi kline history through RestClient',
+    () async {
+      final client = _FakeRestClient({
+        'ch': 'market.btcusdt.kline.15min',
+        'status': 'ok',
+        'ts': 100,
+        'data': [
+          {
+            'id': 2,
+            'open': 10,
+            'close': 12,
+            'low': 9,
+            'high': 13,
+            'amount': 1000,
+            'vol': 100,
+            'count': 10,
+          },
+        ],
+      });
+      final api = KlineApi(client: client);
 
-    final data = await api.fetchKLineData(symbol: 'btcusdt', period: KLinePeriod.min15, size: 2000);
+      final data = await api.fetchKLineData(
+        symbol: 'btcusdt',
+        period: KLinePeriod.min15,
+        size: 2000,
+      );
 
-    expect(client.lastPath, '/market/history/kline');
-    expect(client.lastQueryParameters, {'period': '15min', 'size': 2000, 'symbol': 'btcusdt'});
-    expect(data.single.id, 2);
-  });
+      expect(client.lastPath, '/market/history/kline');
+      expect(client.lastQueryParameters, {
+        'period': '15min',
+        'size': 2000,
+        'symbol': 'btcusdt',
+      });
+      expect(data.single.id, 2);
+    },
+  );
 }
 
 class _FakeRestClient extends RestClient {
@@ -42,7 +62,12 @@ class _FakeRestClient extends RestClient {
   }) async {
     lastPath = path;
     lastQueryParameters = queryParameters;
-    return RestResponse(statusCode: 200, message: 'OK', data: responseData, headers: const {});
+    return RestResponse(
+      statusCode: 200,
+      message: 'OK',
+      data: responseData,
+      headers: const {},
+    );
   }
 
   @override

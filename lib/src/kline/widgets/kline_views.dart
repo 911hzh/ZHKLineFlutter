@@ -1,33 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:kline_flutter/kline_flutter.dart';
+import 'package:kline_flutter/src/kline/delegate/kline_chart_delegate.dart';
+import 'package:kline_flutter/src/kline/widgets/delegate_impl/kline_data_adapter.dart';
 
 /// 默认底部指标选择器。
-///
-/// 点击指标按钮会通过 [KLineController.toggleIndicator] 切换主图或副图指标。
 class KLineDefaultIndicatorSelector<T> extends StatelessWidget {
-  /// 创建默认指标选择器。
-  const KLineDefaultIndicatorSelector({super.key, required this.context});
+  const KLineDefaultIndicatorSelector({
+    super.key,
+    required this.context,
+    required this.mainIndicators,
+    required this.secondaryIndicators,
+  });
 
   /// 当前图表上下文。
   final KLineChartContext<T> context;
 
-  /// 构建指标选择栏。
+  /// 可选择的主图指标。
+  final List<KLineIndicatorSpec<T>> mainIndicators;
+
+  /// 可选择的副图指标。
+  final List<KLineIndicatorSpec<T>> secondaryIndicators;
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: this.context.controller,
       builder: (context, _) {
         return SizedBox(
-          height: 30,
+          height: this.context.layout.indicatorSelectorHeight,
           child: ColoredBox(
             color: Colors.white,
             child: Row(
               children: [
-                for (final type in KLineDefaultIndicatorType.mainTypes)
-                  Expanded(child: _button(type)),
+                for (final indicator in mainIndicators)
+                  Expanded(child: _button(indicator)),
                 Container(width: 1, height: 10, color: Colors.grey[400]),
-                for (final type in KLineDefaultIndicatorType.secondaryTypes)
-                  Expanded(child: _button(type)),
+                for (final indicator in secondaryIndicators)
+                  Expanded(child: _button(indicator)),
               ],
             ),
           ),
@@ -36,15 +44,16 @@ class KLineDefaultIndicatorSelector<T> extends StatelessWidget {
     );
   }
 
-  /// 构建单个指标按钮。
-  Widget _button(KLineDefaultIndicatorType type) {
-    final selected = context.controller.activeIndicatorIds.contains(type.name);
+  Widget _button(KLineIndicatorSpec<T> indicator) {
+    final selected = context.controller.activeIndicatorIds.contains(
+      indicator.id,
+    );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => context.controller.toggleIndicator(type.name),
+      onTap: () => context.controller.toggleIndicator(indicator.id),
       child: Center(
         child: Text(
-          type.label,
+          indicator.label,
           style: TextStyle(
             fontSize: 10,
             fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
@@ -57,27 +66,20 @@ class KLineDefaultIndicatorSelector<T> extends StatelessWidget {
 }
 
 /// 默认主图指标标签。
-///
-/// 展示当前选中或首个可见 K 线的主图指标值，例如 MA、EMA、BOLL。
 class MainIndicatorLabels<T> extends StatelessWidget {
-  /// 创建默认主图指标标签。
   const MainIndicatorLabels({
     super.key,
     required this.context,
     required this.selected,
     required this.adapter,
+    required this.indicators,
   });
 
-  /// 当前图表上下文。
   final KLineChartContext<T> context;
-
-  /// 当前用于展示指标值的数据项。
   final T selected;
-
-  /// 数据适配器，用于读取指标展示项。
   final KLineDataAdapter<T> adapter;
+  final List<KLineIndicatorSpec<T>> indicators;
 
-  /// 构建主图指标标签区域。
   @override
   Widget build(BuildContext context) {
     final active = this.context.controller.activeIndicatorIds;
@@ -87,19 +89,20 @@ class MainIndicatorLabels<T> extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final type in KLineDefaultIndicatorType.mainTypes)
-            if (active.contains(type.name))
+          for (final indicator in indicators)
+            if (active.contains(indicator.id))
               _row(
-                adapter.mainIndicatorEntries(selected, type),
+                adapter.mainIndicatorEntries(selected, indicator),
                 title:
-                    type == KLineDefaultIndicatorType.boll ? type.label : null,
+                    indicator.id == KLineDefaultIndicators.bollId
+                        ? indicator.label
+                        : null,
               ),
         ],
       ),
     );
   }
 
-  /// 构建一行主图指标标签。
   Widget _row(List<KLineIndicatorEntry> values, {String? title}) {
     final children =
         values
@@ -135,58 +138,44 @@ class MainIndicatorLabels<T> extends StatelessWidget {
 }
 
 /// 默认副图指标标签。
-///
-/// 按副图顺序展示每个副图左上角的指标值。
 class SecondaryIndicatorLabels<T> extends StatelessWidget {
-  /// 创建默认副图指标标签。
   const SecondaryIndicatorLabels({
     super.key,
     required this.context,
     required this.selected,
     required this.adapter,
+    required this.indicators,
+    required this.indicatorHeight,
   });
 
-  /// 当前图表上下文。
   final KLineChartContext<T> context;
-
-  /// 当前用于展示指标值的数据项。
   final T selected;
-
-  /// 数据适配器，用于读取指标展示项。
   final KLineDataAdapter<T> adapter;
+  final List<KLineIndicatorSpec<T>> indicators;
+  final KLineIndicatorHeightGetter<T> indicatorHeight;
 
-  /// 构建副图指标标签集合。
   @override
   Widget build(BuildContext context) {
-    final activeTypes =
-        KLineDefaultIndicatorType.secondaryTypes
-            .where(
-              (type) => this.context.controller.activeIndicatorIds.contains(
-                type.name,
-              ),
-            )
-            .toList();
-    return Stack(
-      children: [
-        for (var i = 0; i < activeTypes.length; i++)
-          Positioned(
-            left: 12,
-            top:
-                this.context.layout.mainChartHeight +
-                this.context.layout.secondaryPaneHeight * i +
-                5,
-            child: _label(activeTypes[i]),
-          ),
-      ],
+    final active = this.context.controller.activeIndicatorIds;
+    final children = <Widget>[];
+    var top = this.context.layout.mainChartHeight;
+    for (final indicator in indicators) {
+      if (!active.contains(indicator.id)) continue;
+      children.add(
+        Positioned(left: 12, top: top + 5, child: _label(indicator)),
+      );
+      top += indicatorHeight(this.context, indicator);
+    }
+    return Stack(children: children);
+  }
+
+  Widget _label(KLineIndicatorSpec<T> indicator) {
+    return _row(
+      indicator.label,
+      adapter.secondaryIndicatorEntries(selected, indicator),
     );
   }
 
-  /// 构建指定副图类型的标签。
-  Widget _label(KLineDefaultIndicatorType type) {
-    return _row(type.label, adapter.secondaryIndicatorEntries(selected, type));
-  }
-
-  /// 构建一行副图指标标签。
   Widget _row(String title, List<KLineIndicatorEntry> values) {
     return Row(
       children: [
@@ -270,11 +259,11 @@ class _KLineSelectionDetailText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Text(
         text,
         textAlign: textAlign,
-        style: const TextStyle(fontSize: 8, color: Colors.black),
+        style: const TextStyle(fontSize: 10, color: Colors.black87),
       ),
     );
   }

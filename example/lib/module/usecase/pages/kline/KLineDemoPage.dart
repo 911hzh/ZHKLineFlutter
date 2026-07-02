@@ -81,7 +81,8 @@ class _KLineDemoPageState extends State<KLineDemoPage> {
     // LoggerFactory.current
     //     .getLogger(['KLineDemoPage'])
     //     .info(
-    //       'reachedOlder: $reachedOlder, metrics.scrollDelta: ${metrics.scrollDelta}',
+    //       'reachedOlder: $reachedOlder, '
+    //       'metrics.scrollDelta: ${metrics.scrollDelta}',
     //     );
     if (reachedOlder && metrics.scrollDelta > 0) {
       context.read<KLineDemoCubit>().loadMore();

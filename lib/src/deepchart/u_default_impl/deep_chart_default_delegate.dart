@@ -1,9 +1,8 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-
-import '../delegate/deep_chart_delegate.dart';
-import '../model/deep_depth_entry.dart';
+import 'package:kline_flutter/src/deepchart/delegate/deep_chart_delegate.dart';
+import 'package:kline_flutter/src/deepchart/model/deep_depth_entry.dart';
 
 /// 深度图默认绘制代理。
 ///

@@ -83,9 +83,9 @@ class _TopIndicatorPanel extends StatelessWidget {
   @override
   Widget build(BuildContext buildContext) {
     final activeEntries = <KLineIndicatorEntry>[
-      for (final type in KLineDefaultIndicatorType.mainTypes)
-        if (context.controller.activeIndicatorIds.contains(type.name))
-          ...adapter.mainIndicatorEntries(item, type),
+      for (final indicator in KLineDefaultIndicators.main<KLineModel>())
+        if (context.controller.activeIndicatorIds.contains(indicator.id))
+          ...adapter.mainIndicatorEntries(item, indicator),
     ].where((entry) => entry.value != null).take(3).toList();
 
     return Positioned(
@@ -175,18 +175,21 @@ class _FloatingIndicatorBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
               children: [
-                for (final type in KLineDefaultIndicatorType.values)
+                for (final indicator in [
+                  ...KLineDefaultIndicators.main<KLineModel>(),
+                  ...KLineDefaultIndicators.secondary<KLineModel>(),
+                ])
                   Expanded(
                     child: TextButton(
                       onPressed: () =>
-                          this.context.controller.toggleIndicator(type.name),
+                          this.context.controller.toggleIndicator(indicator.id),
                       child: Text(
-                        type.label,
+                        indicator.label,
                         style: TextStyle(
                           fontSize: 11,
                           color:
                               this.context.controller.activeIndicatorIds
-                                  .contains(type.name)
+                                  .contains(indicator.id)
                               ? Colors.blue
                               : Colors.grey,
                         ),

@@ -56,6 +56,8 @@ class CustomKLineDemoShell extends StatefulWidget {
     this.layout = const KLineLayoutConfig(),
     this.behavior = const KLineBehaviorConfig(),
     this.initialIndicators = const ['volume'],
+    this.mainIndicators,
+    this.secondaryIndicators,
     this.delegateBuilder,
     this.controlsBuilder,
     this.chartBuilder,
@@ -69,6 +71,8 @@ class CustomKLineDemoShell extends StatefulWidget {
   final KLineLayoutConfig layout;
   final KLineBehaviorConfig behavior;
   final Iterable<String> initialIndicators;
+  final List<KLineIndicatorSpec<KLineModel>>? mainIndicators;
+  final List<KLineIndicatorSpec<KLineModel>>? secondaryIndicators;
   final CustomKLineDelegateBuilder? delegateBuilder;
   final CustomKLineControlsBuilder? controlsBuilder;
   final CustomKLineChartBuilder? chartBuilder;
@@ -197,6 +201,8 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
       theme: widget.theme,
       layout: widget.layout,
       behavior: widget.behavior,
+      mainIndicators: widget.mainIndicators,
+      secondaryIndicators: widget.secondaryIndicators,
       isLoading: state.isLoading,
       error: state.error,
       onRetry: _actions.retry,

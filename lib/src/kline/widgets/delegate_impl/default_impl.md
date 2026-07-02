@@ -1,6 +1,6 @@
 # 默认实现目录说明
 
-`u_default_impl` 目录提供 package 内置的默认 K 线 UI 和默认绘制实现。它的目标是让用户在不自定义 `KLineChartDelegate` 的情况下，也能通过 `KLineWidget` 快速接入一套完整的 K 线图；如果用户需要更高自由度，也可以复用这里的 adapter、delegate、util 或 view 组件，只替换其中一部分。
+`delegate_impl` 目录提供 package 内置的默认 K 线 UI 和默认绘制实现。它的目标是让用户在不自定义 `KLineChartDelegate` 的情况下，也能通过 `KLineWidget` 快速接入一套完整的 K 线图；如果用户需要更高自由度，也可以复用这里的 adapter、delegate、util 或 view 组件，只替换其中一部分。
 
 ## 调用关系
 
@@ -34,6 +34,7 @@ KLineWidget<T>
 - `adapter`
 - 可选的 `controller`
 - 可选的 `layout/theme/behavior`
+- 可选的 `mainIndicators` / `secondaryIndicators`
 - 可选的 `onScroll`
 
 适合最简单的接入方式：
@@ -46,6 +47,13 @@ KLineWidget<MyCandle>(
 ```
 
 如果用户传入自定义 `delegate`，`KLineWidget` 会使用用户的 delegate，从而绕过默认 delegate。
+
+默认指标列表语义：
+
+- `mainIndicators == null`：使用默认 MA/EMA/BOLL。
+- `secondaryIndicators == null`：使用默认 VOL/MACD/KDJ/RSI/WR。
+- 传入空列表：不展示对应指标。
+- 传入自定义列表：选择器只展示这份列表，默认指标不会自动合并。
 
 ### `kline_data_adapter.dart`
 
@@ -61,6 +69,8 @@ KLineWidget<MyCandle>(
 - 详情面板字段：`detailEntries`
 
 用户可以只实现基础 OHLCV 和日期；没有指标时返回 `null` 即可。需要自定义指标标题、周期或顺序时，可以覆盖 `mainIndicatorEntries` / `secondaryIndicatorEntries`。
+
+`indicatorValue(T item, String valueId)` 使用字符串 id 读取指标值，内置指标和业务自定义指标都走同一个入口，不再依赖 enum。
 
 ### `kline_default_delegate.dart`
 
@@ -143,19 +153,44 @@ KLineWidget<MyCandle>(
 @override
 List<KLineIndicatorEntry> mainIndicatorEntries(
   MyCandle item,
-  KLineDefaultIndicatorType type,
+  KLineIndicatorSpec<MyCandle> indicator,
 ) {
-  if (type == KLineDefaultIndicatorType.ma) {
+  if (indicator.id == KLineDefaultIndicators.maId) {
     return [
       KLineIndicatorEntry(label: 'MA7', value: item.ma7, colorIndex: 0),
       KLineIndicatorEntry(label: 'MA25', value: item.ma25, colorIndex: 1),
     ];
   }
-  return super.mainIndicatorEntries(item, type);
+  return super.mainIndicatorEntries(item, indicator);
 }
 ```
 
-### 3. 复用默认 util
+### 3. 自定义指标定义
+
+通过 `KLineIndicatorSpec<T>` 定义选择器项和绘制策略。普通 series 指标使用默认折线 renderer；特殊副图可以传 `renderer` 自己绘制。
+
+```dart
+KLineWidget<MyCandle>(
+  dataSource: candles,
+  adapter: const MyCandleAdapter(),
+  initialIndicators: const ['cci'],
+  secondaryIndicators: const [
+    KLineIndicatorSpec<MyCandle>(
+      id: 'cci',
+      label: 'CCI',
+      series: [
+        KLineIndicatorSeries<MyCandle>(
+          id: 'cci14',
+          label: 'CCI14',
+          colorIndex: 2,
+        ),
+      ],
+    ),
+  ],
+)
+```
+
+### 4. 复用默认 util
 
 自定义 delegate，但复用默认实现中的部分逻辑。
 
@@ -179,7 +214,7 @@ class MyDelegate extends KLineChartDelegate<MyCandle> {
 }
 ```
 
-### 4. 完全自定义
+### 5. 完全自定义
 
 直接使用 `KLineChart<T>` 和自己的 `KLineChartDelegate<T>`，不依赖默认实现。
 

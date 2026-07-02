@@ -29,7 +29,31 @@ class MarketPage extends StatelessWidget {
         child: KLineWidget<MyCandle>(
           dataSource: _candles,
           adapter: MyCandleAdapter(),
-          initialIndicators: ['volume'],
+          initialIndicators: [KLineDefaultIndicators.volumeId, 'cci'],
+          secondaryIndicators: [
+            KLineIndicatorSpec<MyCandle>(
+              id: KLineDefaultIndicators.volumeId,
+              label: 'VOL',
+              series: [
+                KLineIndicatorSeries<MyCandle>(
+                  id: KLineDefaultIndicators.volumeMA5,
+                  label: 'MA5',
+                  colorIndex: 1,
+                ),
+              ],
+            ),
+            KLineIndicatorSpec<MyCandle>(
+              id: 'cci',
+              label: 'CCI',
+              series: [
+                KLineIndicatorSeries<MyCandle>(
+                  id: 'cci14',
+                  label: 'CCI14',
+                  colorIndex: 2,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -41,19 +65,23 @@ class MarketPage extends StatelessWidget {
 /// 该类可以来自接口、数据库或本地计算结果，不需要继承 package 内部 model。
 class MyCandle {
   const MyCandle({
+    required this.timestampMs,
     required this.open,
     required this.high,
     required this.low,
     required this.close,
     required this.volume,
+    required this.cci14,
     required this.timeLabel,
   });
 
+  final int timestampMs;
   final double open;
   final double high;
   final double low;
   final double close;
   final double volume;
+  final double cci14;
   final String timeLabel;
 }
 
@@ -78,47 +106,65 @@ class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
 
   @override
   String dateLabel(MyCandle item) => item.timeLabel;
+
+  @override
+  double? indicatorValue(MyCandle item, String valueId) {
+    return switch (valueId) {
+      'cci14' => item.cci14,
+      _ => null,
+    };
+  }
 }
 
 const _candles = [
   MyCandle(
+    timestampMs: 1719649800000,
     open: 100,
     high: 108,
     low: 98,
     close: 106,
     volume: 1200,
+    cci14: 82,
     timeLabel: '09:30',
   ),
   MyCandle(
+    timestampMs: 1719651600000,
     open: 106,
     high: 112,
     low: 104,
     close: 110,
     volume: 1680,
+    cci14: 118,
     timeLabel: '10:00',
   ),
   MyCandle(
+    timestampMs: 1719653400000,
     open: 110,
     high: 111,
     low: 101,
     close: 103,
     volume: 980,
+    cci14: -74,
     timeLabel: '10:30',
   ),
   MyCandle(
+    timestampMs: 1719655200000,
     open: 103,
     high: 109,
     low: 102,
     close: 108,
     volume: 1320,
+    cci14: 36,
     timeLabel: '11:00',
   ),
   MyCandle(
+    timestampMs: 1719657000000,
     open: 108,
     high: 116,
     low: 107,
     close: 114,
     volume: 1510,
+    cci14: 126,
     timeLabel: '11:30',
   ),
 ];
