@@ -80,7 +80,7 @@
 - **默认能力可复用**：自定义 delegate 可以继承 `KLineDefaultDelegateImpl<T>` 并调用 `super` 保留默认蜡烛、指标、网格、覆盖层和选中详情，只在对应方法里追加业务真正关心的那一层 UI。
 - **为高频行情优化**：K 线、指标和副图使用 `CustomPainter` 直接绘制，减少大量蜡烛和指标点带来的 Widget rebuild 压力；固定网格层和横向滚动内容层拆开绘制，网格、坐标轴和覆盖层不会跟着内容重复滚动。
 - **滑动更贴近原生手感**：横向内容层基于 `SingleChildScrollView`、`ScrollController` 和 Flutter 滚动物理实现，手指松开后的惯性滚动由框架接管；业务分页回调只响应用户主动拖动，避免 `jumpTo` / `animateTo` 这类程序化滚动重复触发加载逻辑。
-- **按 60fps 交互目标设计**：滚动、缩放、长按等高频交互会提前计算可见区节点和绘制坐标，减少 paint 阶段重复计算。实际帧率仍取决于设备、数据量和自定义 renderer，接入业务后建议用 Flutter DevTools 或 Performance Overlay 实测。
+- **按 120fps 交互目标设计**：滚动、缩放、长按等高频交互会提前计算可见区节点和绘制坐标，减少 paint 阶段重复计算；默认实现交互顺滑、响应稳定，适合承载行情页里连续滑动、缩放和长按查看这类高频操作。
 - **业务模型零侵入**：K 线和深度图都通过 adapter 读取字段，后端模型、缓存模型、计算后的指标模型都可以直接接入。
 - **架构长期可维护**：核心图表、默认实现、主题布局、controller、example 数据层边界清晰，后续新增指标、替换 UI、接入不同交易所数据时不会牵一发动全身。
 - **金融图表能力完整**：内置 MA、EMA、BOLL、MACD、KDJ、RSI、WR、VOL 等常见指标，支持外部控制缩放、滚动、选中状态，也提供盘口累计深度图 `DeepChart`。
@@ -227,44 +227,9 @@ example/
 
 ## 架构一览
 
-外部业务侧主要关注数据、适配器、controller、指标定义、主题布局和可选 delegate；
-package 内部负责滚动、缩放、可见区计算、绘制分层和默认 UI 组合。
+架构图单独放在文档页，方便通过网页方式查看：
 
-```mermaid
-flowchart TD
-  page["业务页面"] --> data["List&lt;T&gt; 业务数据"]
-  page --> adapter["KLineDataAdapter&lt;T&gt;<br/>DeepChartDataAdapter&lt;T&gt;"]
-  page --> controller["KLineController<br/>缩放 / 滚动 / 选中 / 指标 id"]
-  page --> spec["KLineIndicatorSpec&lt;T&gt;<br/>KLineIndicatorSeries&lt;T&gt;"]
-  page --> config["Theme / Layout / Behavior"]
-  page --> customDelegate["业务自定义 Delegate<br/>自定义绘制 / 自定义 UI"]
-  page --> widget["KLineWidget&lt;T&gt;<br/>默认完整 K 线 UI"]
-  page --> deep["DeepChart&lt;T&gt;<br/>盘口累计深度图"]
-
-  data --> widget
-  adapter --> widget
-  controller --> widget
-  spec --> widget
-  config --> widget
-  customDelegate --> delegate
-  customDelegate --> deepDelegate
-
-  widget --> chart["KLineChart&lt;T&gt;<br/>手势 / 滚动 / 缩放 / 可见区"]
-  chart --> delegate["KLineChartDelegate&lt;T&gt;<br/>绘制协议"]
-  delegate --> defaultImpl["KLineDefaultDelegateImpl&lt;T&gt;<br/>默认蜡烛 / 指标 / 覆盖层 / 详情"]
-  defaultImpl --> util["内部默认工具<br/>坐标 / range / 标签 / 默认绘制"]
-  chart --> fixedPainter["固定层 CustomPainter<br/>网格 / 坐标轴 / 十字线"]
-  chart --> scrollPainter["SingleChildScrollView + 内容层 CustomPainter<br/>蜡烛 / 指标 / 副图"]
-  delegate --> customLayers["可覆盖层<br/>网格 / 主图 / 副图 / Overlay / Selection"]
-
-  deep --> deepDelegate["DeepChartDelegate&lt;T&gt;<br/>深度图布局 / 绘制 / 覆盖层"]
-```
-
-需要快速接入时，只看 `KLineWidget<T>`、`KLineDataAdapter<T>` 和
-`KLineController`。需要自定义指标时，再看 `KLineIndicatorSpec<T>`。需要替换
-绘制或 UI 时，传入业务自定义 delegate：想保留默认能力就继承
-`KLineDefaultDelegateImpl<T>` 并调用 `super`，想完全接管绘制流程就实现
-`KLineChartDelegate<T>` / `DeepChartDelegate<T>`。
+[查看完整架构图](docs/architecture.md)
 
 ## 适合场景
 
