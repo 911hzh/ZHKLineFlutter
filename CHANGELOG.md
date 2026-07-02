@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- 更新文档
+
 ## 0.3.0
 
 - 破坏性调整：移除默认指标 enum API，改为基于 `KLineIndicatorSpec<T>` 和 `KLineIndicatorSeries<T>` 的动态指标定义。
