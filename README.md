@@ -229,7 +229,7 @@ example/
 
 架构图单独放在文档页，方便通过网页方式查看：
 
-[查看完整架构图](docs/architecture.md)
+[查看完整架构图](doc/architecture.md)
 
 ## 适合场景
 
