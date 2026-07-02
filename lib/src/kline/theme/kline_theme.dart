@@ -172,8 +172,13 @@ class KLineLayoutConfig {
   ///
   /// [secondaryPaneCount] 表示当前展示的副图数量，
   /// [includeSelector] 控制是否把指标选择器高度计入总高度。
-  double chartHeight({int secondaryPaneCount = 0, bool includeSelector = true}) {
-    return mainChartHeight + secondaryPaneHeight * secondaryPaneCount + (includeSelector ? indicatorSelectorHeight : 0);
+  double chartHeight({
+    int secondaryPaneCount = 0,
+    bool includeSelector = true,
+  }) {
+    return mainChartHeight +
+        secondaryPaneHeight * secondaryPaneCount +
+        (includeSelector ? indicatorSelectorHeight : 0);
   }
 }
 

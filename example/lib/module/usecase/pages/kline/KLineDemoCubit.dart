@@ -35,7 +35,9 @@ class KLineDemoState {
 }
 
 class KLineDemoCubit extends Cubit<KLineDemoState> {
-  KLineDemoCubit({required KlineStore klineStore}) : _klineStore = klineStore, super(const KLineDemoState());
+  KLineDemoCubit({required KlineStore klineStore})
+    : _klineStore = klineStore,
+      super(const KLineDemoState());
 
   final KlineStore _klineStore;
   bool _isLoadingMore = false;
@@ -58,7 +60,13 @@ class KLineDemoCubit extends Cubit<KLineDemoState> {
     emit(state.copyWith(isLoading: true, clearError: true));
     try {
       final refreshedState = await _klineStore.refresh(state.selectedPeriod);
-      emit(state.copyWith(data: refreshedState.models, isLoading: false, clearError: true));
+      emit(
+        state.copyWith(
+          data: refreshedState.models,
+          isLoading: false,
+          clearError: true,
+        ),
+      );
     } catch (error) {
       emit(state.copyWith(isLoading: false, error: error));
     }
@@ -70,7 +78,13 @@ class KLineDemoCubit extends Cubit<KLineDemoState> {
     emit(state.copyWith(isLoading: true, clearError: true));
     try {
       final loadedState = await _klineStore.loadMore(state.selectedPeriod);
-      emit(state.copyWith(data: loadedState.models, isLoading: false, clearError: true));
+      emit(
+        state.copyWith(
+          data: loadedState.models,
+          isLoading: false,
+          clearError: true,
+        ),
+      );
     } catch (error) {
       emit(state.copyWith(isLoading: false, error: error));
     } finally {
@@ -90,14 +104,30 @@ class KLineDemoCubit extends Cubit<KLineDemoState> {
 
     final cachedState = await _klineStore.readCached(period);
     if (cachedState.models.isNotEmpty) {
-      emit(state.copyWith(selectedPeriod: period, data: cachedState.models, isLoading: true, clearError: true));
+      emit(
+        state.copyWith(
+          selectedPeriod: period,
+          data: cachedState.models,
+          isLoading: true,
+          clearError: true,
+        ),
+      );
     }
 
     try {
       final refreshedState = await _klineStore.refresh(period);
-      emit(state.copyWith(selectedPeriod: period, data: refreshedState.models, isLoading: false, clearError: true));
+      emit(
+        state.copyWith(
+          selectedPeriod: period,
+          data: refreshedState.models,
+          isLoading: false,
+          clearError: true,
+        ),
+      );
     } catch (error) {
-      emit(state.copyWith(selectedPeriod: period, isLoading: false, error: error));
+      emit(
+        state.copyWith(selectedPeriod: period, isLoading: false, error: error),
+      );
     }
   }
 }

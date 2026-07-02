@@ -9,11 +9,10 @@ Future<void> main() async {
   await configureDependencies();
   // 进入demo pagelist 页面。
   runApp(App(initialRoute: '/home'));
-  
+
   // 这里面是快捷接入
   // runApp(MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

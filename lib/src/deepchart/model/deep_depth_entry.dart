@@ -22,7 +22,12 @@ class DeepDepthEntry {
 @immutable
 class DeepDepthNode {
   /// 创建深度图绘制节点。
-  const DeepDepthNode({required this.index, required this.entry, required this.cumulativeSize, this.position});
+  const DeepDepthNode({
+    required this.index,
+    required this.entry,
+    required this.cumulativeSize,
+    this.position,
+  });
 
   /// 当前节点在买盘或卖盘数组中的下标。
   final int index;
@@ -81,14 +86,20 @@ class DeepDepthNodes {
 
   /// 买卖盘中的最低价格，用作底部价格轴起点。
   double get minPrice {
-    final prices = [...bids.map((node) => node.price), ...asks.map((node) => node.price)];
+    final prices = [
+      ...bids.map((node) => node.price),
+      ...asks.map((node) => node.price),
+    ];
     if (prices.isEmpty) return 0;
     return prices.reduce((left, right) => left < right ? left : right);
   }
 
   /// 买卖盘中的最高价格，用作底部价格轴终点。
   double get maxPrice {
-    final prices = [...bids.map((node) => node.price), ...asks.map((node) => node.price)];
+    final prices = [
+      ...bids.map((node) => node.price),
+      ...asks.map((node) => node.price),
+    ];
     if (prices.isEmpty) return 0;
     return prices.reduce((left, right) => left > right ? left : right);
   }

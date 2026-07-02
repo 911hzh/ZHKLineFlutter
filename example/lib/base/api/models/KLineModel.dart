@@ -25,8 +25,14 @@ class KLineModel {
   });
 
   /// 工厂构造函数
-  factory KLineModel.fromKLineData(KLineData klineData, KLinePeriod selectedPeriod) {
-    final date = DateTime.fromMillisecondsSinceEpoch(klineData.id * 1000, isUtc: false);
+  factory KLineModel.fromKLineData(
+    KLineData klineData,
+    KLinePeriod selectedPeriod,
+  ) {
+    final date = DateTime.fromMillisecondsSinceEpoch(
+      klineData.id * 1000,
+      isUtc: false,
+    );
 
     String dateString;
     final formatter = DateFormatter('Asia/Singapore');
@@ -43,7 +49,11 @@ class KLineModel {
         dateString = formatter.format(date, 'yyyy-MM-dd');
     }
 
-    return KLineModel(klineData: klineData, selectedPeriod: selectedPeriod, dateString: dateString);
+    return KLineModel(
+      klineData: klineData,
+      selectedPeriod: selectedPeriod,
+      dateString: dateString,
+    );
   }
 
   /// 便捷访问属性

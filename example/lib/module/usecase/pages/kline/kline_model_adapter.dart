@@ -70,11 +70,15 @@ class _KLineModelAdapter extends KLineDataAdapter<KLineModel> {
   }
 
   String _signedNumber(double value) {
-    return value >= 0 ? '+${value.toStringAsFixed(2)}' : value.toStringAsFixed(2);
+    return value >= 0
+        ? '+${value.toStringAsFixed(2)}'
+        : value.toStringAsFixed(2);
   }
 
   String _signedPercent(double value) {
     final percent = value * 100;
-    return percent >= 0 ? '+${percent.toStringAsFixed(2)}%' : '${percent.toStringAsFixed(2)}%';
+    return percent >= 0
+        ? '+${percent.toStringAsFixed(2)}%'
+        : '${percent.toStringAsFixed(2)}%';
   }
 }

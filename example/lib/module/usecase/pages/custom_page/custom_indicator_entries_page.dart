@@ -16,7 +16,8 @@ class CustomIndicatorEntriesPage extends StatelessWidget {
       copy: CustomDemoCopy(
         title: '自定义指标与详情字段',
         description: '覆盖 KLineDataAdapter 的指标入口，可以重命名指标、调整顺序、改变颜色索引，并扩展长按详情字段。',
-        extensionPoint: 'KLineDataAdapter.mainIndicatorEntries / secondaryIndicatorEntries / detailEntries',
+        extensionPoint:
+            'KLineDataAdapter.mainIndicatorEntries / secondaryIndicatorEntries / detailEntries',
         scenario: '适合交易所、券商或量化业务使用自己的指标参数和本地化字段。',
       ),
       adapter: CustomIndicatorEntriesAdapter(),
@@ -29,22 +30,44 @@ class CustomIndicatorEntriesAdapter extends CustomKLineModelAdapter {
   const CustomIndicatorEntriesAdapter();
 
   @override
-  List<KLineIndicatorEntry> mainIndicatorEntries(KLineModel item, KLineIndicatorSpec<KLineModel> indicator) {
+  List<KLineIndicatorEntry> mainIndicatorEntries(
+    KLineModel item,
+    KLineIndicatorSpec<KLineModel> indicator,
+  ) {
     if (indicator.id == KLineDefaultIndicators.maId) {
       return [
-        KLineIndicatorEntry(label: '短线MA5', value: indicatorValue(item, KLineDefaultIndicators.ma5), colorIndex: 0),
-        KLineIndicatorEntry(label: '趋势MA30', value: indicatorValue(item, KLineDefaultIndicators.ma30), colorIndex: 2),
+        KLineIndicatorEntry(
+          label: '短线MA5',
+          value: indicatorValue(item, KLineDefaultIndicators.ma5),
+          colorIndex: 0,
+        ),
+        KLineIndicatorEntry(
+          label: '趋势MA30',
+          value: indicatorValue(item, KLineDefaultIndicators.ma30),
+          colorIndex: 2,
+        ),
       ];
     }
     return super.mainIndicatorEntries(item, indicator);
   }
 
   @override
-  List<KLineIndicatorEntry> secondaryIndicatorEntries(KLineModel item, KLineIndicatorSpec<KLineModel> indicator) {
+  List<KLineIndicatorEntry> secondaryIndicatorEntries(
+    KLineModel item,
+    KLineIndicatorSpec<KLineModel> indicator,
+  ) {
     if (indicator.id == KLineDefaultIndicators.rsiId) {
       return [
-        KLineIndicatorEntry(label: '快RSI', value: indicatorValue(item, KLineDefaultIndicators.rsi6), colorIndex: 3),
-        KLineIndicatorEntry(label: '慢RSI', value: indicatorValue(item, KLineDefaultIndicators.rsi24), colorIndex: 1),
+        KLineIndicatorEntry(
+          label: '快RSI',
+          value: indicatorValue(item, KLineDefaultIndicators.rsi6),
+          colorIndex: 3,
+        ),
+        KLineIndicatorEntry(
+          label: '慢RSI',
+          value: indicatorValue(item, KLineDefaultIndicators.rsi24),
+          colorIndex: 1,
+        ),
       ];
     }
     return super.secondaryIndicatorEntries(item, indicator);

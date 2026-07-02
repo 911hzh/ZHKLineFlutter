@@ -48,7 +48,10 @@ class _ControllerPanel extends StatelessWidget {
               children: [
                 Text(
                   'scale ${controller.scale.toStringAsFixed(2)} | offset ${controller.scrollOffset.toStringAsFixed(0)} | visible ${controller.visibleRange ?? '-'}',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF475569)),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF475569),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -56,31 +59,46 @@ class _ControllerPanel extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     OutlinedButton(
-                      onPressed: () => controller.setScale((controller.scale * 1.2).clamp(0.5, 3).toDouble()),
+                      onPressed: () => controller.setScale(
+                        (controller.scale * 1.2).clamp(0.5, 3).toDouble(),
+                      ),
                       child: const Text('放大'),
                     ),
                     OutlinedButton(
-                      onPressed: () => controller.setScale((controller.scale / 1.2).clamp(0.5, 3).toDouble()),
+                      onPressed: () => controller.setScale(
+                        (controller.scale / 1.2).clamp(0.5, 3).toDouble(),
+                      ),
                       child: const Text('缩小'),
                     ),
                     OutlinedButton(
-                      onPressed: () => controller.setScrollOffset(controller.scrollOffset + 120),
+                      onPressed: () => controller.setScrollOffset(
+                        controller.scrollOffset + 120,
+                      ),
                       child: const Text('向历史滚动'),
                     ),
-                    OutlinedButton(onPressed: () => controller.setScrollOffset(0), child: const Text('回到最新')),
                     OutlinedButton(
-                      onPressed: () => controller.toggleIndicator(KLineDefaultIndicators.maId),
+                      onPressed: () => controller.setScrollOffset(0),
+                      child: const Text('回到最新'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => controller.toggleIndicator(
+                        KLineDefaultIndicators.maId,
+                      ),
                       child: const Text('切换 MA'),
                     ),
                     OutlinedButton(
-                      onPressed: () => controller.selectIndex(controller.visibleRange?.start),
+                      onPressed: () => controller.selectIndex(
+                        controller.visibleRange?.start,
+                      ),
                       child: const Text('选中首个可见点'),
                     ),
                     TextButton(
                       onPressed: () {
                         controller
                           ..clearSelection()
-                          ..setActiveIndicators([KLineDefaultIndicators.volumeId])
+                          ..setActiveIndicators([
+                            KLineDefaultIndicators.volumeId,
+                          ])
                           ..setScale(1)
                           ..setScrollOffset(0);
                       },

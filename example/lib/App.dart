@@ -8,6 +8,10 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(routes: RouteConfig.routes, initialRoute: initialRoute, key: globalNavigatorKey);
+    return MaterialApp(
+      routes: RouteConfig.routes,
+      initialRoute: initialRoute,
+      key: globalNavigatorKey,
+    );
   }
 }

@@ -74,7 +74,7 @@ analyze:
 # 格式化代码
 format:
 	@echo "✨ 格式化代码..."
-	dart format lib/ test/
+	dart format lib/ test/ example/
 
 # 检查代码格式（不修改）
 format-check:

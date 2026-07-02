@@ -11,7 +11,11 @@ import 'package:kline_flutter/kline_flutter.dart';
 typedef CustomKLineDelegateBuilder =
     KLineChartDelegate<KLineModel> Function(
       KLineDataAdapter<KLineModel> adapter,
-      void Function(KLineChartContext<KLineModel> context, KLineScrollMetrics metrics) onScroll,
+      void Function(
+        KLineChartContext<KLineModel> context,
+        KLineScrollMetrics metrics,
+      )
+      onScroll,
     );
 
 typedef CustomKLineControlsBuilder =
@@ -29,7 +33,11 @@ typedef CustomKLineChartBuilder =
       KLineController controller,
       KLineDataAdapter<KLineModel> adapter,
       CustomKLineDemoActions actions,
-      void Function(KLineChartContext<KLineModel> context, KLineScrollMetrics metrics) onScroll,
+      void Function(
+        KLineChartContext<KLineModel> context,
+        KLineScrollMetrics metrics,
+      )
+      onScroll,
     );
 
 class CustomKLineDemoActions {
@@ -121,7 +129,12 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
                 _CustomDemoHeader(copy: widget.copy),
                 const SizedBox(height: 12),
                 if (widget.controlsBuilder != null) ...[
-                  widget.controlsBuilder!(context, _controller, state, _actions),
+                  widget.controlsBuilder!(
+                    context,
+                    _controller,
+                    state,
+                    _actions,
+                  ),
                   const SizedBox(height: 12),
                 ],
                 _buildChart(context, state),
@@ -146,7 +159,14 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
 
   Widget _buildChart(BuildContext context, KLineDemoState state) {
     if (widget.chartBuilder != null) {
-      return widget.chartBuilder!(context, state, _controller, widget.adapter, _actions, _handleUserScroll);
+      return widget.chartBuilder!(
+        context,
+        state,
+        _controller,
+        widget.adapter,
+        _actions,
+        _handleUserScroll,
+      );
     }
 
     if (!widget.passPlaceholderStateToWidget) {
@@ -157,14 +177,22 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
         );
       }
       if (state.error != null && state.data.isEmpty) {
-        return _ShellMessage(height: 220, message: '加载失败: ${state.error}', actionText: '重试', onAction: _actions.retry);
+        return _ShellMessage(
+          height: 220,
+          message: '加载失败: ${state.error}',
+          actionText: '重试',
+          onAction: _actions.retry,
+        );
       }
       if (state.data.isEmpty) {
         return const _ShellMessage(height: 220, message: '暂无数据');
       }
     }
 
-    final delegate = widget.delegateBuilder?.call(widget.adapter, _handleUserScroll);
+    final delegate = widget.delegateBuilder?.call(
+      widget.adapter,
+      _handleUserScroll,
+    );
     return KLineWidget<KLineModel>(
       controller: _controller,
       dataSource: state.data,
@@ -182,7 +210,10 @@ class _CustomKLineDemoShellState extends State<CustomKLineDemoShell> {
     );
   }
 
-  void _handleUserScroll(KLineChartContext<KLineModel> chartContext, KLineScrollMetrics metrics) {
+  void _handleUserScroll(
+    KLineChartContext<KLineModel> chartContext,
+    KLineScrollMetrics metrics,
+  ) {
     final reachedOlder = metrics.extentAfter <= _edgeLoadThreshold;
     if (reachedOlder && metrics.scrollDelta > 0) {
       _actions.loadMore();
@@ -208,7 +239,10 @@ class _CustomDemoHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(copy.description, style: const TextStyle(fontSize: 14, height: 1.4)),
+            Text(
+              copy.description,
+              style: const TextStyle(fontSize: 14, height: 1.4),
+            ),
             const SizedBox(height: 10),
             _InfoLine(label: '扩展点', value: copy.extensionPoint),
             const SizedBox(height: 6),
@@ -238,13 +272,22 @@ class _InfoLine extends StatelessWidget {
           TextSpan(text: value),
         ],
       ),
-      style: const TextStyle(fontSize: 12, color: Color(0xFF4D5966), height: 1.35),
+      style: const TextStyle(
+        fontSize: 12,
+        color: Color(0xFF4D5966),
+        height: 1.35,
+      ),
     );
   }
 }
 
 class _ShellMessage extends StatelessWidget {
-  const _ShellMessage({required this.height, required this.message, this.actionText, this.onAction});
+  const _ShellMessage({
+    required this.height,
+    required this.message,
+    this.actionText,
+    this.onAction,
+  });
 
   final double height;
   final String message;
