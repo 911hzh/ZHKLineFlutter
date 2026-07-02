@@ -37,7 +37,10 @@ class KLineVisibleRange {
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        other is KLineVisibleRange && runtimeType == other.runtimeType && start == other.start && end == other.end;
+        other is KLineVisibleRange &&
+            runtimeType == other.runtimeType &&
+            start == other.start &&
+            end == other.end;
   }
 
   @override
@@ -117,7 +120,14 @@ class KLineController extends ChangeNotifier {
   /// 该入口供图表内部消费；业务侧通常只需要调用 [scrollToLatest]、
   /// [scrollToIndex] 或 [revealSelected]。每次请求通过 [revision] 区分，
   /// 这样连续请求不会被旧的 post-frame 回调误消费。
-  ({int revision, bool latest, int? index, KLineScrollAlignment alignment, bool animated})? get scrollRequest {
+  ({
+    int revision,
+    bool latest,
+    int? index,
+    KLineScrollAlignment alignment,
+    bool animated,
+  })?
+  get scrollRequest {
     if (_scrollRequestRevision == 0) return null;
     return (
       revision: _scrollRequestRevision,
@@ -155,10 +165,21 @@ class KLineController extends ChangeNotifier {
     required double baseScale,
     required double localFocalX,
     required double contentFocalX,
+    double? minScrollOffset,
+    double? maxScrollOffset,
   }) {
     if (baseScale == 0) return;
     final scaleRatio = scale / baseScale;
-    final nextScrollOffset = contentFocalX * scaleRatio - localFocalX;
+    var nextScrollOffset = contentFocalX * scaleRatio - localFocalX;
+    if (minScrollOffset != null || maxScrollOffset != null) {
+      nextScrollOffset =
+          nextScrollOffset
+              .clamp(
+                minScrollOffset ?? double.negativeInfinity,
+                maxScrollOffset ?? double.infinity,
+              )
+              .toDouble();
+    }
     final scaleChanged = _scale != scale;
     final scrollChanged = _scrollOffset != nextScrollOffset;
     if (!scaleChanged && !scrollChanged) return;
@@ -199,7 +220,11 @@ class KLineController extends ChangeNotifier {
   /// 触发“滚动到指定下标”命令。
   ///
   /// 主动查看指定位置通常表示用户暂时离开最新区域，因此会关闭跟随最新。
-  void scrollToIndex(int index, {KLineScrollAlignment alignment = KLineScrollAlignment.right, bool animated = true}) {
+  void scrollToIndex(
+    int index, {
+    KLineScrollAlignment alignment = KLineScrollAlignment.right,
+    bool animated = true,
+  }) {
     _isFollowingLatest = false;
     _shouldScrollToLatest = false;
     _scrollToIndex = index;
@@ -212,7 +237,10 @@ class KLineController extends ChangeNotifier {
   /// 当存在选中项时，将其滚回可见区域。
   ///
   /// 复用 [scrollToIndex]，所以 reveal 选中项也会关闭跟随最新。
-  void revealSelected({KLineScrollAlignment alignment = KLineScrollAlignment.center, bool animated = true}) {
+  void revealSelected({
+    KLineScrollAlignment alignment = KLineScrollAlignment.center,
+    bool animated = true,
+  }) {
     final selectedIndex = _selectedIndex;
     if (selectedIndex == null) return;
     scrollToIndex(selectedIndex, alignment: alignment, animated: animated);
@@ -222,7 +250,11 @@ class KLineController extends ChangeNotifier {
   ///
   /// [index] 为 null 时表示清除选中态。选中时可以同时传入局部坐标
   /// [localPosition] 和内容坐标 [contentPosition]，供十字线与详情面板定位。
-  void selectIndex(int? index, {Offset? localPosition, Offset? contentPosition}) {
+  void selectIndex(
+    int? index, {
+    Offset? localPosition,
+    Offset? contentPosition,
+  }) {
     final nextLocalPosition = index == null ? null : localPosition;
     final nextContentPosition = index == null ? null : contentPosition;
     if (_selectedIndex == index &&

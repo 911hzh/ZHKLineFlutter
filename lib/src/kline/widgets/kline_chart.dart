@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:kline_flutter/src/kline/controller/kline_controller.dart';
 import 'package:kline_flutter/src/kline/delegate/kline_chart_delegate.dart';
 import 'package:kline_flutter/src/kline/theme/kline_theme.dart';
+import 'package:kline_flutter/src/kline/widgets/scale_gesture_handler.dart';
 
 /// K 线图核心组件。
 ///
@@ -81,16 +82,8 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   /// Flutter ScrollView 的实际执行者。两者需要通过监听彼此保持同步。
   final ScrollController _scrollController = ScrollController();
 
-  /// 缩放开始时记录基准值，用于围绕焦点计算新的滚动偏移。
-  double _baseScale = 1;
-
-  /// 缩放开始时，手势焦点在组件局部坐标系中的 x 坐标。
-  double _scaleStartLocalFocalX = 0;
-
-  /// 缩放开始时，手势焦点在横向滚动内容坐标系中的 x 坐标。
-  ///
-  /// 缩放过程中用它反推新的 scrollOffset，让手指下方的 K 线尽量保持不跳动。
-  double _scaleStartContentFocalX = 0;
+  /// 缩放手势的状态和 offset 计算集中放在独立处理器里。
+  final ScaleGestureHandler _scaleGestureHandler = ScaleGestureHandler();
 
   /// 最近一次完整图表上下文，用于滚动通知回调拿到最新布局信息。
   KLineChartContext<T>? _latestContext;
@@ -147,7 +140,8 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   Widget build(BuildContext context) {
     if (widget.isLoading) {
       // 加载态直接交给外部 builder；此时不创建图表上下文，也不触发 delegate 绘制。
-      return widget.loadingBuilder?.call(context) ?? const Center(child: CircularProgressIndicator());
+      return widget.loadingBuilder?.call(context) ??
+          const Center(child: CircularProgressIndicator());
     }
 
     return LayoutBuilder(
@@ -157,42 +151,51 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
         final itemCount = widget.dataSource.length;
         if (itemCount == 0) {
           // 空数据没有可见区和布局节点，保持占位简单，避免 delegate 读取空节点出错。
-          return widget.emptyBuilder?.call(context) ?? const Center(child: Text('暂无数据'));
+          return widget.emptyBuilder?.call(context) ??
+              const Center(child: Text('暂无数据'));
         }
 
-        final itemExtent = _resolveItemExtent();
-        final contentWidth = _resolveContentWidth(
+        final scaleLayout = _scaleGestureHandler.resolveLayout(
+          controller: _controller,
+          layout: widget.layout,
           itemCount: itemCount,
-          itemExtent: itemExtent,
           viewportWidth: viewportSize.width,
         );
         final visibleRange = KLineChartLayoutUtils.computeVisibleRange(
           itemCount: itemCount,
-          itemExtent: itemExtent,
+          itemExtent: scaleLayout.itemExtent,
           viewportWidth: viewportSize.width,
-          scrollOffset: _controller.scrollOffset,
+          scrollOffset: scaleLayout.scrollOffset,
         );
         // 第一次 context 只包含基础布局信息，交给 delegate 生成业务布局节点。
         // 这里不能由 core 直接计算蜡烛/指标坐标，否则自定义 delegate 会被绕开。
         final layoutNodesContext = _createContext(
           viewportSize: viewportSize,
           itemCount: itemCount,
-          itemExtent: itemExtent,
-          contentWidth: contentWidth,
+          itemExtent: scaleLayout.itemExtent,
+          contentWidth: scaleLayout.contentWidth,
           visibleRange: visibleRange,
           layoutNodes: const [],
         );
-        final layoutNodes = widget.delegate.getLayoutNodes(layoutNodesContext, widget.dataSource);
+        final layoutNodes = widget.delegate.getLayoutNodes(
+          layoutNodesContext,
+          widget.dataSource,
+        );
         // 第二次 context 带上 delegate 返回的节点，绘制、选中和 overlay 都复用同一份结果。
         final chartContext = _createContext(
           viewportSize: viewportSize,
           itemCount: itemCount,
-          itemExtent: itemExtent,
-          contentWidth: contentWidth,
+          itemExtent: scaleLayout.itemExtent,
+          contentWidth: scaleLayout.contentWidth,
           visibleRange: visibleRange,
           layoutNodes: layoutNodes,
         );
         _latestContext = chartContext;
+        _scaleGestureHandler.syncScrollOffsetBounds(
+          controller: _controller,
+          scrollOffset: scaleLayout.scrollOffset,
+          isMounted: () => mounted,
+        );
         _syncVisibleRange(chartContext);
         // 滚动目标依赖本轮布局尺寸，必须在 context 更新后再处理。
         _consumeScrollRequest(chartContext);
@@ -202,27 +205,61 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
         // 高度、覆盖层和选中浮层都统一交给 delegate，core 不假设副图数量或 UI 结构。
         final chartHeight = widget.delegate.chartHeight(chartContext);
         final selectedNode = chartContext.selectedNode;
-        final overlayView = widget.delegate.buildOverlayView(context, chartContext);
+        final overlayView = widget.delegate.buildOverlayView(
+          context,
+          chartContext,
+        );
         final selectionView =
-            selectedNode == null ? null : widget.delegate.buildSelectionView(context, chartContext, selectedNode);
+            selectedNode == null
+                ? null
+                : widget.delegate.buildSelectionView(
+                  context,
+                  chartContext,
+                  selectedNode,
+                );
 
         return SizedBox(
           height: chartHeight,
           child: GestureDetector(
-            onScaleStart: widget.behavior.enableScale ? (details) => _handleScaleStart(chartContext, details) : null,
-            onScaleUpdate: widget.behavior.enableScale ? (details) => _handleScaleUpdate(chartContext, details) : null,
-            onScaleEnd: widget.behavior.enableScale ? (_) => _handleScaleEnd(chartContext) : null,
+            onScaleStart:
+                widget.behavior.enableScale
+                    ? (details) => _scaleGestureHandler.handleStart(
+                      controller: _controller,
+                      details: details,
+                    )
+                    : null,
+            onScaleUpdate:
+                widget.behavior.enableScale
+                    ? (details) => _scaleGestureHandler.handleUpdate(
+                      controller: _controller,
+                      layout: widget.layout,
+                      context: chartContext,
+                      details: details,
+                    )
+                    : null,
             onTapUp:
                 widget.behavior.enableCrosshair
-                    ? (details) => _selectNearest(chartContext, details.localPosition, isMove: false)
+                    ? (details) => _selectNearest(
+                      chartContext,
+                      details.localPosition,
+                      isMove: false,
+                    )
                     : null,
             onLongPressStart:
                 widget.behavior.enableCrosshair
-                    ? (details) => _selectNearest(chartContext, details.localPosition, isMove: false)
+                    ? (details) => _selectNearest(
+                      chartContext,
+                      details.localPosition,
+                      isMove: false,
+                    )
                     : null,
             onLongPressMoveUpdate:
                 widget.behavior.enableCrosshair
-                    ? (details) => _selectNearest(chartContext, details.localPosition, isMove: true)
+                    ? (details) => _selectNearest(
+                      chartContext,
+                      details.localPosition,
+                      isMove: true,
+                    )
                     : null,
             onLongPressEnd: (_) => _endInteraction(chartContext),
             child: Stack(
@@ -232,13 +269,20 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
                   child: IgnorePointer(
                     // 固定层不参与命中测试，避免遮挡滚动层和手势识别。
                     child: CustomPaint(
-                      painter: _KLineChartFixedPainter<T>(context: chartContext, delegate: widget.delegate),
+                      painter: _KLineChartFixedPainter<T>(
+                        context: chartContext,
+                        delegate: widget.delegate,
+                      ),
                     ),
                   ),
                 ),
                 // 滚动层：绘制蜡烛、指标线等随内容宽度横向滚动的图层。
                 NotificationListener<ScrollNotification>(
-                  onNotification: (notification) => _handleUserScrollNotification(chartContext, notification),
+                  onNotification:
+                      (notification) => _handleUserScrollNotification(
+                        chartContext,
+                        notification,
+                      ),
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     scrollDirection: Axis.horizontal,
@@ -246,10 +290,13 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
                     child: SizedBox(
                       // 滚动层宽度使用 contentWidth；高度使用 delegate 的整体高度，
                       // 让主图、副图和自定义区域共享同一个内容坐标系。
-                      width: contentWidth,
+                      width: scaleLayout.contentWidth,
                       height: chartHeight,
                       child: CustomPaint(
-                        painter: _KLineChartContentPainter<T>(context: chartContext, delegate: widget.delegate),
+                        painter: _KLineChartContentPainter<T>(
+                          context: chartContext,
+                          delegate: widget.delegate,
+                        ),
                       ),
                     ),
                   ),
@@ -267,7 +314,8 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
 
   Size _resolveViewportSize(BuildContext context, BoxConstraints constraints) {
     final mediaSize = MediaQuery.sizeOf(context);
-    final width = constraints.maxWidth.isFinite ? constraints.maxWidth : mediaSize.width;
+    final width =
+        constraints.maxWidth.isFinite ? constraints.maxWidth : mediaSize.width;
     // 高度必须统一走 delegate：默认副图、自定义 indicator 高度和完全自定义 delegate
     // 都只在 chartHeight 里有完整信息。父布局给了有限高度时，尊重父布局约束。
     final height =
@@ -280,7 +328,10 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   // 无界高度场景下，真实 context 还没创建；先给 delegate 一个只用于算高度的空 context。
   // chartHeight 不应该依赖 layoutNodes，依赖业务状态时可从 controller/layout/theme 读取。
   KLineChartContext<T> _createSizingContext(double width) {
-    final itemExtent = _resolveItemExtent();
+    final itemExtent = _scaleGestureHandler.resolveItemExtent(
+      layout: widget.layout,
+      scale: _controller.scale,
+    );
     return _createContext(
       viewportSize: Size(width, 0),
       itemCount: 0,
@@ -289,30 +340,6 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
       visibleRange: const KLineVisibleRange(start: 0, end: -1),
       layoutNodes: const [],
     );
-  }
-
-  /// 返回缩放后的单根 K 线横向占位宽度。
-  ///
-  /// 这里包含蜡烛宽度和间距；实际蜡烛实体宽度由 delegate 或布局节点自行计算。
-  double _resolveItemExtent() {
-    return (widget.layout.candleWidth + widget.layout.candleSpacing) * _controller.scale;
-  }
-
-  /// 计算横向滚动内容宽度。
-  ///
-  /// 宽度至少等于视口宽度，避免数据量很少时 ScrollView 内容比容器窄。
-  /// 同时额外考虑最后一根蜡烛实体和 chartPadding，保证右侧不会被裁掉。
-  double _resolveContentWidth({required int itemCount, required double itemExtent, required double viewportWidth}) {
-    final baseWidth = itemCount * itemExtent;
-    final bodyWidth = math.max(1.0, widget.layout.scaledCandleWidth(_controller.scale));
-    // 保证最后一根蜡烛完整显示，避免右侧蜡烛体被滚动内容宽度截断。
-    final lastCandleTrailingEdge =
-        (itemCount - 1) * itemExtent +
-        itemExtent / 2 +
-        widget.layout.chartPadding.left +
-        bodyWidth / 2 +
-        widget.layout.chartPadding.right;
-    return math.max(viewportWidth, math.max(baseWidth, lastCandleTrailingEdge));
   }
 
   /// 创建传给 delegate 的统一上下文对象。
@@ -358,10 +385,14 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   /// 是否通知业务分页由 [_handleUserScrollNotification] 单独判断。
   void _handleScroll() {
     final position = _scrollController.position;
-    final offset = _scrollController.offset.clamp(position.minScrollExtent, position.maxScrollExtent).toDouble();
+    final offset =
+        _scrollController.offset
+            .clamp(position.minScrollExtent, position.maxScrollExtent)
+            .toDouble();
     _controller.setScrollOffset(offset);
     // 程序化滚动只是同步视口，不应该像用户拖动一样清掉十字线选中态。
-    if (widget.behavior.clearSelectionOnScroll && !_isSyncingScrollFromController) {
+    if (widget.behavior.clearSelectionOnScroll &&
+        !_isSyncingScrollFromController) {
       _controller.clearSelection();
     }
   }
@@ -369,7 +400,10 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   /// 过滤横向滚动通知，并只把用户主动拖动交给 delegate。
   ///
   /// 返回 false 表示不拦截通知，让 Flutter 默认滚动行为继续执行。
-  bool _handleUserScrollNotification(KLineChartContext<T> context, ScrollNotification notification) {
+  bool _handleUserScrollNotification(
+    KLineChartContext<T> context,
+    ScrollNotification notification,
+  ) {
     final metrics = notification.metrics;
     if (metrics.axis != Axis.horizontal) {
       return false;
@@ -413,7 +447,10 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
     if (_isSyncingScrollFromController) return;
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
-    final target = _controller.scrollOffset.clamp(position.minScrollExtent, position.maxScrollExtent).toDouble();
+    final target =
+        _controller.scrollOffset
+            .clamp(position.minScrollExtent, position.maxScrollExtent)
+            .toDouble();
     if ((position.pixels - target).abs() < 0.5) return;
     _isSyncingScrollFromController = true;
     try {
@@ -422,34 +459,6 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
       _isSyncingScrollFromController = false;
     }
   }
-
-  /// 记录缩放起点。
-  ///
-  /// 缩放本身由 controller 保存比例；这里额外保存焦点，用于后续计算保持焦点稳定的 offset。
-  void _handleScaleStart(KLineChartContext<T> context, ScaleStartDetails details) {
-    _baseScale = _controller.scale;
-    _scaleStartLocalFocalX = details.localFocalPoint.dx;
-    _scaleStartContentFocalX = _controller.scrollOffset + _scaleStartLocalFocalX;
-  }
-
-  /// 根据手势缩放比例更新 controller。
-  ///
-  /// 缩放时同时更新 scrollOffset，避免放大/缩小时内容从手指下方滑走。
-  void _handleScaleUpdate(KLineChartContext<T> context, ScaleUpdateDetails details) {
-    if (details.scale == 1) return;
-    final nextScale = (_baseScale * details.scale).clamp(widget.layout.minScale, widget.layout.maxScale);
-    _controller.setScaleAroundFocalPoint(
-      scale: nextScale,
-      baseScale: _baseScale,
-      localFocalX: _scaleStartLocalFocalX,
-      contentFocalX: _scaleStartContentFocalX,
-    );
-  }
-
-  /// 缩放结束钩子。
-  ///
-  /// 当前没有额外收尾逻辑，保留该入口方便未来处理惯性或吸附缩放。
-  void _handleScaleEnd(KLineChartContext<T> context) {}
 
   /// controller 状态变化入口。
   ///
@@ -466,7 +475,8 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   /// 执行必须等本帧布局完成，因为目标 offset 依赖 contentWidth、viewportSize 和 ScrollPosition 边界。
   void _consumeScrollRequest(KLineChartContext<T> context) {
     final request = _controller.scrollRequest;
-    if (request == null || request.revision == _lastHandledScrollRequestRevision) {
+    if (request == null ||
+        request.revision == _lastHandledScrollRequestRevision) {
       return;
     }
     // 滚动目标依赖最新布局和 ScrollPosition 边界，所以等本帧完成后再执行。
@@ -487,11 +497,19 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
       // 额外宽度算进去，否则“滚到最旧”会差一点到不了右侧边界。
       final target =
           index * context.itemExtent -
-          (context.viewportSize.width - context.itemExtent) * request.alignment.factor +
-          (context.contentWidth - context.itemCount * context.itemExtent) * request.alignment.factor;
+          (context.viewportSize.width - context.itemExtent) *
+              request.alignment.factor +
+          (context.contentWidth - context.itemCount * context.itemExtent) *
+              request.alignment.factor;
       // controller 只表达目标，最终仍按 ScrollView 当前真实可滚动范围裁剪。
-      final maxScrollOffset = math.max(0.0, context.contentWidth - context.viewportSize.width);
-      await _scrollToOffset(target.clamp(0, maxScrollOffset).toDouble(), animated: request.animated);
+      final maxScrollOffset = math.max(
+        0.0,
+        context.contentWidth - context.viewportSize.width,
+      );
+      await _scrollToOffset(
+        target.clamp(0, maxScrollOffset).toDouble(),
+        animated: request.animated,
+      );
       _controller.consumeScrollRequest(request.revision);
     });
   }
@@ -541,7 +559,11 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
   ///
   /// 手势坐标是组件局部坐标，需要加上 scrollOffset 转成滚动内容坐标，
   /// 再和 delegate 生成的节点中心点比较。
-  void _selectNearest(KLineChartContext<T> context, Offset localPosition, {required bool isMove}) {
+  void _selectNearest(
+    KLineChartContext<T> context,
+    Offset localPosition, {
+    required bool isMove,
+  }) {
     if (context.layoutNodes.isEmpty) return;
     final x = localPosition.dx + _controller.scrollOffset;
     KLineLayoutNode<T>? nearest;
@@ -555,7 +577,11 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
       }
     }
     if (nearest == null) return;
-    _controller.selectIndex(nearest.index, localPosition: localPosition, contentPosition: Offset(x, localPosition.dy));
+    _controller.selectIndex(
+      nearest.index,
+      localPosition: localPosition,
+      contentPosition: Offset(x, localPosition.dy),
+    );
     if (isMove) {
       widget.delegate.didMoveSelection(context, nearest);
     } else {
@@ -574,7 +600,10 @@ class _KLineChartState<T> extends State<KLineChart<T>> {
 }
 
 class _KLineChartFixedPainter<T> extends CustomPainter {
-  const _KLineChartFixedPainter({required this.context, required this.delegate});
+  const _KLineChartFixedPainter({
+    required this.context,
+    required this.delegate,
+  });
 
   final KLineChartContext<T> context;
   final KLineChartDelegate<T> delegate;
@@ -592,7 +621,10 @@ class _KLineChartFixedPainter<T> extends CustomPainter {
 }
 
 class _KLineChartContentPainter<T> extends CustomPainter {
-  const _KLineChartContentPainter({required this.context, required this.delegate});
+  const _KLineChartContentPainter({
+    required this.context,
+    required this.delegate,
+  });
 
   final KLineChartContext<T> context;
   final KLineChartDelegate<T> delegate;

@@ -460,6 +460,53 @@ void main() {
     },
   );
 
+  testWidgets(
+    'chart clamps scroll offset before computing visible range after scale down',
+    (tester) async {
+      final candles = List.generate(
+        80,
+        (index) => _ExternalCandle(
+          open: index,
+          high: index + 2,
+          low: index - 1,
+          close: index + 1,
+          volume: 100,
+          time: index,
+        ),
+      );
+      final delegate = _RecordingDelegate();
+      final controller = KLineController(
+        initialScale: 3,
+        initialScrollOffset: 2000,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 120,
+              height: 180,
+              child: KLineChart<_ExternalCandle>(
+                controller: controller,
+                dataSource: candles,
+                delegate: delegate,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      controller.setScale(1);
+      await tester.pump();
+
+      expect(
+        delegate.lastContext?.visibleRange.start,
+        lessThan(candles.length - 1),
+      );
+      expect(controller.scrollOffset, lessThan(800));
+    },
+  );
+
   testWidgets('chart reports ballistic scroll after user releases drag', (
     tester,
   ) async {
