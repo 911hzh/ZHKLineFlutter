@@ -24,7 +24,8 @@ class _CustomStateBuilderPageState extends State<CustomStateBuilderPage> {
       copy: const CustomDemoCopy(
         title: '自定义加载与错误状态',
         description:
-            'KLineWidget 暴露 loadingBuilder、emptyBuilder、errorBuilder 和 onRetry，不需要业务方包一层状态占位。',
+            'KLineWidget 暴露 loadingBuilder、emptyBuilder、errorBuilder 和 onRetry，'
+            '不需要业务方包一层状态占位。',
         extensionPoint:
             'KLineWidget.loadingBuilder / emptyBuilder / errorBuilder / onRetry',
         scenario: '适合接入统一 Design System、骨架屏、空态插画、错误重试按钮和弱网提示。',

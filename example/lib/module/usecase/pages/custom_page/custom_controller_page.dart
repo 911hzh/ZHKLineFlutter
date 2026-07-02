@@ -47,7 +47,9 @@ class _ControllerPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'scale ${controller.scale.toStringAsFixed(2)} | offset ${controller.scrollOffset.toStringAsFixed(0)} | visible ${controller.visibleRange ?? '-'}',
+                  'scale ${controller.scale.toStringAsFixed(2)} | '
+                  'offset ${controller.scrollOffset.toStringAsFixed(0)} | '
+                  'visible ${controller.visibleRange ?? '-'}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF475569),

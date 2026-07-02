@@ -19,7 +19,8 @@ class CustomIndicatorSpecPage extends StatelessWidget {
       copy: const CustomDemoCopy(
         title: '动态指标定义',
         description:
-            '通过 KLineIndicatorSpec 定义副图选择器。VOL 复用内置绘制，CCI 走默认折线绘制，特殊形态给 spec 传 renderer。',
+            '通过 KLineIndicatorSpec 定义副图选择器。VOL 复用内置绘制，'
+            'CCI 走默认折线绘制，特殊形态给 spec 传 renderer。',
         extensionPoint:
             'KLineWidget.secondaryIndicators / KLineIndicatorSpec.renderer',
         scenario: '适合接入 CCI、资金流、策略评分、风险强弱等业务自定义指标。',

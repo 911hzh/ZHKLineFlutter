@@ -109,7 +109,9 @@ class _CustomLiveUpdatePageState extends State<CustomLiveUpdatePage> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  '初始数据复用示例应用的真实 K 线数据；打开“跟随最新数据”后，timer 每 3 秒模拟一次 socket 最新 K 线。页面自己更新数据，再主动调用一次滚动请求。',
+                  '初始数据复用示例应用的真实 K 线数据；打开“跟随最新数据”后，'
+                  'timer 每 3 秒模拟一次 socket 最新 K 线。页面自己更新数据，'
+                  '再主动调用一次滚动请求。',
                   style: TextStyle(
                     fontSize: 12,
                     color: Color(0xFF475569),
@@ -209,7 +211,10 @@ class _StatusCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Text(
-              'items $count | auto $autoUpdateCount | followLatest $isFollowingLatest | offset ${controller.scrollOffset.toStringAsFixed(1)} | visible ${controller.visibleRange ?? '-'}',
+              'items $count | auto $autoUpdateCount | '
+              'followLatest $isFollowingLatest | '
+              'offset ${controller.scrollOffset.toStringAsFixed(1)} | '
+              'visible ${controller.visibleRange ?? '-'}',
               style: const TextStyle(
                 fontSize: 12,
                 color: Color(0xFF334155),

@@ -5,6 +5,7 @@
 -include Makefile.ci
 
 FLUTTER ?= $(shell if command -v fvm >/dev/null 2>&1 && [ -f .fvmrc ]; then echo "fvm flutter"; else echo "flutter"; fi)
+DART_FORMAT_LINE_LENGTH ?= 80
 
 .PHONY: help gen clean test get upgrade analyze format format-check watch deep-clean check-version
 
@@ -74,12 +75,12 @@ analyze:
 # 格式化代码
 format:
 	@echo "✨ 格式化代码..."
-	dart format lib/ test/ example/
+	dart format --line-length $(DART_FORMAT_LINE_LENGTH) lib/ test/ example/
 
 # 检查代码格式（不修改）
 format-check:
 	@echo "🔍 检查代码格式..."
-	dart format --output=none --set-exit-if-changed lib/ test/
+	dart format --line-length $(DART_FORMAT_LINE_LENGTH) --output=none --set-exit-if-changed lib/ test/
 
 # 检查Flutter版本
 check-version:

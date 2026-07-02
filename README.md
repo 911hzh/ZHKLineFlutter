@@ -50,6 +50,7 @@
 
 - **几分钟完成接入**：业务页面只需要准备 `List<T>` 和 `KLineDataAdapter<T>`，默认 UI 已包含蜡烛图、指标、副图、长按详情和基础状态展示，不需要为了图表改造已有数据模型。
 - **扩展点清晰可控**：通过 `KLineChartDelegate<T>` / `DeepChartDelegate<T>` 暴露绘制流程。想改背景、网格、指标文案、主图绘制、选中浮层或深度图，只替换对应模块即可。
+- **指标定义可扩展**：通过 `KLineIndicatorSpec<T>` / `KLineIndicatorSeries<T>` 定义主图和副图指标，不需要改 enum 或 switch；普通折线指标自动绘制，特殊指标可传入 renderer 自定义绘制。
 - **默认能力可复用**：每个默认绘制能力都拆到了独立的 KLineDefaultDelegateImplUtil 中。你可以复用坐标计算、文本绘制、指标布局等基础能力，只专注改业务真正关心的那一层 UI。
 - **为高频行情优化**：基于 `CustomPainter` 分层绘制，并提前计算坐标、可见区节点和绘制数据，减少绘制阶段重复计算，适合滚动、缩放、长按等高频交互场景。
 - **业务模型零侵入**：K 线和深度图都通过 adapter 读取字段，后端模型、缓存模型、计算后的指标模型都可以直接接入。
@@ -68,7 +69,7 @@ flutter pub add kline_flutter
 
 ```yaml
 dependencies:
-  kline_flutter: ^0.2.0
+  kline_flutter: ^0.3.0
 ```
 
 然后在业务代码中导入：
@@ -155,6 +156,39 @@ class MarketPage extends StatelessWidget {
 }
 ```
 
+## 动态指标
+
+`0.3.0` 起，指标不再依赖默认 enum。默认 UI 的指标选择器来自 `mainIndicators` 和 `secondaryIndicators`：
+
+- 不传：使用 package 默认指标。
+- 传空列表：不展示对应主图或副图指标。
+- 传自定义列表：选择器只展示这份列表。
+
+普通指标只需要定义 series，默认 delegate 会自动绘制折线、计算范围和展示标签：
+
+```dart
+KLineWidget<MyCandle>(
+  dataSource: candles,
+  adapter: const MyCandleAdapter(),
+  initialIndicators: const ['cci'],
+  secondaryIndicators: [
+    const KLineIndicatorSpec<MyCandle>(
+      id: 'cci',
+      label: 'CCI',
+      series: [
+        KLineIndicatorSeries<MyCandle>(
+          id: 'cci14',
+          label: 'CCI14',
+          colorIndex: 2,
+        ),
+      ],
+    ),
+  ],
+)
+```
+
+series 默认通过 `adapter.indicatorValue(item, valueId)` 取值，也可以直接给 `KLineIndicatorSeries.value` 传回调。需要柱状图、混合图或特殊副图时，在 `KLineIndicatorSpec.renderer` 中自定义绘制。
+
 ## 实时数据接入
 
 实时行情推荐保持一个简单边界：业务层先决定数据插到哪里，再按需要调用 controller 滚动到目标位置。package 不判断 socket 数据应该插到头部、尾部还是替换整窗。
@@ -226,6 +260,7 @@ DeepChart<DeepDepthEntry>(
 - `KLineChartDelegate<T>`：绘制协议，可控制布局节点、网格、主图、副图、覆盖层和选中 UI。
 - `KLineDataAdapter<T>`：业务模型适配器。
 - `KLineController`：缩放、滚动、选中、可见区和指标状态控制。
+- `KLineIndicatorSpec<T>`：动态指标定义，可用于主图、副图和自定义 renderer。
 
 ### 深度图
 

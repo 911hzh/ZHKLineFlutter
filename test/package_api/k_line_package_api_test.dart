@@ -375,137 +375,133 @@ void main() {
     expect(delegate.lastContext?.viewportSize.height, 123);
   });
 
-  testWidgets(
-    'chart keeps grid fixed and delegates only visible content while scrolling and scaling',
-    (tester) async {
-      final candles = List.generate(
-        80,
-        (index) => _ExternalCandle(
-          open: index,
-          high: index + 2,
-          low: index - 1,
-          close: index + 1,
-          volume: 100,
-          time: index,
-        ),
-      );
-      final delegate = _RecordingDelegate();
-      final controller = KLineController();
+  testWidgets('chart keeps grid fixed and delegates only visible content while '
+      'scrolling and scaling', (tester) async {
+    final candles = List.generate(
+      80,
+      (index) => _ExternalCandle(
+        open: index,
+        high: index + 2,
+        low: index - 1,
+        close: index + 1,
+        volume: 100,
+        time: index,
+      ),
+    );
+    final delegate = _RecordingDelegate();
+    final controller = KLineController();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              width: 120,
-              height: 180,
-              child: KLineChart<_ExternalCandle>(
-                controller: controller,
-                dataSource: candles,
-                delegate: delegate,
-              ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 120,
+            height: 180,
+            child: KLineChart<_ExternalCandle>(
+              controller: controller,
+              dataSource: candles,
+              delegate: delegate,
             ),
           ),
         ),
-      );
+      ),
+    );
 
-      expect(delegate.gridSize?.width, 120);
-      expect(delegate.drawnMainIndices.first, 0);
-      expect(delegate.drawnSecondaryIndices.first, 0);
-      expect(delegate.drawnMainIndices.length, lessThan(candles.length));
+    expect(delegate.gridSize?.width, 120);
+    expect(delegate.drawnMainIndices.first, 0);
+    expect(delegate.drawnSecondaryIndices.first, 0);
+    expect(delegate.drawnMainIndices.length, lessThan(candles.length));
 
-      controller.selectIndex(0);
-      await tester.pump();
-      expect(controller.selectedIndex, isNotNull);
+    controller.selectIndex(0);
+    await tester.pump();
+    expect(controller.selectedIndex, isNotNull);
 
-      delegate.drawnMainIndices.clear();
-      delegate.drawnSecondaryIndices.clear();
-      await tester.dragFrom(const Offset(100, 120), const Offset(-80, 0));
-      await tester.pumpAndSettle();
+    delegate.drawnMainIndices.clear();
+    delegate.drawnSecondaryIndices.clear();
+    await tester.dragFrom(const Offset(100, 120), const Offset(-80, 0));
+    await tester.pumpAndSettle();
 
-      expect(controller.scrollOffset, greaterThan(0));
-      expect(delegate.scrollCount, greaterThan(0));
-      expect(delegate.lastScrollMetrics?.pixels, controller.scrollOffset);
-      expect(delegate.lastScrollMetrics?.maxScrollExtent, greaterThan(0));
-      expect(controller.selectedIndex, isNull);
-      expect(delegate.drawnMainIndices.first, greaterThan(0));
-      expect(delegate.drawnSecondaryIndices.first, greaterThan(0));
-      expect(controller.visibleRange?.start, greaterThan(0));
+    expect(controller.scrollOffset, greaterThan(0));
+    expect(delegate.scrollCount, greaterThan(0));
+    expect(delegate.lastScrollMetrics?.pixels, controller.scrollOffset);
+    expect(delegate.lastScrollMetrics?.maxScrollExtent, greaterThan(0));
+    expect(controller.selectedIndex, isNull);
+    expect(delegate.drawnMainIndices.first, greaterThan(0));
+    expect(delegate.drawnSecondaryIndices.first, greaterThan(0));
+    expect(controller.visibleRange?.start, greaterThan(0));
 
-      controller.setScale(2);
-      await tester.pumpAndSettle();
+    controller.setScale(2);
+    await tester.pumpAndSettle();
 
-      expect(controller.scale, 2);
-      expect(controller.visibleRange, isNotNull);
+    expect(controller.scale, 2);
+    expect(controller.visibleRange, isNotNull);
 
-      controller.setScrollOffset(30);
-      await tester.pumpAndSettle();
+    controller.setScrollOffset(30);
+    await tester.pumpAndSettle();
 
-      final scrollableState = tester.state<ScrollableState>(
-        find.byType(Scrollable),
-      );
-      expect(scrollableState.position.pixels, 30);
-      final userScrollCount = delegate.scrollCount;
+    final scrollableState = tester.state<ScrollableState>(
+      find.byType(Scrollable),
+    );
+    expect(scrollableState.position.pixels, 30);
+    final userScrollCount = delegate.scrollCount;
 
-      controller.setScaleAroundFocalPoint(
-        scale: 2,
-        baseScale: 1,
-        localFocalX: 60,
-        contentFocalX: 90,
-      );
-      await tester.pumpAndSettle();
+    controller.setScaleAroundFocalPoint(
+      scale: 2,
+      baseScale: 1,
+      localFocalX: 60,
+      contentFocalX: 90,
+    );
+    await tester.pumpAndSettle();
 
-      expect(controller.scale, 2);
-      expect(scrollableState.position.pixels, 120);
-      expect(delegate.scrollCount, userScrollCount);
-    },
-  );
+    expect(controller.scale, 2);
+    expect(scrollableState.position.pixels, 120);
+    expect(delegate.scrollCount, userScrollCount);
+  });
 
-  testWidgets(
-    'chart clamps scroll offset before computing visible range after scale down',
-    (tester) async {
-      final candles = List.generate(
-        80,
-        (index) => _ExternalCandle(
-          open: index,
-          high: index + 2,
-          low: index - 1,
-          close: index + 1,
-          volume: 100,
-          time: index,
-        ),
-      );
-      final delegate = _RecordingDelegate();
-      final controller = KLineController(
-        initialScale: 3,
-        initialScrollOffset: 2000,
-      );
+  testWidgets('chart clamps scroll offset before computing visible range after '
+      'scale down', (tester) async {
+    final candles = List.generate(
+      80,
+      (index) => _ExternalCandle(
+        open: index,
+        high: index + 2,
+        low: index - 1,
+        close: index + 1,
+        volume: 100,
+        time: index,
+      ),
+    );
+    final delegate = _RecordingDelegate();
+    final controller = KLineController(
+      initialScale: 3,
+      initialScrollOffset: 2000,
+    );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              width: 120,
-              height: 180,
-              child: KLineChart<_ExternalCandle>(
-                controller: controller,
-                dataSource: candles,
-                delegate: delegate,
-              ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 120,
+            height: 180,
+            child: KLineChart<_ExternalCandle>(
+              controller: controller,
+              dataSource: candles,
+              delegate: delegate,
             ),
           ),
         ),
-      );
+      ),
+    );
 
-      controller.setScale(1);
-      await tester.pump();
+    controller.setScale(1);
+    await tester.pump();
 
-      expect(
-        delegate.lastContext?.visibleRange.start,
-        lessThan(candles.length - 1),
-      );
-      expect(controller.scrollOffset, lessThan(800));
-    },
-  );
+    expect(
+      delegate.lastContext?.visibleRange.start,
+      lessThan(candles.length - 1),
+    );
+    expect(controller.scrollOffset, lessThan(800));
+  });
 
   testWidgets('chart reports ballistic scroll after user releases drag', (
     tester,

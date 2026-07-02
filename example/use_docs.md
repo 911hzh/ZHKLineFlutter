@@ -110,6 +110,16 @@ class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
   String dateLabel(MyCandle item) => item.timeLabel;
 
   @override
+  double? indicatorValue(MyCandle item, String valueId) {
+    return switch (valueId) {
+      'ma7' => item.ma7,
+      'ma25' => item.ma25,
+      'cci14' => item.cci14,
+      _ => null,
+    };
+  }
+
+  @override
   List<KLineIndicatorEntry> mainIndicatorEntries(
     MyCandle item,
     KLineIndicatorSpec<MyCandle> indicator,
@@ -134,6 +144,70 @@ class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
   }
 }
 ```
+
+## 动态指标列表
+
+`KLineWidget` 的默认选择器来自 `mainIndicators` 和 `secondaryIndicators`：
+
+- `null`：使用 package 默认指标，主图为 MA/EMA/BOLL，副图为 VOL/MACD/KDJ/RSI/WR。
+- `[]`：不展示对应主图或副图指标。
+- 自定义列表：只展示传入的指标。需要默认 + 自定义时，显式组合列表。
+
+普通 series 指标不需要自己写绘制逻辑，默认 delegate 会自动绘制折线、计算范围和展示标签：
+
+```dart
+KLineWidget<MyCandle>(
+  dataSource: candles,
+  adapter: const MyCandleAdapter(),
+  initialIndicators: const ['volume', 'cci'],
+  secondaryIndicators: [
+    KLineDefaultIndicators.volume<MyCandle>(),
+    const KLineIndicatorSpec<MyCandle>(
+      id: 'cci',
+      label: 'CCI',
+      series: [
+        KLineIndicatorSeries<MyCandle>(
+          id: 'cci14',
+          label: 'CCI14',
+          colorIndex: 2,
+        ),
+      ],
+    ),
+  ],
+)
+```
+
+`KLineIndicatorSeries.id` 会作为 `valueId` 传给 `adapter.indicatorValue(item, valueId)`。如果某个指标值不想经过 adapter，也可以直接传 `value` 回调：
+
+```dart
+const KLineIndicatorSeries<MyCandle>(
+  id: 'bodyPower',
+  label: 'BODY',
+  colorIndex: 0,
+  value: _bodyPowerValue,
+)
+```
+
+需要柱状图、混合图或特殊绘制时，在 `KLineIndicatorSpec.renderer` 里接管绘制：
+
+```dart
+const KLineIndicatorSpec<MyCandle>(
+  id: 'bodyPower',
+  label: '强弱',
+  height: 76,
+  renderer: drawBodyPower,
+  series: [
+    KLineIndicatorSeries<MyCandle>(
+      id: 'bodyPower',
+      label: 'BODY',
+      colorIndex: 0,
+      value: _bodyPowerValue,
+    ),
+  ],
+)
+```
+
+完整示例可看 `example/lib/module/usecase/pages/custom_page/custom_indicator_spec_page.dart`。
 
 ## 自定义主题和布局
 

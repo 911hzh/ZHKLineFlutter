@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- 破坏性调整：移除默认指标 enum API，改为基于 `KLineIndicatorSpec<T>` 和 `KLineIndicatorSeries<T>` 的动态指标定义。
+- 新增 `KLineWidget.mainIndicators` / `secondaryIndicators`，指标选择器以传入列表为唯一来源；不传使用默认指标，传空列表表示不展示对应指标。
+- 将 `KLineDataAdapter.indicatorValue` 改为接收 `String valueId`，业务侧可以直接支持任意自定义指标值。
+- 新增 `KLineDefaultIndicators` class 常量和工厂，保留 MA、EMA、BOLL、VOL、MACD、KDJ、RSI、WR 默认指标能力。
+- 支持自定义副图指标：普通 series 指标自动绘制折线、计算范围和展示标签；复杂指标可通过 `KLineIndicatorSpec.renderer` 自定义绘制。
+- 优化默认占位高度和视口高度计算，统一通过 delegate 获取高度，避免默认副图和自定义 indicator 高度不一致。
+- 修复缩小后旧滚动偏移超过新内容宽度时右侧偶发空白/闪动的问题，并抽离 `ScaleGestureHandler` 管理缩放手势逻辑。
+- 更新 example 自定义指标页面，演示默认 VOL、CCI 折线指标和自定义柱状 renderer 混合使用。
+
 ## 0.2.0
 
 - 新增 `KLineController` 实时场景控制能力：支持跟随最新、滚动到最新、滚动到指定下标和 reveal 当前选中项。

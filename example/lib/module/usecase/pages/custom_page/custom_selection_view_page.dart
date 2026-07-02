@@ -105,7 +105,8 @@ class _TradeDetailCard extends StatelessWidget {
               _DetailRow(
                 label: '涨跌幅',
                 value:
-                    '${item.changeRate >= 0 ? '+' : ''}${(item.changeRate * 100).toStringAsFixed(2)}%',
+                    '${item.changeRate >= 0 ? '+' : ''}'
+                    '${(item.changeRate * 100).toStringAsFixed(2)}%',
                 color: trendColor,
               ),
               const SizedBox(height: 8),
