@@ -69,7 +69,7 @@ class _ControllerPanel extends StatelessWidget {
                     ),
                     OutlinedButton(onPressed: () => controller.setScrollOffset(0), child: const Text('回到最新')),
                     OutlinedButton(
-                      onPressed: () => controller.toggleIndicator(KLineDefaultIndicatorType.ma.name),
+                      onPressed: () => controller.toggleIndicator(KLineDefaultIndicators.maId),
                       child: const Text('切换 MA'),
                     ),
                     OutlinedButton(
@@ -80,7 +80,7 @@ class _ControllerPanel extends StatelessWidget {
                       onPressed: () {
                         controller
                           ..clearSelection()
-                          ..setActiveIndicators([KLineDefaultIndicatorType.volume.name])
+                          ..setActiveIndicators([KLineDefaultIndicators.volumeId])
                           ..setScale(1)
                           ..setScrollOffset(0);
                       },

@@ -26,11 +26,7 @@ class MarketPage extends StatelessWidget {
       appBar: AppBar(title: const Text('K 线图最小接入')),
       body: const Padding(
         padding: EdgeInsets.all(12),
-        child: KLineWidget<MyCandle>(
-          dataSource: _candles,
-          adapter: MyCandleAdapter(),
-          initialIndicators: ['volume'],
-        ),
+        child: KLineWidget<MyCandle>(dataSource: _candles, adapter: MyCandleAdapter(), initialIndicators: ['volume']),
       ),
     );
   }
@@ -83,49 +79,9 @@ class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
 }
 
 const _candles = [
-  MyCandle(
-    timestampMs: 1719649800000,
-    open: 100,
-    high: 108,
-    low: 98,
-    close: 106,
-    volume: 1200,
-    timeLabel: '09:30',
-  ),
-  MyCandle(
-    timestampMs: 1719651600000,
-    open: 106,
-    high: 112,
-    low: 104,
-    close: 110,
-    volume: 1680,
-    timeLabel: '10:00',
-  ),
-  MyCandle(
-    timestampMs: 1719653400000,
-    open: 110,
-    high: 111,
-    low: 101,
-    close: 103,
-    volume: 980,
-    timeLabel: '10:30',
-  ),
-  MyCandle(
-    timestampMs: 1719655200000,
-    open: 103,
-    high: 109,
-    low: 102,
-    close: 108,
-    volume: 1320,
-    timeLabel: '11:00',
-  ),
-  MyCandle(
-    timestampMs: 1719657000000,
-    open: 108,
-    high: 116,
-    low: 107,
-    close: 114,
-    volume: 1510,
-    timeLabel: '11:30',
-  ),
+  MyCandle(timestampMs: 1719649800000, open: 100, high: 108, low: 98, close: 106, volume: 1200, timeLabel: '09:30'),
+  MyCandle(timestampMs: 1719651600000, open: 106, high: 112, low: 104, close: 110, volume: 1680, timeLabel: '10:00'),
+  MyCandle(timestampMs: 1719653400000, open: 110, high: 111, low: 101, close: 103, volume: 980, timeLabel: '10:30'),
+  MyCandle(timestampMs: 1719655200000, open: 103, high: 109, low: 102, close: 108, volume: 1320, timeLabel: '11:00'),
+  MyCandle(timestampMs: 1719657000000, open: 108, high: 116, low: 107, close: 114, volume: 1510, timeLabel: '11:30'),
 ];

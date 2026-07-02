@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kline_flutter/kline_flutter.dart';
-import 'package:kline_flutter/src/kline/u_default_impl/kline_default_delegate_util.dart';
+import 'package:kline_flutter/src/kline/widgets/delegate_impl/kline_default_delegate_util.dart';
 
 class _ExternalCandle {
   const _ExternalCandle({
@@ -112,6 +112,34 @@ class _RecordingDelegate extends KLineChartDelegate<_ExternalCandle> {
   }
 }
 
+class _FixedHeightDelegate extends KLineChartDelegate<_ExternalCandle> {
+  const _FixedHeightDelegate(this.height);
+
+  final double height;
+
+  @override
+  double chartHeight(KLineChartContext<_ExternalCandle> context) => height;
+}
+
+class _ViewportHeightDelegate extends KLineChartDelegate<_ExternalCandle> {
+  _ViewportHeightDelegate(this.height);
+
+  final double height;
+  KLineChartContext<_ExternalCandle>? lastContext;
+
+  @override
+  double chartHeight(KLineChartContext<_ExternalCandle> context) => height;
+
+  @override
+  void drawGrid(
+    Canvas canvas,
+    Size size,
+    KLineChartContext<_ExternalCandle> context,
+  ) {
+    lastContext = context;
+  }
+}
+
 class _ExternalCandleAdapter extends KLineDataAdapter<_ExternalCandle> {
   const _ExternalCandleAdapter();
 
@@ -134,16 +162,13 @@ class _ExternalCandleAdapter extends KLineDataAdapter<_ExternalCandle> {
   String dateLabel(_ExternalCandle item) => 'T${item.time}';
 
   @override
-  double? indicatorValue(
-    _ExternalCandle item,
-    KLineDefaultIndicatorValue value,
-  ) {
-    return switch (value) {
-      KLineDefaultIndicatorValue.ma5 => item.close.toDouble(),
-      KLineDefaultIndicatorValue.bollUpper => item.high.toDouble() + 10,
-      KLineDefaultIndicatorValue.bollMiddle => item.close.toDouble(),
-      KLineDefaultIndicatorValue.bollLower => item.low.toDouble() - 10,
-      KLineDefaultIndicatorValue.volumeMA5 => item.volume.toDouble(),
+  double? indicatorValue(_ExternalCandle item, String valueId) {
+    return switch (valueId) {
+      KLineDefaultIndicators.ma5 => item.close.toDouble(),
+      KLineDefaultIndicators.bollUpper => item.high.toDouble() + 10,
+      KLineDefaultIndicators.bollMiddle => item.close.toDouble(),
+      KLineDefaultIndicators.bollLower => item.low.toDouble() - 10,
+      KLineDefaultIndicators.volumeMA5 => item.volume.toDouble(),
       _ => null,
     };
   }
@@ -151,9 +176,9 @@ class _ExternalCandleAdapter extends KLineDataAdapter<_ExternalCandle> {
   @override
   List<KLineIndicatorEntry> mainIndicatorEntries(
     _ExternalCandle item,
-    KLineDefaultIndicatorType type,
+    KLineIndicatorSpec<_ExternalCandle> indicator,
   ) {
-    if (type == KLineDefaultIndicatorType.ma) {
+    if (indicator.id == KLineDefaultIndicators.maId) {
       return [
         KLineIndicatorEntry(
           label: 'MA7',
@@ -162,7 +187,7 @@ class _ExternalCandleAdapter extends KLineDataAdapter<_ExternalCandle> {
         ),
       ];
     }
-    return super.mainIndicatorEntries(item, type);
+    return super.mainIndicatorEntries(item, indicator);
   }
 }
 
@@ -170,16 +195,16 @@ class _HighVolumeMaAdapter extends _ExternalCandleAdapter {
   const _HighVolumeMaAdapter();
 
   @override
-  double? indicatorValue(
-    _ExternalCandle item,
-    KLineDefaultIndicatorValue value,
-  ) {
-    return switch (value) {
-      KLineDefaultIndicatorValue.volumeMA5 => item.volume.toDouble() * 2,
-      _ => super.indicatorValue(item, value),
+  double? indicatorValue(_ExternalCandle item, String valueId) {
+    return switch (valueId) {
+      KLineDefaultIndicators.volumeMA5 => item.volume.toDouble() * 2,
+      _ => super.indicatorValue(item, valueId),
     };
   }
 }
+
+double? _cciValue(_ExternalCandle item) =>
+    item.close.toDouble() - item.open.toDouble();
 
 void main() {
   const candles = [
@@ -326,6 +351,29 @@ void main() {
       expect(delegate.moveCount, greaterThan(0));
     },
   );
+
+  testWidgets('chart viewport height comes from delegate when unconstrained', (
+    tester,
+  ) async {
+    final delegate = _ViewportHeightDelegate(123);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              KLineChart<_ExternalCandle>(
+                dataSource: candles,
+                delegate: delegate,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(delegate.lastContext?.viewportSize.height, 123);
+  });
 
   testWidgets(
     'chart keeps grid fixed and delegates only visible content while scrolling and scaling',
@@ -499,6 +547,27 @@ void main() {
     await tester.longPressAt(const Offset(40, 80));
     await tester.pump();
     expect(find.textContaining('Close'), findsOneWidget);
+  });
+
+  testWidgets('default widget placeholder height comes from delegate', (
+    tester,
+  ) async {
+    const placeholderKey = Key('placeholder');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: KLineWidget<_ExternalCandle>(
+            dataSource: const [],
+            adapter: const _ExternalCandleAdapter(),
+            delegate: const _FixedHeightDelegate(123),
+            emptyBuilder: (_) => const SizedBox.expand(key: placeholderKey),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(find.byKey(placeholderKey)).height, 123);
   });
 
   testWidgets(
@@ -686,10 +755,17 @@ void main() {
         context!,
         candles,
         adapter: adapter,
+        mainIndicators: KLineDefaultIndicators.main<_ExternalCandle>(),
       );
 
       expect(
-        KLineDefaultDelegateImplUtil.chartHeight(context),
+        KLineDefaultDelegateImplUtil.chartHeight(
+          context,
+          secondaryIndicators: const [],
+          indicatorHeight:
+              (_, indicator) =>
+                  indicator.height ?? context.layout.secondaryPaneHeight,
+        ),
         context.layout.mainChartHeight + context.layout.indicatorSelectorHeight,
       );
       expect(nodes, hasLength(candles.length));
@@ -779,9 +855,12 @@ void main() {
       time: 1,
     );
 
-    final nodes = KLineDefaultDelegateImplUtil.getLayoutNodes(context, [
-      candle,
-    ], adapter: const _ExternalCandleAdapter());
+    final nodes = KLineDefaultDelegateImplUtil.getLayoutNodes(
+      context,
+      [candle],
+      adapter: const _ExternalCandleAdapter(),
+      mainIndicators: const <KLineIndicatorSpec<_ExternalCandle>>[],
+    );
     final node = nodes.single as KLineDefaultLayoutNode<_ExternalCandle>;
 
     expect(node.highY, layout.contentPadding.top);
@@ -794,7 +873,7 @@ void main() {
       contentPadding: EdgeInsets.fromLTRB(0, 10, 0, 10),
     );
     final controller = KLineController(
-      initialIndicators: [KLineDefaultIndicatorType.boll.name],
+      initialIndicators: [KLineDefaultIndicators.bollId],
     );
     final context = KLineChartContext<_ExternalCandle>(
       controller: controller,
@@ -816,9 +895,12 @@ void main() {
       time: 1,
     );
 
-    final nodes = KLineDefaultDelegateImplUtil.getLayoutNodes(context, [
-      candle,
-    ], adapter: const _ExternalCandleAdapter());
+    final nodes = KLineDefaultDelegateImplUtil.getLayoutNodes(
+      context,
+      [candle],
+      adapter: const _ExternalCandleAdapter(),
+      mainIndicators: KLineDefaultIndicators.main<_ExternalCandle>(),
+    );
     final node = nodes.single as KLineDefaultLayoutNode<_ExternalCandle>;
 
     expect(node.highY, greaterThan(layout.contentPadding.top));
@@ -855,13 +937,63 @@ void main() {
       ],
     );
 
-    final range = KLineDefaultDelegateImplUtil.secondaryIndicatorRange(
+    final range = KLineDefaultDelegateImplUtil.indicatorRange(
       context,
-      KLineDefaultIndicatorType.volume,
+      KLineDefaultIndicators.volume<_ExternalCandle>(),
       adapter: const _HighVolumeMaAdapter(),
     );
 
     expect(range, (0, 200));
+  });
+
+  test('custom secondary indicator spec is activated by string id', () {
+    const cci = KLineIndicatorSpec<_ExternalCandle>(
+      id: 'cci',
+      label: 'CCI',
+      height: 88,
+      series: [
+        KLineIndicatorSeries<_ExternalCandle>(
+          id: 'cci14',
+          label: 'CCI14',
+          colorIndex: 2,
+          value: _cciValue,
+        ),
+      ],
+    );
+    final delegate = KLineDefaultDelegateImpl<_ExternalCandle>(
+      adapter: const _ExternalCandleAdapter(),
+      secondaryIndicators: const [cci],
+    );
+    final context = KLineChartContext<_ExternalCandle>(
+      controller: KLineController(initialIndicators: const ['cci']),
+      layout: const KLineLayoutConfig(mainChartHeight: 100),
+      theme: const KLineTheme(),
+      viewportSize: const Size(120, 220),
+      itemCount: 1,
+      itemExtent: 10,
+      contentWidth: 10,
+      visibleRange: const KLineVisibleRange(start: 0, end: 0),
+      layoutNodes: const [],
+    );
+    const candle = _ExternalCandle(
+      open: 10,
+      high: 12,
+      low: 9,
+      close: 11,
+      volume: 100,
+      time: 1,
+    );
+
+    expect(delegate.availableSecondaryIndicators(context), const [cci]);
+    expect(delegate.activeSecondaryIndicators(context), const [cci]);
+    expect(
+      delegate.chartHeight(context),
+      100 + 88 + context.layout.indicatorSelectorHeight,
+    );
+    expect(
+      delegate.adapter.secondaryIndicatorEntries(candle, cci).single.value,
+      1,
+    );
   });
 
   test('default cross line uses selected node content x in content layer', () {

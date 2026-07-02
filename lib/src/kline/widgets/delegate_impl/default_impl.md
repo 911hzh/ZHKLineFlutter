@@ -143,15 +143,15 @@ KLineWidget<MyCandle>(
 @override
 List<KLineIndicatorEntry> mainIndicatorEntries(
   MyCandle item,
-  KLineDefaultIndicatorType type,
+  KLineIndicatorSpec<MyCandle> indicator,
 ) {
-  if (type == KLineDefaultIndicatorType.ma) {
+  if (indicator.id == KLineDefaultIndicators.maId) {
     return [
       KLineIndicatorEntry(label: 'MA7', value: item.ma7, colorIndex: 0),
       KLineIndicatorEntry(label: 'MA25', value: item.ma25, colorIndex: 1),
     ];
   }
-  return super.mainIndicatorEntries(item, type);
+  return super.mainIndicatorEntries(item, indicator);
 }
 ```
 

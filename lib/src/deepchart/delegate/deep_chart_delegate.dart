@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
-import '../adapter/deep_chart_data_adapter.dart';
-import '../model/deep_depth_entry.dart';
-import '../theme/deep_chart_theme.dart';
+import 'package:kline_flutter/src/deepchart/adapter/deep_chart_data_adapter.dart';
+import 'package:kline_flutter/src/deepchart/model/deep_depth_entry.dart';
+import 'package:kline_flutter/src/deepchart/theme/deep_chart_theme.dart';
 
 /// 深度图线段布局结果。
 ///

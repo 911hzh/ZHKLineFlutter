@@ -1,138 +1,216 @@
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
+import 'package:kline_flutter/src/kline/delegate/kline_chart_delegate.dart';
 
-/// 默认 K 线实现支持的指标类型。
-enum KLineDefaultIndicatorType {
-  /// 主图 MA 指标。
-  ma,
+typedef KLineIndicatorValueGetter<T> = double? Function(T item);
 
-  /// 主图 EMA 指标。
-  ema,
+typedef KLineIndicatorRenderer<T> =
+    void Function(
+      Canvas canvas,
+      Rect rect,
+      KLineChartContext<T> context,
+      KLineDataAdapter<T> adapter,
+      KLineIndicatorSpec<T> indicator,
+    );
 
-  /// 主图 BOLL 指标。
-  boll,
+typedef KLineIndicatorHeightGetter<T> =
+    double Function(
+      KLineChartContext<T> context,
+      KLineIndicatorSpec<T> indicator,
+    );
 
-  /// 副图成交量指标。
-  volume,
+/// 一条指标线的数据定义。
+@immutable
+class KLineIndicatorSeries<T> {
+  const KLineIndicatorSeries({
+    required this.id,
+    required this.label,
+    required this.colorIndex,
+    this.value,
+  });
 
-  /// 副图 MACD 指标。
-  macd,
+  /// 指标值 id，例如 `ma5`、`cci14`。
+  final String id;
 
-  /// 副图 KDJ 指标。
-  kdj,
+  /// 指标标签名，例如 `MA5`、`DIF`。
+  final String label;
 
-  /// 副图 RSI 指标。
-  rsi,
+  /// 使用 [KLineTheme.indicatorColorAt] 取色的颜色索引。
+  final int colorIndex;
 
-  /// 副图 WR 指标。
-  wr;
+  /// 自定义取值；为空时走 [KLineDataAdapter.indicatorValue]。
+  final KLineIndicatorValueGetter<T>? value;
 
-  /// 默认主图指标列表。
-  static const mainTypes = [
-    KLineDefaultIndicatorType.ma,
-    KLineDefaultIndicatorType.ema,
-    KLineDefaultIndicatorType.boll,
-  ];
-
-  /// 默认副图指标列表。
-  static const secondaryTypes = [
-    KLineDefaultIndicatorType.volume,
-    KLineDefaultIndicatorType.macd,
-    KLineDefaultIndicatorType.kdj,
-    KLineDefaultIndicatorType.rsi,
-    KLineDefaultIndicatorType.wr,
-  ];
-
-  /// 当前指标是否绘制在主图区域。
-  bool get isMainType => mainTypes.contains(this);
-
-  /// 当前指标是否绘制在副图区域。
-  bool get isSecondaryType => secondaryTypes.contains(this);
-
-  /// 默认指标选择器展示文案。
-  String get label {
-    return switch (this) {
-      KLineDefaultIndicatorType.ma => 'MA',
-      KLineDefaultIndicatorType.ema => 'EMA',
-      KLineDefaultIndicatorType.boll => 'BOLL',
-      KLineDefaultIndicatorType.volume => 'VOL',
-      KLineDefaultIndicatorType.macd => 'MACD',
-      KLineDefaultIndicatorType.kdj => 'KDJ',
-      KLineDefaultIndicatorType.rsi => 'RSI',
-      KLineDefaultIndicatorType.wr => 'WR',
-    };
+  double? valueOf(T item, KLineDataAdapter<T> adapter) {
+    return value?.call(item) ?? adapter.indicatorValue(item, id);
   }
 }
 
-/// 默认 K 线实现可读取的指标数值。
-enum KLineDefaultIndicatorValue {
-  /// MA 5 周期数值。
-  ma5,
+/// 一个可选择、可绘制的指标定义。
+@immutable
+class KLineIndicatorSpec<T> {
+  const KLineIndicatorSpec({
+    required this.id,
+    required this.label,
+    this.series = const [],
+    this.height,
+    this.renderer,
+  });
 
-  /// MA 10 周期数值。
-  ma10,
+  /// 稳定唯一标识，用于 [KLineController.activeIndicatorIds]。
+  final String id;
 
-  /// MA 30 周期数值。
-  ma30,
+  /// 指标选择器展示文案。
+  final String label;
 
-  /// EMA 5 周期数值。
-  ema5,
+  /// 默认折线绘制和标签展示使用的数据线。
+  final List<KLineIndicatorSeries<T>> series;
 
-  /// EMA 10 周期数值。
-  ema10,
+  /// 副图高度；为空时使用 [KLineLayoutConfig.secondaryPaneHeight]。
+  final double? height;
 
-  /// EMA 30 周期数值。
-  ema30,
+  /// 自定义绘制策略；为空时使用默认折线绘制。
+  final KLineIndicatorRenderer<T>? renderer;
+}
 
-  /// BOLL 上轨。
-  bollUpper,
+/// 默认 K 线指标 id 与定义工厂。
+abstract final class KLineDefaultIndicators {
+  static const maId = 'ma';
+  static const emaId = 'ema';
+  static const bollId = 'boll';
+  static const volumeId = 'volume';
+  static const macdId = 'macd';
+  static const kdjId = 'kdj';
+  static const rsiId = 'rsi';
+  static const wrId = 'wr';
 
-  /// BOLL 中轨。
-  bollMiddle,
+  static const ma5 = 'ma5';
+  static const ma10 = 'ma10';
+  static const ma30 = 'ma30';
+  static const ema5 = 'ema5';
+  static const ema10 = 'ema10';
+  static const ema30 = 'ema30';
+  static const bollUpper = 'bollUpper';
+  static const bollMiddle = 'bollMiddle';
+  static const bollLower = 'bollLower';
+  static const macdValue = 'macd';
+  static const dif = 'dif';
+  static const dea = 'dea';
+  static const k = 'k';
+  static const d = 'd';
+  static const j = 'j';
+  static const rsi6 = 'rsi6';
+  static const rsi12 = 'rsi12';
+  static const rsi24 = 'rsi24';
+  static const wr6 = 'wr6';
+  static const wr10 = 'wr10';
+  static const wr14 = 'wr14';
+  static const volumeMA5 = 'volumeMA5';
+  static const volumeMA10 = 'volumeMA10';
 
-  /// BOLL 下轨。
-  bollLower,
+  static KLineIndicatorSpec<T> ma<T>() {
+    return KLineIndicatorSpec<T>(
+      id: maId,
+      label: 'MA',
+      series: <KLineIndicatorSeries<T>>[
+        KLineIndicatorSeries<T>(id: ma5, label: 'MA5', colorIndex: 0),
+        KLineIndicatorSeries<T>(id: ma10, label: 'MA10', colorIndex: 1),
+        KLineIndicatorSeries<T>(id: ma30, label: 'MA30', colorIndex: 2),
+      ],
+    );
+  }
 
-  /// MACD 柱状值。
-  macd,
+  static KLineIndicatorSpec<T> ema<T>() {
+    return KLineIndicatorSpec<T>(
+      id: emaId,
+      label: 'EMA',
+      series: <KLineIndicatorSeries<T>>[
+        KLineIndicatorSeries<T>(id: ema5, label: 'EMA5', colorIndex: 3),
+        KLineIndicatorSeries<T>(id: ema10, label: 'EMA10', colorIndex: 4),
+        KLineIndicatorSeries<T>(id: ema30, label: 'EMA30', colorIndex: 5),
+      ],
+    );
+  }
 
-  /// MACD DIF 线。
-  dif,
+  static KLineIndicatorSpec<T> boll<T>() {
+    return KLineIndicatorSpec<T>(
+      id: bollId,
+      label: 'BOLL',
+      series: <KLineIndicatorSeries<T>>[
+        KLineIndicatorSeries<T>(id: bollUpper, label: 'UB', colorIndex: 0),
+        KLineIndicatorSeries<T>(id: bollMiddle, label: 'MB', colorIndex: 1),
+        KLineIndicatorSeries<T>(id: bollLower, label: 'LB', colorIndex: 2),
+      ],
+    );
+  }
 
-  /// MACD DEA 线。
-  dea,
+  static KLineIndicatorSpec<T> volume<T>() {
+    return KLineIndicatorSpec<T>(
+      id: volumeId,
+      label: 'VOL',
+      series: <KLineIndicatorSeries<T>>[
+        KLineIndicatorSeries<T>(id: volumeMA5, label: 'MA5', colorIndex: 1),
+        KLineIndicatorSeries<T>(id: volumeMA10, label: 'MA10', colorIndex: 3),
+      ],
+    );
+  }
 
-  /// KDJ K 值。
-  k,
+  static KLineIndicatorSpec<T> macd<T>() {
+    return KLineIndicatorSpec<T>(
+      id: macdId,
+      label: 'MACD',
+      series: <KLineIndicatorSeries<T>>[
+        KLineIndicatorSeries<T>(id: dif, label: 'DIF', colorIndex: 1),
+        KLineIndicatorSeries<T>(id: dea, label: 'DEA', colorIndex: 3),
+        KLineIndicatorSeries<T>(id: macdValue, label: 'MACD', colorIndex: 0),
+      ],
+    );
+  }
 
-  /// KDJ D 值。
-  d,
+  static KLineIndicatorSpec<T> kdj<T>() {
+    return KLineIndicatorSpec<T>(
+      id: kdjId,
+      label: 'KDJ',
+      series: <KLineIndicatorSeries<T>>[
+        KLineIndicatorSeries<T>(id: k, label: 'K', colorIndex: 1),
+        KLineIndicatorSeries<T>(id: d, label: 'D', colorIndex: 3),
+        KLineIndicatorSeries<T>(id: j, label: 'J', colorIndex: 2),
+      ],
+    );
+  }
 
-  /// KDJ J 值。
-  j,
+  static KLineIndicatorSpec<T> rsi<T>() {
+    return KLineIndicatorSpec<T>(
+      id: rsiId,
+      label: 'RSI',
+      series: <KLineIndicatorSeries<T>>[
+        KLineIndicatorSeries<T>(id: rsi6, label: 'RSI6', colorIndex: 3),
+        KLineIndicatorSeries<T>(id: rsi12, label: 'RSI12', colorIndex: 4),
+        KLineIndicatorSeries<T>(id: rsi24, label: 'RSI24', colorIndex: 1),
+      ],
+    );
+  }
 
-  /// RSI 6 周期值。
-  rsi6,
+  static KLineIndicatorSpec<T> wr<T>() {
+    return KLineIndicatorSpec<T>(
+      id: wrId,
+      label: 'WR',
+      series: <KLineIndicatorSeries<T>>[
+        KLineIndicatorSeries<T>(id: wr6, label: 'WR6', colorIndex: 3),
+        KLineIndicatorSeries<T>(id: wr10, label: 'WR10', colorIndex: 4),
+        KLineIndicatorSeries<T>(id: wr14, label: 'WR14', colorIndex: 1),
+      ],
+    );
+  }
 
-  /// RSI 12 周期值。
-  rsi12,
+  static List<KLineIndicatorSpec<T>> main<T>() {
+    return [ma<T>(), ema<T>(), boll<T>()];
+  }
 
-  /// RSI 24 周期值。
-  rsi24,
-
-  /// WR 6 周期值。
-  wr6,
-
-  /// WR 10 周期值。
-  wr10,
-
-  /// WR 14 周期值。
-  wr14,
-
-  /// 成交量 MA 5 周期值。
-  volumeMA5,
-
-  /// 成交量 MA 10 周期值。
-  volumeMA10,
+  static List<KLineIndicatorSpec<T>> secondary<T>() {
+    return [volume<T>(), macd<T>(), kdj<T>(), rsi<T>(), wr<T>()];
+  }
 }
 
 /// 默认详情面板中的一行展示数据。
@@ -192,163 +270,38 @@ abstract class KLineDataAdapter<T> {
   /// 返回底部时间轴与详情面板使用的日期文案。
   String dateLabel(T item);
 
-  /// 返回默认指标对应的数值；没有该指标时返回 null。
-  double? indicatorValue(T item, KLineDefaultIndicatorValue value) => null;
+  /// 返回指标 id 对应的数值；没有该指标时返回 null。
+  double? indicatorValue(T item, String valueId) => null;
 
   /// 返回主图指标左上角标签展示项。
-  ///
-  /// 默认实现使用常见的 MA/EMA/BOLL 参数。业务方可以覆盖该方法来自定义
-  /// 指标名称、顺序、颜色索引或指标参数，例如 MA7/MA25。
   List<KLineIndicatorEntry> mainIndicatorEntries(
     T item,
-    KLineDefaultIndicatorType type,
+    KLineIndicatorSpec<T> indicator,
   ) {
-    return switch (type) {
-      KLineDefaultIndicatorType.ma => [
-        KLineIndicatorEntry(
-          label: 'MA5',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.ma5),
-          colorIndex: 0,
-        ),
-        KLineIndicatorEntry(
-          label: 'MA10',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.ma10),
-          colorIndex: 1,
-        ),
-        KLineIndicatorEntry(
-          label: 'MA30',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.ma30),
-          colorIndex: 2,
-        ),
-      ],
-      KLineDefaultIndicatorType.ema => [
-        KLineIndicatorEntry(
-          label: 'EMA5',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.ema5),
-          colorIndex: 3,
-        ),
-        KLineIndicatorEntry(
-          label: 'EMA10',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.ema10),
-          colorIndex: 4,
-        ),
-        KLineIndicatorEntry(
-          label: 'EMA30',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.ema30),
-          colorIndex: 5,
-        ),
-      ],
-      KLineDefaultIndicatorType.boll => [
-        KLineIndicatorEntry(
-          label: 'UB',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.bollUpper),
-          colorIndex: 0,
-        ),
-        KLineIndicatorEntry(
-          label: 'MB',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.bollMiddle),
-          colorIndex: 1,
-        ),
-        KLineIndicatorEntry(
-          label: 'LB',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.bollLower),
-          colorIndex: 2,
-        ),
-      ],
-      _ => const [],
-    };
+    return indicatorEntries(item, indicator);
   }
 
   /// 返回副图指标左上角标签展示项。
-  ///
-  /// 默认实现使用 VOL、MACD、KDJ、RSI、WR 的常见展示字段。
   List<KLineIndicatorEntry> secondaryIndicatorEntries(
     T item,
-    KLineDefaultIndicatorType type,
+    KLineIndicatorSpec<T> indicator,
   ) {
-    return switch (type) {
-      KLineDefaultIndicatorType.volume => [
+    return indicatorEntries(item, indicator);
+  }
+
+  /// 按指标定义生成默认标签展示项。
+  List<KLineIndicatorEntry> indicatorEntries(
+    T item,
+    KLineIndicatorSpec<T> indicator,
+  ) {
+    return [
+      for (final series in indicator.series)
         KLineIndicatorEntry(
-          label: 'MA5',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.volumeMA5),
-          colorIndex: 1,
+          label: series.label,
+          value: series.valueOf(item, this),
+          colorIndex: series.colorIndex,
         ),
-        KLineIndicatorEntry(
-          label: 'MA10',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.volumeMA10),
-          colorIndex: 3,
-        ),
-      ],
-      KLineDefaultIndicatorType.macd => [
-        KLineIndicatorEntry(
-          label: 'DIF',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.dif),
-          colorIndex: 1,
-        ),
-        KLineIndicatorEntry(
-          label: 'DEA',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.dea),
-          colorIndex: 3,
-        ),
-        KLineIndicatorEntry(
-          label: 'MACD',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.macd),
-          colorIndex: 0,
-        ),
-      ],
-      KLineDefaultIndicatorType.kdj => [
-        KLineIndicatorEntry(
-          label: 'K',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.k),
-          colorIndex: 1,
-        ),
-        KLineIndicatorEntry(
-          label: 'D',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.d),
-          colorIndex: 3,
-        ),
-        KLineIndicatorEntry(
-          label: 'J',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.j),
-          colorIndex: 2,
-        ),
-      ],
-      KLineDefaultIndicatorType.rsi => [
-        KLineIndicatorEntry(
-          label: 'RSI6',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.rsi6),
-          colorIndex: 3,
-        ),
-        KLineIndicatorEntry(
-          label: 'RSI12',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.rsi12),
-          colorIndex: 4,
-        ),
-        KLineIndicatorEntry(
-          label: 'RSI24',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.rsi24),
-          colorIndex: 1,
-        ),
-      ],
-      KLineDefaultIndicatorType.wr => [
-        KLineIndicatorEntry(
-          label: 'WR6',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.wr6),
-          colorIndex: 3,
-        ),
-        KLineIndicatorEntry(
-          label: 'WR10',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.wr10),
-          colorIndex: 4,
-        ),
-        KLineIndicatorEntry(
-          label: 'WR14',
-          value: indicatorValue(item, KLineDefaultIndicatorValue.wr14),
-          colorIndex: 1,
-        ),
-      ],
-      _ => const [],
-    };
+    ];
   }
 
   /// 返回长按选中详情面板中的字段。

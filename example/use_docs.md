@@ -112,15 +112,15 @@ class MyCandleAdapter extends KLineDataAdapter<MyCandle> {
   @override
   List<KLineIndicatorEntry> mainIndicatorEntries(
     MyCandle item,
-    KLineDefaultIndicatorType type,
+    KLineIndicatorSpec<MyCandle> indicator,
   ) {
-    if (type == KLineDefaultIndicatorType.ma) {
+    if (indicator.id == KLineDefaultIndicators.maId) {
       return [
         KLineIndicatorEntry(label: 'MA7', value: item.ma7, colorIndex: 0),
         KLineIndicatorEntry(label: 'MA25', value: item.ma25, colorIndex: 1),
       ];
     }
-    return super.mainIndicatorEntries(item, type);
+    return super.mainIndicatorEntries(item, indicator);
   }
 
   @override
@@ -201,7 +201,7 @@ KLineWidget<MyCandle>(
 
 controller.setScale(1.2);
 controller.setScrollOffset(0);
-controller.toggleIndicator(KLineDefaultIndicatorType.ma.name);
+controller.toggleIndicator(KLineDefaultIndicators.maId);
 ```
 
 ## 实时数据接入

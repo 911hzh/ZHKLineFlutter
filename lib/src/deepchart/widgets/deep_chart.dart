@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-
-import '../adapter/deep_chart_data_adapter.dart';
-import '../delegate/deep_chart_delegate.dart';
-import '../model/deep_depth_entry.dart';
-import '../theme/deep_chart_theme.dart';
-import '../u_default_impl/deep_chart_default_delegate.dart';
+import 'package:kline_flutter/src/deepchart/adapter/deep_chart_data_adapter.dart';
+import 'package:kline_flutter/src/deepchart/delegate/deep_chart_delegate.dart';
+import 'package:kline_flutter/src/deepchart/model/deep_depth_entry.dart';
+import 'package:kline_flutter/src/deepchart/theme/deep_chart_theme.dart';
+import 'package:kline_flutter/src/deepchart/u_default_impl/deep_chart_default_delegate.dart';
 
 /// 深度图组件。
 ///

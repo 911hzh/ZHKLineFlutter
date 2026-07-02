@@ -1,13 +1,12 @@
 import 'package:example/base/api/models/KLineModel.dart';
 import 'package:example/base/store/kline/KlineStore.dart';
 import 'package:example/module/getIt/Injection.dart';
+import 'package:example/module/usecase/pages/custom_page/custom_demo_copy.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_kline_model_adapter.dart';
 import 'package:example/module/usecase/pages/custom_page/custom_live_update_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kline_flutter/kline_flutter.dart';
-
-import 'custom_demo_copy.dart';
 
 class CustomLiveUpdatePage extends StatefulWidget {
   const CustomLiveUpdatePage({super.key});

@@ -1,4 +1,4 @@
-import '../model/deep_depth_entry.dart';
+import 'package:kline_flutter/src/deepchart/model/deep_depth_entry.dart';
 
 /// 深度图数据适配器。
 ///

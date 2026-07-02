@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
-import '../controller/kline_controller.dart';
-import '../theme/kline_theme.dart';
+import 'package:kline_flutter/src/kline/controller/kline_controller.dart';
+import 'package:kline_flutter/src/kline/theme/kline_theme.dart';
 
 /// 绘制布局节点。
 ///
@@ -10,7 +9,11 @@ import '../theme/kline_theme.dart';
 /// 已经计算好的坐标，避免每次绘制重复计算。
 @immutable
 class KLineLayoutNode<T> {
-  const KLineLayoutNode({required this.index, required this.item, required this.frame});
+  const KLineLayoutNode({
+    required this.index,
+    required this.item,
+    required this.frame,
+  });
 
   /// 数据在 dataSource 中的原始下标。
   final int index;
@@ -59,7 +62,12 @@ abstract final class KLineChartLayoutUtils {
         KLineLayoutNode<T>(
           index: index,
           item: dataSource[index],
-          frame: Rect.fromLTWH(left, 0, context.itemExtent, context.viewportSize.height),
+          frame: Rect.fromLTWH(
+            left,
+            0,
+            context.itemExtent,
+            context.viewportSize.height,
+          ),
         ),
       );
     }
@@ -180,7 +188,10 @@ abstract class KLineChartDelegate<T> {
   /// core 已经在 [context.visibleRange] 中计算好可见范围。默认实现会按该范围
   /// 从 [dataSource] 读取可见 item，再生成默认布局节点。业务 delegate 可以覆盖
   /// 该方法，在一个入口里自行计算可见节点并返回带有业务坐标的 node 子类。
-  List<KLineLayoutNode<T>> getLayoutNodes(KLineChartContext<T> context, List<T> dataSource) {
+  List<KLineLayoutNode<T>> getLayoutNodes(
+    KLineChartContext<T> context,
+    List<T> dataSource,
+  ) {
     return KLineChartLayoutUtils.buildLayoutNodes(
       context: context,
       dataSource: dataSource,
@@ -206,15 +217,26 @@ abstract class KLineChartDelegate<T> {
   void drawMainChart(Canvas canvas, Size size, KLineChartContext<T> context) {}
 
   /// 绘制副图滚动内容，例如 VOL、MACD、KDJ、RSI、WR 等。
-  void drawSecondaryCharts(Canvas canvas, Size size, KLineChartContext<T> context) {}
+  void drawSecondaryCharts(
+    Canvas canvas,
+    Size size,
+    KLineChartContext<T> context,
+  ) {}
 
   /// 构建选中项详情 UI。
-  Widget? buildSelectionView(BuildContext context, KLineChartContext<T> chartContext, KLineLayoutNode<T> selectedNode) {
+  Widget? buildSelectionView(
+    BuildContext context,
+    KLineChartContext<T> chartContext,
+    KLineLayoutNode<T> selectedNode,
+  ) {
     return null;
   }
 
   /// 构建固定覆盖 UI，例如指标标签、底部指标切换栏。
-  Widget? buildOverlayView(BuildContext context, KLineChartContext<T> chartContext) {
+  Widget? buildOverlayView(
+    BuildContext context,
+    KLineChartContext<T> chartContext,
+  ) {
     return null;
   }
 
@@ -229,5 +251,8 @@ abstract class KLineChartDelegate<T> {
   void didSelectItem(KLineChartContext<T> context, KLineLayoutNode<T> node) {}
 
   /// 长按移动选中节点时回调。
-  void didMoveSelection(KLineChartContext<T> context, KLineLayoutNode<T> node) {}
+  void didMoveSelection(
+    KLineChartContext<T> context,
+    KLineLayoutNode<T> node,
+  ) {}
 }
