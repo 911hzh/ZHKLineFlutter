@@ -1,5 +1,5 @@
 name: kline_flutter
-description: "一个面向金融行情场景的 Flutter 图表库，提供 K 线图、技术指标、交互控制和深度图能力。它以 `CustomPainter` 和 delegate 架构为核心，让你既可以快速接入一套默认 UI，也可以在真实业务中按需替换绘制、布局、覆盖层和数据适配。"
+description: "A Flutter candlestick and K-line financial chart library with technical indicators, OHLCV trading charts, depth charts, and customizable delegates."
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -13,7 +13,7 @@ description: "一个面向金融行情场景的 Flutter 图表库，提供 K 线
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.3.1
+version: 0.4.0
 repository: https://github.com/911hzh/ZHKLineFlutter
 environment:
   sdk: ^3.7.0
