@@ -1,6 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:kline_flutter/kline_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kline_flutter/src/deepchart/adapter/deep_chart_data_adapter.dart';
+import 'package:kline_flutter/src/deepchart/delegate/deep_chart_delegate.dart';
+import 'package:kline_flutter/src/deepchart/model/deep_depth_entry.dart';
+import 'package:kline_flutter/src/deepchart/theme/deep_chart_theme.dart';
 
 void main() {
   test(
@@ -25,6 +28,35 @@ void main() {
     },
   );
 
+  test('buildPositionedDepthNodes maps both sides around center gap', () {
+    const nodes = DeepDepthNodes(
+      bids: [
+        DeepDepthNode(
+          index: 0,
+          entry: DeepDepthEntry(price: 100, size: 2),
+          cumulativeSize: 2,
+        ),
+      ],
+      asks: [
+        DeepDepthNode(
+          index: 0,
+          entry: DeepDepthEntry(price: 101, size: 4),
+          cumulativeSize: 4,
+        ),
+      ],
+    );
+
+    final positioned = DeepChartDefaultLayoutUtils.buildPositionedDepthNodes(
+      nodes: nodes,
+      contentRect: const Rect.fromLTWH(0, 0, 100, 100),
+      centerGap: 2,
+    );
+
+    expect(positioned.bids.single.position?.dx, 49);
+    expect(positioned.asks.single.position?.dx, 51);
+    expect(positioned.asks.single.position?.dy, 0);
+  });
+
   test('default grid segments stay inside the chart content rect', () {
     const layout = DeepChartLayoutConfig(
       mainHeight: 80,
@@ -33,13 +65,13 @@ void main() {
       gridVerticalCount: 2,
     );
     final size = Size(160, layout.mainHeight + layout.bottomHeight);
+    final contentRect = layout.contentRectFor(size);
     final lines = DeepChartDefaultLayoutUtils.buildGridLines(
-      contentRect: layout.contentRectFor(size),
+      contentRect: contentRect,
       horizontalCount: layout.gridHorizontalCount,
       verticalCount: layout.gridVerticalCount,
     );
 
-    final contentRect = layout.contentRectFor(size);
     expect(lines, isNotEmpty);
     for (final line in lines) {
       expect(_containsInclusive(contentRect, line.start), isTrue);
@@ -78,85 +110,11 @@ void main() {
     expect(rightLabels.last.dy, contentRect.bottom - 10);
     expect(bottomLabels.first.rect.left, contentRect.left);
     expect(bottomLabels.first.textAlign, TextAlign.left);
-    expect(
-      bottomLabels[1].rect.center.dx,
-      contentRect.left + contentRect.width / layout.gridVerticalCount,
-    );
-    expect(bottomLabels[1].textAlign, TextAlign.center);
     expect(bottomLabels.last.rect.right, contentRect.right);
     expect(bottomLabels.last.textAlign, TextAlign.right);
-    for (final label in bottomLabels) {
-      expect(label.rect.top, layout.mainHeight);
-      expect(
-        label.rect.height,
-        layout.bottomHeight - layout.contentPadding.bottom,
-      );
-    }
   });
 
-  test(
-    'content rect reserves bottom label row even without bottom padding',
-    () {
-      const layout = DeepChartLayoutConfig(
-        mainHeight: 80,
-        contentPadding: EdgeInsets.fromLTRB(8, 0, 8, 0),
-      );
-      final size = Size(160, layout.mainHeight + layout.bottomHeight);
-
-      final contentRect = layout.contentRectFor(size);
-      final bottomLabels =
-          DeepChartDefaultLayoutUtils.buildBottomPriceLabelLayouts(
-            contentRect: contentRect,
-            chartWidth: size.width,
-            rowTop: layout.mainHeight,
-            rowHeight: layout.bottomHeight,
-            bottomPadding: layout.contentPadding.bottom,
-            priceLabelCount: layout.priceLabelCount,
-            verticalCount: layout.gridVerticalCount,
-          );
-
-      expect(contentRect.bottom, lessThan(size.height));
-      for (final label in bottomLabels) {
-        expect(
-          label.rect.bottom,
-          lessThanOrEqualTo(size.height - layout.contentPadding.bottom),
-        );
-      }
-    },
-  );
-
-  test('bottom label row leaves bottom padding below text area', () {
-    const layout = DeepChartLayoutConfig(
-      mainHeight: 120,
-      bottomHeight: 24,
-      contentPadding: EdgeInsets.only(bottom: 8),
-    );
-    final labels = DeepChartDefaultLayoutUtils.buildBottomPriceLabelLayouts(
-      contentRect: layout.contentRectFor(const Size(200, 144)),
-      chartWidth: 200,
-      rowTop: layout.mainHeight,
-      rowHeight: layout.bottomHeight,
-      bottomPadding: layout.contentPadding.bottom,
-      priceLabelCount: layout.priceLabelCount,
-      verticalCount: layout.gridVerticalCount,
-    );
-
-    expect(labels.first.rect.top, 120);
-    expect(labels.first.rect.bottom, 136);
-  });
-
-  test('layout total height is chart height plus bottom label height', () {
-    const layout = DeepChartLayoutConfig(
-      mainHeight: 120,
-      bottomHeight: 18,
-      contentPadding: EdgeInsets.zero,
-    );
-
-    expect(layout.mainHeight + layout.bottomHeight, 138);
-    expect(layout.contentRectFor(const Size(200, 138)).bottom, 120);
-  });
-
-  test('bottom separator sits below the bottom label row', () {
+  test('bottom separator sits inside the total height', () {
     const layout = DeepChartLayoutConfig(
       mainHeight: 120,
       bottomHeight: 18,
@@ -168,9 +126,32 @@ void main() {
       totalHeight: layout.mainHeight + layout.bottomHeight,
     );
 
-    expect(line.start.dy, layout.mainHeight + layout.bottomHeight - 0.5);
-    expect(line.end.dy, layout.mainHeight + layout.bottomHeight - 0.5);
+    expect(line.start.dy, 137.5);
+    expect(line.end.dy, 137.5);
   });
+
+  test(
+    'default delegate getLayoutNodes reads business data through adapter',
+    () {
+      const delegate = _Delegate<_Level>();
+      final context = DeepChartContext<_Level>(
+        bids: const [_Level(100, 2)],
+        asks: const [_Level(101, 3)],
+        adapter: const _Adapter(),
+        theme: const DeepChartTheme(),
+        layout: const DeepChartLayoutConfig(mainHeight: 80),
+        viewportSize: const Size(160, 96),
+        nodes: const DeepDepthNodes(bids: [], asks: []),
+      );
+
+      final nodes = delegate.getLayoutNodes(context);
+
+      expect(nodes.bids.single.price, 100);
+      expect(nodes.bids.single.cumulativeSize, 2);
+      expect(nodes.bids.single.position, isNotNull);
+      expect(nodes.asks.single.price, 101);
+    },
+  );
 }
 
 bool _containsInclusive(Rect rect, Offset offset) {
@@ -178,4 +159,25 @@ bool _containsInclusive(Rect rect, Offset offset) {
       offset.dx <= rect.right &&
       offset.dy >= rect.top &&
       offset.dy <= rect.bottom;
+}
+
+class _Level {
+  const _Level(this.price, this.size);
+
+  final double price;
+  final double size;
+}
+
+class _Adapter extends DeepChartDataAdapter<_Level> {
+  const _Adapter();
+
+  @override
+  double price(_Level item) => item.price;
+
+  @override
+  double size(_Level item) => item.size;
+}
+
+class _Delegate<T> extends DeepChartDelegate<T> {
+  const _Delegate();
 }

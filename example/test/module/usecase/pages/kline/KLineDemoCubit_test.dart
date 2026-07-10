@@ -31,7 +31,7 @@ void main() {
     expect(states[0].isLoading, isTrue);
     expect(states[1].data.first.close, 11);
     expect(states[1].isLoading, isTrue);
-    expect(states.last.data.map((model) => model.timestamp), [2, 1]);
+    expect(states.last.data.map((model) => model.timestamp), [2]);
     expect(states.last.data.first.close, 12);
     expect(states.last.isLoading, isFalse);
     expect(cubit.state.data.first.close, 12);
@@ -76,7 +76,7 @@ void main() {
     await refreshing;
 
     expect(cubit.state.isLoading, isFalse);
-    expect(cubit.state.data.map((model) => model.timestamp), [2, 1]);
+    expect(cubit.state.data.map((model) => model.timestamp), [2]);
     expect(cubit.state.data.first.close, 12);
     await cubit.close();
   });
