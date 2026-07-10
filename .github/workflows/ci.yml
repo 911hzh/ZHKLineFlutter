@@ -14,7 +14,6 @@ concurrency:
 
 env:
   FLUTTER_VERSION: "3.41.9"
-  DART_VERSION: "3.11.5"
 
 jobs:
   package-check:
@@ -30,7 +29,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          dart-version: ${{ env.DART_VERSION }}
           channel: "stable"
           cache: true
 
@@ -56,13 +54,20 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          dart-version: ${{ env.DART_VERSION }}
           channel: "stable"
           cache: true
 
-      - name: 📦 get example dependencies
+      - name: 📦 get package dependencies
         working-directory: example
-        run: flutter pub get
+        run: make get
+
+      - name: 🔍 analyze package
+        working-directory: example
+        run: make analyze
+
+      - name: 🧪 test package
+        working-directory: example
+        run: make test
 
       - name: 🚀 generate example code
         working-directory: example

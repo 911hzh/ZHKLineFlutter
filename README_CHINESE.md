@@ -97,7 +97,7 @@ flutter pub add kline_flutter
 
 ```yaml
 dependencies:
-  kline_flutter: ^0.3.0
+  kline_flutter: ^0.5.0
 ```
 
 然后在业务代码中导入：

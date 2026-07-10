@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0
+
+- Reorganized package and example tests to mirror the source directory
+  structure.
+- Pruned low-value and duplicate tests while keeping focused regression
+  coverage for core chart behavior.
+- Added regression coverage for controller-driven K-line scroll requests and
+  default delegate secondary pane height fallback.
+- Added Chinese testing documentation that clarifies unit, widget, and
+  integration test boundaries.
+
 ## 0.4.0
 
 - Switched the default README to English for pub.dev and GitHub discovery.
