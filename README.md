@@ -114,7 +114,7 @@ Or add it manually:
 
 ```yaml
 dependencies:
-  kline_flutter: ^0.4.0
+  kline_flutter: ^0.5.0
 ```
 
 Then import it:
