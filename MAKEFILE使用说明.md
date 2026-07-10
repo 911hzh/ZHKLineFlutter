@@ -3,7 +3,7 @@
 仓库现在有两个实际入口：
 
 - 根目录 `Makefile`：只负责 package 自身的依赖、测试、分析、格式化
-- `example/Makefile`：只负责 example 的代码生成和编译
+- `example/Makefile`：只负责 example 自身的依赖、测试、分析、代码生成和编译
 
 ## 根目录命令
 
@@ -23,6 +23,9 @@ make check-version  # 检查 Flutter 环境
 
 ```bash
 cd example
+make get            # 获取 example 依赖
+make analyze        # 分析 example 代码
+make test           # 运行 example 测试
 make gen            # 运行 example 代码生成
 make watch          # 监听 example 代码生成
 make build-web      # 构建 example Web
@@ -33,7 +36,7 @@ make build-web      # 构建 example Web
 GitHub Actions 当前拆成两个 job：
 
 - package check：根目录执行 `make get`、`make analyze`、`make test`
-- example build web：`cd example` 后执行 `make gen`、`make build-web`
+- example build web：`cd example` 后执行 `make get`、`make analyze`、`make test`、`make gen`、`make build-web`
 
 ## 推荐用法
 
@@ -48,6 +51,9 @@ make test
 
 ```bash
 cd example
+make get
+make analyze
+make test
 make gen
 make build-web
 ```

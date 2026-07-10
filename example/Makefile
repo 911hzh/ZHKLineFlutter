@@ -1,6 +1,18 @@
 FLUTTER ?= $(shell if command -v fvm >/dev/null 2>&1; then echo "fvm flutter"; else echo "flutter"; fi)
 
-.PHONY: gen watch build-web
+.PHONY: get analyze test gen watch build-web
+
+get:
+	@echo "📦 获取 example 依赖..."
+	$(FLUTTER) pub get
+
+analyze:
+	@echo "🔍 分析 example 代码..."
+	$(FLUTTER) analyze
+
+test:
+	@echo "🧪 运行 example 测试..."
+	$(FLUTTER) test
 
 gen:
 	@echo "🚀 运行 example 代码生成器..."
