@@ -14,6 +14,8 @@ Chinese documentation is available in [`README_CHINESE.md`](README_CHINESE.md).
 For custom UI, depth chart integration, external controls, realtime data, and
 complete examples, see [`example/use_docs.md`](example/use_docs.md).
 
+flutter package see: <https://pub.dev/packages/kline_flutter>
+
 ## Preview
 
 ### Dynamic Indicators and Labels
